@@ -1,4 +1,4 @@
-package com.uteshop.model;
+package com.uteshop.entity;
 
 import java.math.BigDecimal;
 

@@ -1,5 +1,4 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ taglib prefix="decorator" uri="http://www.sitemesh.org/sitemesh-decorator" %>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
