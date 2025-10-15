@@ -35,10 +35,14 @@ public class CategoryController extends HttpServlet {
             // Lấy thông tin danh mục và danh sách sản phẩm
             DanhMuc category = danhMucDAO.findById(categoryId);
             List<SanPham> products = sanPhamDAO.findByCategoryId(categoryId);
+            
+            // Lấy tất cả danh mục để hiển thị trong dropdown lọc
+            List<DanhMuc> allCategories = danhMucDAO.findAll();
 
             if (category != null) {
                 request.setAttribute("category", category);
                 request.setAttribute("products", products);
+                request.setAttribute("allCategories", allCategories);
             } else {
                 request.setAttribute("errorMessage", "Danh mục không tồn tại.");
             }

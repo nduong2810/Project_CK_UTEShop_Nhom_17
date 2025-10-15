@@ -27,7 +27,7 @@
                         </div>
                     </c:if>
 
-                    <form action="${pageContext.request.contextPath}/auth/verify-otp" method="post" id="otpForm">
+                    <form action="${pageContext.request.contextPath}/guest/verify-otp" method="post" id="otpForm">
                         <div class="mb-4">
                             <label class="form-label text-center d-block">Mã OTP</label>
                             <div class="d-flex justify-content-center gap-2 otp-inputs">
@@ -46,7 +46,7 @@
 
                         <div class="text-center">
                             <p class="mb-2">
-                                <a href="${pageContext.request.contextPath}/auth/resend-otp" class="text-decoration-none">
+                                <a href="${pageContext.request.contextPath}/guest/resend-otp" class="text-decoration-none">
                                     <i class="fa fa-redo"></i> Gửi lại mã OTP
                                 </a>
                             </p>

@@ -21,7 +21,7 @@
                         </div>
                     </c:if>
 
-                    <form action="${pageContext.request.contextPath}/auth/login" method="post">
+                    <form action="${pageContext.request.contextPath}/guest/login" method="post">
                         <div class="mb-3">
                             <label for="email" class="form-label">Email</label>
                             <div class="input-group">
@@ -51,13 +51,13 @@
 
                         <div class="text-center">
                             <p class="mb-2">
-                                <a href="${pageContext.request.contextPath}/auth/forgot-password" class="text-decoration-none">
+                                <a href="${pageContext.request.contextPath}/guest/forgot-password" class="text-decoration-none">
                                     <i class="fa fa-question-circle"></i> Quên mật khẩu?
                                 </a>
                             </p>
                             <p class="mb-0">
                                 Chưa có tài khoản? 
-                                <a href="${pageContext.request.contextPath}/auth/register" class="text-decoration-none fw-bold">
+                                <a href="${pageContext.request.contextPath}/guest/register" class="text-decoration-none fw-bold">
                                     Đăng ký ngay
                                 </a>
                             </p>

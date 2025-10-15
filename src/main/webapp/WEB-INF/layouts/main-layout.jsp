@@ -16,16 +16,25 @@
     <sitemesh:write property='head'/>
 </head>
 <body>
-    <!-- Header -->
-    <jsp:include page="/WEB-INF/views/common/header.jsp"/>
-    
-    <!-- Main Content -->
-    <main class="container-fluid p-0">
-        <sitemesh:write property='body'/>
-    </main>
-    
-    <!-- Footer -->
-    <jsp:include page="/WEB-INF/views/common/footer.jsp"/>
+    <!-- Loading Screen -->
+    <div id="loader-wrapper">
+        <div class="loader"></div>
+        <p class="loader-text">Đang tải trang...</p>
+    </div>
+
+    <!-- Main Page Content (Initially Hidden) -->
+    <div id="page-content" style="visibility: hidden; opacity: 0;">
+        <!-- Header -->
+        <jsp:include page="/WEB-INF/views/common/header.jsp"/>
+        
+        <!-- Main Content -->
+        <main class="container-fluid p-0">
+            <sitemesh:write property='body'/>
+        </main>
+        
+        <!-- Footer -->
+        <jsp:include page="/WEB-INF/views/common/footer.jsp"/>
+    </div>
     
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

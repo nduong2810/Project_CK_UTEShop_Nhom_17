@@ -13,7 +13,7 @@ public class DanhMucDAO {
 
     public List<DanhMuc> findAll() {
         List<DanhMuc> categoryList = new ArrayList<>();
-        String sql = "SELECT maDM, tenDM, moTa FROM DanhMuc WHERE trangThai = 1 ORDER BY tenDM ASC";
+        String sql = "SELECT MaDM, TenDM, MaCha FROM DanhMuc ORDER BY TenDM ASC";
 
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -21,9 +21,9 @@ public class DanhMucDAO {
 
             while (rs.next()) {
                 DanhMuc danhMuc = new DanhMuc();
-                danhMuc.setMaDM(rs.getInt("maDM"));
-                danhMuc.setTenDM(rs.getString("tenDM"));
-                danhMuc.setMoTa(rs.getString("moTa"));
+                danhMuc.setMaDM(rs.getInt("MaDM"));
+                danhMuc.setTenDM(rs.getString("TenDM"));
+                // Không set moTa vì cột không tồn tại
                 categoryList.add(danhMuc);
             }
         } catch (Exception e) {
@@ -35,7 +35,7 @@ public class DanhMucDAO {
     }
 
     public DanhMuc findById(Integer id) {
-        String sql = "SELECT * FROM DanhMuc WHERE maDM = ? AND trangThai = 1";
+        String sql = "SELECT MaDM, TenDM, MaCha FROM DanhMuc WHERE MaDM = ?";
         DanhMuc danhMuc = null;
 
         try (Connection conn = DBConnect.getConnection();
@@ -45,9 +45,9 @@ public class DanhMucDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     danhMuc = new DanhMuc();
-                    danhMuc.setMaDM(rs.getInt("maDM"));
-                    danhMuc.setTenDM(rs.getString("tenDM"));
-                    danhMuc.setMoTa(rs.getString("moTa"));
+                    danhMuc.setMaDM(rs.getInt("MaDM"));
+                    danhMuc.setTenDM(rs.getString("TenDM"));
+                    // Không set moTa vì cột không tồn tại
                 }
             }
         } catch (Exception e) {

@@ -17,6 +17,8 @@ public class SanPhamDAO {
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
+            System.out.println("Executing query: " + sql);
+            int count = 0;
             while (rs.next()) {
                 SanPham sp = new SanPham();
                 sp.setMaSP(rs.getInt("MaSP"));
@@ -26,10 +28,14 @@ public class SanPhamDAO {
                 sp.setHinhAnh(rs.getString("HinhAnh"));
                 sp.setMoTa(rs.getString("MoTa"));
                 list.add(sp);
+                count++;
+                System.out.println("Found product: " + sp.getTenSP());
             }
+            System.out.println("Total products found: " + count);
 
         } catch (Exception e) {
             System.err.println("Error in getTop10SanPhamBanChay: " + e.getMessage());
+            e.printStackTrace();
         }
 
         return list;

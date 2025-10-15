@@ -68,8 +68,6 @@
                     <c:forEach var="sp" items="${top10}" varStatus="status">
                         <div class="col">
                             <div class="product-card h-100 fade-in-up" 
-                                 data-product-id="${sp.maSP}" 
-                                 data-price="${sp.donGia}"
                                  style="animation-delay: ${status.index * 0.05}s;">
                                 
                                 <div class="product-image-container position-relative">
@@ -127,85 +125,3 @@
         </div>
     </div>
 </section>
-
-<style>
-.hero-section .carousel-item {
-    height: 450px;
-}
-.hero-section .carousel-item img {
-    object-fit: cover;
-    filter: brightness(0.6);
-}
-.hero-section .carousel-caption {
-    background: rgba(0, 0, 0, 0.3);
-    backdrop-filter: blur(5px);
-    border-radius: 1rem;
-    padding: 2rem;
-    bottom: 15%;
-}
-.section-header .underline {
-    width: 100px;
-    height: 4px;
-    background: var(--gradient-primary);
-    border-radius: 2px;
-}
-.product-card {
-    border: 1px solid #eee;
-    border-radius: 0.75rem;
-    overflow: hidden;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    background: white;
-}
-.product-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.1);
-}
-.product-image-container {
-    height: 180px;
-    padding: 0.5rem;
-}
-.product-image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    transition: transform 0.3s ease;
-}
-.product-card:hover .product-image-container img {
-    transform: scale(1.05);
-}
-.product-badge {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 2;
-}
-.product-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-.product-card:hover .product-overlay {
-    opacity: 1;
-}
-.product-name-link {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-height: 40px; /* Reserve space for 2 lines */
-}
-.empty-state {
-    padding: 3rem;
-    border-radius: 15px;
-    background: white;
-}
-.cta-section {
-    position: relative;
-}
-</style>

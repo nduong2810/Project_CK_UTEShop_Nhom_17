@@ -27,7 +27,7 @@
                         </div>
                     </c:if>
 
-                    <form action="${pageContext.request.contextPath}/auth/register" method="post" id="registerForm">
+                    <form action="${pageContext.request.contextPath}/guest/register" method="post" id="registerForm">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="hoTen" class="form-label">Họ và tên</label>
@@ -118,7 +118,7 @@
                         <div class="text-center">
                             <p class="mb-0">
                                 Đã có tài khoản? 
-                                <a href="${pageContext.request.contextPath}/auth/login" class="text-decoration-none fw-bold">
+                                <a href="${pageContext.request.contextPath}/guest/login" class="text-decoration-none fw-bold">
                                     Đăng nhập ngay
                                 </a>
                             </p>
