@@ -699,6 +699,80 @@
                 opacity: 0.95;
             }
         }
+        
+        /* Custom notification styles */
+        .custom-notification {
+            border-radius: 12px;
+            overflow: hidden;
+            max-width: 400px;
+            width: 100%;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            animation: slideIn 0.4s ease-out;
+        }
+        
+        .notification-header {
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            background: var(--gradient-primary);
+            color: white;
+            font-weight: 600;
+        }
+        
+        .notification-header i {
+            margin-right: 10px;
+        }
+        
+        .notification-body {
+            padding: 16px;
+            background: white;
+            color: #333;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .notification-close {
+            background: none;
+            border: none;
+            color: white;
+            opacity: 0.8;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1161,45 +1235,121 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Enhanced notification system with better styling
 function showNotification(message, type = 'info') {
+    // Remove existing notifications
+    const existingNotifications = document.querySelectorAll('.custom-notification');
+    existingNotifications.forEach(notif => notif.remove());
+
     const notification = document.createElement('div');
-    notification.className = `alert alert-${type} position-fixed shadow-lg`;
-    notification.style.cssText = `
-        top: 20px;
-        right: 20px;
-        z-index: 9999;
-        min-width: 350px;
-        max-width: 400px;
-        border: none;
-        border-radius: 10px;
-        animation: slideInRight 0.3s ease-out;
-    `;
+    notification.className = 'custom-notification position-fixed shadow-lg';
+    notification.style.cssText = 
+        'top: 20px;' +
+        'right: 20px;' +
+        'z-index: 99999;' +
+        'min-width: 350px;' +
+        'max-width: 400px;' +
+        'border: none;' +
+        'border-radius: 12px;' +
+        'transform: translateX(100%);' +
+        'opacity: 0;' +
+        'transition: all 0.4s ease;' +
+        'background: white;' +
+        'color: #333;' +
+        'box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);' +
+        'overflow: hidden;';
     
     let iconClass = 'info-circle';
-    if (type === 'success') iconClass = 'check-circle';
-    else if (type === 'error') iconClass = 'exclamation-triangle';
-    else if (type === 'warning') iconClass = 'exclamation-triangle';
+    let bgColor = '#17a2b8';
+    let borderColor = '#17a2b8';
+    let titleText = 'Thông báo';
     
-    notification.innerHTML = `
-        <div class="d-flex align-items-center">
-            <i class="fas fa-${iconClass} me-3 fs-5"></i>
-            <div class="flex-grow-1">${message}</div>
-            <button type="button" class="btn-close ms-2" onclick="this.parentElement.parentElement.remove()"></button>
-        </div>
-    `;
+    if (type === 'success') {
+        iconClass = 'check-circle';
+        bgColor = '#28a745';
+        borderColor = '#20c997';
+        titleText = 'Thành công';
+    } else if (type === 'error' || type === 'danger') {
+        iconClass = 'exclamation-triangle';
+        bgColor = '#dc3545';
+        borderColor = '#e83e8c';
+        titleText = 'Lỗi';
+    } else if (type === 'warning') {
+        iconClass = 'exclamation-triangle';
+        bgColor = '#ffc107';
+        borderColor = '#fd7e14';
+        titleText = 'Yêu cầu đăng nhập';
+        notification.style.color = '#333';
+    }
+    
+    const headerStyle = 
+        'background: linear-gradient(135deg, ' + bgColor + ' 0%, ' + borderColor + ' 100%);' +
+        'padding: 12px 16px;' +
+        'color: white;' +
+        'font-weight: 600;' +
+        'display: flex;' +
+        'align-items: center;';
+    
+    const iconStyle = 
+        'background: rgba(255,255,255,0.2);' +
+        'width: 32px;' +
+        'height: 32px;' +
+        'border-radius: 50%;' +
+        'display: flex;' +
+        'align-items: center;' +
+        'justify-content: center;' +
+        'margin-right: 12px;';
+    
+    const closeButtonStyle = 
+        'background: none;' +
+        'border: none;' +
+        'color: white;' +
+        'opacity: 0.8;' +
+        'font-size: 18px;' +
+        'cursor: pointer;' +
+        'padding: 4px;' +
+        'border-radius: 50%;' +
+        'width: 28px;' +
+        'height: 28px;' +
+        'display: flex;' +
+        'align-items: center;' +
+        'justify-content: center;';
+    
+    const bodyStyle = 
+        'padding: 16px;' +
+        'font-size: 14px;' +
+        'line-height: 1.5;';
+    
+    notification.innerHTML = 
+        '<div style="' + headerStyle + '">' +
+            '<div style="' + iconStyle + '">' +
+                '<i class="fas fa-' + iconClass + '"></i>' +
+            '</div>' +
+            '<div style="flex-grow: 1;">' + titleText + '</div>' +
+            '<button type="button" onclick="this.parentElement.parentElement.remove()" style="' + closeButtonStyle + '">×</button>' +
+        '</div>' +
+        '<div style="' + bodyStyle + '">' +
+            message +
+        '</div>';
     
     document.body.appendChild(notification);
     
-    // Auto remove after 5 seconds
+    // Show notification with animation
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+        notification.style.opacity = '1';
+    }, 100);
+    
+    // Auto remove after 4 seconds
     setTimeout(() => {
         if (notification.parentElement) {
-            notification.style.animation = 'slideOutRight 0.3s ease-in';
+            notification.style.transform = 'translateX(100%)';
+            notification.style.opacity = '0';
             setTimeout(() => {
                 if (notification.parentElement) {
                     notification.remove();
                 }
-            }, 300);
+            }, 400);
         }
-    }, 5000);
+    }, 4000);
 }
 
 // Add CSS animations for notifications

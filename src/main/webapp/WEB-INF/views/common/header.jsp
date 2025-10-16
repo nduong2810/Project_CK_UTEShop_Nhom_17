@@ -346,10 +346,10 @@
                 </form>
             </div>
 
-            <!-- User Menu & Actions - Chỉ dành cho Guest -->
+            <!-- User Menu & Actions -->
             <div class="d-flex align-items-center gap-2">
                 <!-- Cart -->
-                <a href="${pageContext.request.contextPath}/guest/cart" class="btn btn-outline position-relative cart-icon" 
+                <a href="${pageContext.request.contextPath}/user/cart" class="btn btn-outline position-relative cart-icon" 
                    title="Xem giỏ hàng">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-count position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCount">
@@ -357,17 +357,133 @@
                     </span>
                 </a>
                 
-                <!-- Đăng nhập -->
-                <a href="${pageContext.request.contextPath}/guest/login" class="btn btn-outline">
-                    <i class="fas fa-sign-in-alt me-1"></i>
-                    <span class="d-none d-md-inline">Đăng nhập</span>
-                </a>
-                
-                <!-- Đăng ký -->
-                <a href="${pageContext.request.contextPath}/guest/register" class="btn btn-warning">
-                    <i class="fas fa-user-plus me-1"></i>
-                    <span class="d-none d-md-inline">Đăng ký</span>
-                </a>
+                <!-- Check if user is logged in -->
+                <c:choose>
+                    <c:when test="${not empty sessionScope.user}">
+                        <!-- User is logged in - Show user menu -->
+                        <div class="dropdown">
+                            <button class="btn btn-outline dropdown-toggle d-flex align-items-center" type="button" 
+                                    id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="user-avatar me-2">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span class="d-none d-md-inline">${sessionScope.user.hoTen}</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <!-- Role-based menu items -->
+                                <li>
+                                    <h6 class="dropdown-header">
+                                        <i class="fas fa-user-circle me-2"></i>
+                                        ${sessionScope.user.hoTen}
+                                        <small class="d-block text-muted">${sessionScope.userRole}</small>
+                                    </h6>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                
+                                <!-- Common user features -->
+                                <li>
+                                    <a class="dropdown-item" href="${pageContext.request.contextPath}/user/profile">
+                                        <i class="fas fa-user-edit me-2"></i>Hồ sơ cá nhân
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="${pageContext.request.contextPath}/user/orders">
+                                        <i class="fas fa-shopping-bag me-2"></i>Đơn hàng của tôi
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="${pageContext.request.contextPath}/user/wishlist">
+                                        <i class="fas fa-heart me-2"></i>Sản phẩm yêu thích
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="${pageContext.request.contextPath}/user/addresses">
+                                        <i class="fas fa-map-marker-alt me-2"></i>Địa chỉ giao hàng
+                                    </a>
+                                </li>
+                                
+                                <!-- Vendor-specific features -->
+                                <c:if test="${sessionScope.userRole == 'VENDOR'}">
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <h6 class="dropdown-header">
+                                            <i class="fas fa-store me-2"></i>Quản lý Shop
+                                        </h6>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/vendor/dashboard">
+                                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/vendor/products">
+                                            <i class="fas fa-box me-2"></i>Quản lý sản phẩm
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/vendor/orders">
+                                            <i class="fas fa-clipboard-list me-2"></i>Đơn hàng shop
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/vendor/promotions">
+                                            <i class="fas fa-tags me-2"></i>Khuyến mãi
+                                        </a>
+                                    </li>
+                                </c:if>
+                                
+                                <!-- Admin-specific features -->
+                                <c:if test="${sessionScope.userRole == 'ADMIN'}">
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <h6 class="dropdown-header">
+                                            <i class="fas fa-crown me-2"></i>Quản trị
+                                        </h6>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/admin/dashboard">
+                                            <i class="fas fa-chart-line me-2"></i>Dashboard Admin
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/admin/users">
+                                            <i class="fas fa-users me-2"></i>Quản lý người dùng
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/admin/shops">
+                                            <i class="fas fa-store-alt me-2"></i>Quản lý shop
+                                        </a>
+                                    </li>
+                                </c:if>
+                                
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="${pageContext.request.contextPath}/user/settings">
+                                        <i class="fas fa-cog me-2"></i>Cài đặt
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="${pageContext.request.contextPath}/auth/logout">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </c:when>
+                    <c:otherwise>
+                        <!-- User is not logged in - Show login/register buttons -->
+                        <a href="${pageContext.request.contextPath}/auth/login" class="btn btn-outline">
+                            <i class="fas fa-sign-in-alt me-1"></i>
+                            <span class="d-none d-md-inline">Đăng nhập</span>
+                        </a>
+                        
+                        <a href="${pageContext.request.contextPath}/auth/register" class="btn btn-warning">
+                            <i class="fas fa-user-plus me-1"></i>
+                            <span class="d-none d-md-inline">Đăng ký</span>
+                        </a>
+                    </c:otherwise>
+                </c:choose>
             </div>
         </div>
     </div>
@@ -399,28 +515,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Update cart count if needed
-    updateCartCount();
+    // Set default cart count for guest
+    const cartCountElement = document.getElementById('cartCount');
+    if (cartCountElement) {
+        cartCountElement.textContent = '0';
+        cartCountElement.style.display = 'none';
+    }
 });
-
-// Function to update cart count
-function updateCartCount() {
-    // This can be called after adding items to cart
-    fetch('${pageContext.request.contextPath}/api/cart/count')
-        .then(response => response.json())
-        .then(data => {
-            const cartCountElement = document.getElementById('cartCount');
-            if (cartCountElement && data.count !== undefined) {
-                cartCountElement.textContent = data.count;
-                if (data.count > 0) {
-                    cartCountElement.style.display = 'flex';
-                } else {
-                    cartCountElement.style.display = 'none';
-                }
-            }
-        })
-        .catch(error => console.log('Cart count update failed:', error));
-}
 
 // Auto-hide dropdown on mobile after selection
 document.querySelectorAll('.dropdown-item').forEach(item => {

@@ -23,11 +23,6 @@
                              alt="${product.tenSP}"
                              onerror="this.src='${pageContext.request.contextPath}/img/no-image.png'">
                     </div>
-                    <!-- Thumbnails (nếu có nhiều ảnh) -->
-                    <%-- <div class="thumbnail-container d-flex">
-                        <img src="..." class="thumbnail active" alt="Thumb 1">
-                        <img src="..." class="thumbnail" alt="Thumb 2">
-                    </div> --%>
                 </div>
 
                 <!-- Product Details -->
@@ -49,7 +44,6 @@
                         <span class="h2 text-danger fw-bolder">
                             <fmt:formatNumber value="${product.donGia}" type="currency" currencySymbol="" maxFractionDigits="0"/>₫
                         </span>
-                        <%-- <span class="text-muted text-decoration-line-through ms-2">15.000.000₫</span> --%>
                     </div>
 
                     <p class="text-muted">${product.moTa}</p>
@@ -67,10 +61,10 @@
                     </div>
 
                     <div class="d-grid gap-2 d-sm-flex">
-                        <button class="btn btn-primary btn-lg flex-grow-1" type="button">
+                        <button class="btn btn-primary btn-lg flex-grow-1" type="button" id="addToCartBtn">
                             <i class="fa fa-cart-plus"></i> Thêm vào giỏ hàng
                         </button>
-                        <button class="btn btn-warning btn-lg flex-grow-1" type="button">
+                        <button class="btn btn-warning btn-lg flex-grow-1" type="button" id="buyNowBtn">
                             <i class="fa fa-bolt"></i> Mua ngay
                         </button>
                     </div>
@@ -105,28 +99,225 @@
     .price-section {
         border-left: 5px solid var(--bs-danger);
     }
+
+    /* Notification Toast Styles */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 99999;
+    }
+
+    .custom-toast {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        border: none;
+        min-width: 350px;
+        max-width: 400px;
+        transform: translateX(100%);
+        opacity: 0;
+        transition: all 0.4s ease;
+        overflow: hidden;
+    }
+
+    .custom-toast.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    .toast-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom: none;
+        padding: 12px 16px;
+        font-weight: 600;
+    }
+
+    .toast-header .btn-close {
+        background: none;
+        border: none;
+        color: white;
+        opacity: 0.8;
+        font-size: 18px;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .toast-header .btn-close:hover {
+        opacity: 1;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+    }
+
+    .toast-body {
+        padding: 16px;
+        color: #333;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .toast-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .toast-success .toast-header {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    }
+
+    .toast-warning .toast-header {
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        color: #333;
+    }
+
+    .toast-product-info {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 10px;
+        border-left: 4px solid #667eea;
+    }
+
+    .toast-product-name {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 4px;
+    }
+
+    .toast-product-price {
+        color: #dc3545;
+        font-weight: 600;
+    }
+
+    .toast-quantity {
+        color: #6c757d;
+        font-size: 13px;
+    }
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const quantityInput = document.getElementById('quantity');
-        const minusButton = document.getElementById('button-minus');
-        const plusButton = document.getElementById('button-plus');
+document.addEventListener('DOMContentLoaded', function() {
+    const quantityInput = document.getElementById('quantity');
+    const minusButton = document.getElementById('button-minus');
+    const plusButton = document.getElementById('button-plus');
+    const addToCartBtn = document.getElementById('addToCartBtn');
+    const buyNowBtn = document.getElementById('buyNowBtn');
 
-        if(minusButton) {
-            minusButton.addEventListener('click', function() {
-                let currentValue = parseInt(quantityInput.value);
-                if (currentValue > 1) {
-                    quantityInput.value = currentValue - 1;
-                }
-            });
-        }
+    // Quantity controls
+    if (minusButton) {
+        minusButton.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value) || 1;
+            if (currentValue > 1) {
+                quantityInput.value = currentValue - 1;
+            }
+        });
+    }
 
-        if(plusButton) {
-            plusButton.addEventListener('click', function() {
-                let currentValue = parseInt(quantityInput.value);
-                quantityInput.value = currentValue + 1;
-            });
-        }
+    if (plusButton) {
+        plusButton.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value) || 1;
+            quantityInput.value = currentValue + 1;
+        });
+    }
+
+    // Add to cart button
+    if (addToCartBtn) {
+        addToCartBtn.addEventListener('click', function() {
+            const quantity = parseInt(quantityInput.value) || 1;
+            showNotification('success', 'Thêm vào giỏ hàng', 
+                `Đã thêm ${quantity} sản phẩm vào giỏ hàng thành công!`, 
+                '${product.tenSP}', '${product.donGia}', quantity);
+        });
+    }
+
+    // Buy now button  
+    if (buyNowBtn) {
+        buyNowBtn.addEventListener('click', function() {
+            const quantity = parseInt(quantityInput.value) || 1;
+            showNotification('warning', 'Yêu cầu đăng nhập', 
+                `Bạn cần đăng nhập để mua ${quantity} sản phẩm này.`, 
+                '${product.tenSP}', '${product.donGia}', quantity);
+        });
+    }
+});
+
+function showNotification(type, title, message, productName, productPrice, quantity) {
+    // Remove existing notifications
+    const existingToasts = document.querySelectorAll('.custom-toast');
+    existingToasts.forEach(toast => {
+        toast.remove();
     });
+
+    // Create toast container if not exists
+    let toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) {
+        toastContainer = document.createElement('div');
+        toastContainer.className = 'toast-container';
+        document.body.appendChild(toastContainer);
+    }
+
+    // Create new toast
+    const toast = document.createElement('div');
+    toast.className = `custom-toast toast-${type}`;
+    
+    const iconHtml = type === 'success' 
+        ? '<i class="fa fa-check-circle"></i>' 
+        : '<i class="fa fa-exclamation-triangle"></i>';
+
+    const formattedPrice = new Intl.NumberFormat('vi-VN').format(productPrice);
+
+    toast.innerHTML = `
+        <div class="toast-header">
+            <div class="toast-icon">${iconHtml}</div>
+            <strong class="me-auto">${title}</strong>
+            <button type="button" class="btn-close" onclick="closeToast(this)">×</button>
+        </div>
+        <div class="toast-body">
+            <div>${message}</div>
+            <div class="toast-product-info">
+                <div class="toast-product-name">${productName}</div>
+                <div class="d-flex justify-content-between">
+                    <span class="toast-product-price">${formattedPrice}₫</span>
+                    <span class="toast-quantity">Số lượng: ${quantity}</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    toastContainer.appendChild(toast);
+
+    // Show toast with animation
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 100);
+
+    // Auto hide after 4 seconds
+    setTimeout(() => {
+        hideToast(toast);
+    }, 4000);
+}
+
+function closeToast(button) {
+    const toast = button.closest('.custom-toast');
+    hideToast(toast);
+}
+
+function hideToast(toast) {
+    if (toast && toast.parentElement) {
+        toast.classList.remove('show');
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.remove();
+            }
+        }, 400);
+    }
+}
 </script>

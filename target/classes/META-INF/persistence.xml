@@ -16,6 +16,13 @@
         <class>com.uteshop.entity.ChiTietDonHang</class>
         <class>com.uteshop.entity.CuaHang</class>
         <class>com.uteshop.entity.OtpXacThuc</class>
+        <class>com.uteshop.entity.MaGiamGia</class>
+        <class>com.uteshop.entity.GioHang</class>
+        <class>com.uteshop.entity.ChiTietGioHang</class>
+        <class>com.uteshop.entity.DiaChiGiaoHang</class>
+        <class>com.uteshop.entity.DanhGiaSanPham</class>
+        <class>com.uteshop.entity.SanPhamDaXem</class>
+        <class>com.uteshop.entity.SanPhamYeuThich</class>
         
         <properties>
             <!-- Database connection properties -->
@@ -26,10 +33,15 @@
             
             <!-- Hibernate properties -->
             <property name="hibernate.dialect" value="org.hibernate.dialect.SQLServerDialect"/>
-            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <!-- Changed from 'update' to 'validate' to prevent automatic schema changes -->
+            <property name="hibernate.hbm2ddl.auto" value="validate"/>
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
             <property name="hibernate.use_sql_comments" value="true"/>
+            
+            <!-- SQL Server specific settings -->
+            <property name="hibernate.dialect.storage_engine" value="innodb"/>
+            <property name="hibernate.temp.use_jdbc_metadata_defaults" value="false"/>
             
             <!-- Connection pool settings -->
             <property name="hibernate.connection.pool_size" value="10"/>
@@ -41,6 +53,11 @@
             
             <!-- Validation -->
             <property name="hibernate.validator.apply_to_ddl" value="false"/>
+            
+            <!-- Additional SQL Server compatibility settings -->
+            <property name="hibernate.connection.CharSet" value="utf8"/>
+            <property name="hibernate.connection.characterEncoding" value="utf8"/>
+            <property name="hibernate.connection.useUnicode" value="true"/>
         </properties>
     </persistence-unit>
 </persistence>

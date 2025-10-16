@@ -8,38 +8,38 @@ import java.time.LocalDateTime;
 public class NguoiDung {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "maND")
+    @Column(name = "MaND")
     private int maND;
     
-    @Column(name = "tenDangNhap", unique = true, nullable = false, length = 50)
-    private String tenDangNhap;
+    @Column(name = "TenDangNhap", unique = true, nullable = false, length = 50, columnDefinition = "varchar(50) NOT NULL DEFAULT ''")
+    private String tenDangNhap = "";
     
-    @Column(name = "matKhau", nullable = false, length = 255)
+    @Column(name = "MatKhau", nullable = false, length = 255)
     private String matKhau;
     
-    @Column(name = "email", unique = true, nullable = false, length = 100)
+    @Column(name = "Email", unique = true, nullable = false, length = 100)
     private String email;
     
-    @Column(name = "hoTen", nullable = false, length = 100)
+    @Column(name = "HoTen", nullable = false, length = 100)
     private String hoTen;
     
-    @Column(name = "soDienThoai", length = 15)
+    @Column(name = "SoDienThoai", length = 15)
     private String soDienThoai;
     
-    @Column(name = "diaChi", length = 255)
+    @Column(name = "DiaChi", length = 255)
     private String diaChi;
     
     @Enumerated(EnumType.STRING)
-    @Column(name = "vaiTro", nullable = false, length = 20)
+    @Column(name = "VaiTro", nullable = false, length = 20)
     private VaiTro vaiTro;
     
-    @Column(name = "trangThai", nullable = false)
+    @Column(name = "TrangThai", nullable = false, columnDefinition = "bit NOT NULL DEFAULT 1")
     private boolean trangThai = true;
     
-    @Column(name = "ngayTao", nullable = false)
+    @Column(name = "NgayTao", nullable = false)
     private LocalDateTime ngayTao;
     
-    @Column(name = "ngayCapNhat")
+    @Column(name = "NgayCapNhat")
     private LocalDateTime ngayCapNhat;
 
     // Enum for roles
@@ -50,6 +50,7 @@ public class NguoiDung {
     // Constructors
     public NguoiDung() {
         this.ngayTao = LocalDateTime.now();
+        this.trangThai = true;
     }
 
     public NguoiDung(String tenDangNhap, String matKhau, String email, String hoTen, VaiTro vaiTro) {

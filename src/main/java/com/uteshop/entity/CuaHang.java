@@ -8,35 +8,35 @@ import java.time.LocalDateTime;
 public class CuaHang {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "maCH")
+    @Column(name = "MaCH")
     private int maCH;
     
-    @Column(name = "tenCH", nullable = false, length = 255)
+    @Column(name = "TenCH", nullable = false, length = 255)
     private String tenCH;
     
-    @Column(name = "moTa", length = 1000)
+    @Column(name = "MoTa", length = 1000)
     private String moTa;
     
-    @Column(name = "diaChi", nullable = false, length = 500)
+    @Column(name = "DiaChi", nullable = false, length = 500)
     private String diaChi;
     
-    @Column(name = "soDienThoai", length = 15)
+    @Column(name = "SoDienThoai", length = 15)
     private String soDienThoai;
     
-    @Column(name = "email", length = 100)
+    @Column(name = "Email", length = 100)
     private String email;
     
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "maNguoiDung", nullable = false)
+    @JoinColumn(name = "MaND", nullable = false)
     private NguoiDung nguoiDung;
     
-    @Column(name = "trangThai", nullable = false)
+    @Column(name = "TrangThai", nullable = false)
     private boolean trangThai = true;
     
-    @Column(name = "ngayTao", nullable = false)
+    @Column(name = "NgayTao", nullable = false)
     private LocalDateTime ngayTao;
     
-    @Column(name = "ngayCapNhat")
+    @Column(name = "NgayCapNhat")
     private LocalDateTime ngayCapNhat;
 
     // Constructors

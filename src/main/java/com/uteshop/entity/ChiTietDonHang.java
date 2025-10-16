@@ -8,24 +8,24 @@ import java.math.BigDecimal;
 public class ChiTietDonHang {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "maCTDH")
+    @Column(name = "MaCTDH")
     private int maCTDH;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "maDH", nullable = false)
+    @JoinColumn(name = "MaDH", nullable = false)
     private DonHang donHang;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "maSP", nullable = false)
+    @JoinColumn(name = "MaSP", nullable = false)
     private SanPham sanPham;
     
-    @Column(name = "soLuong", nullable = false)
+    @Column(name = "SoLuong", nullable = false)
     private int soLuong;
     
-    @Column(name = "donGia", nullable = false, precision = 18, scale = 2)
+    @Column(name = "DonGia", nullable = false, precision = 18, scale = 2)
     private BigDecimal donGia;
     
-    @Column(name = "thanhTien", nullable = false, precision = 18, scale = 2)
+    @Column(name = "ThanhTien", nullable = false, precision = 18, scale = 2)
     private BigDecimal thanhTien;
 
     // Constructors
