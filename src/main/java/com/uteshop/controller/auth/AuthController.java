@@ -75,7 +75,7 @@ public class AuthController extends HttpServlet {
             throws ServletException, IOException {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
-        String role = request.getParameter("role");
+        String selectedRole = request.getParameter("role");
         boolean remember = "on".equals(request.getParameter("remember"));
 
         try {
@@ -102,12 +102,14 @@ public class AuthController extends HttpServlet {
                 return;
             }
 
-            // Check role match
-            if (role != null && !role.isEmpty() && !user.getVaiTro().name().equals(role)) {
-                request.setAttribute("error", "Vai trò đăng nhập không khớp với tài khoản");
+            // Check if selected role matches user's actual role
+            if (selectedRole != null && !selectedRole.equals(user.getVaiTro().name())) {
+                request.setAttribute("error", "Bạn không có quyền truy cập với vai trò đã chọn");
                 showLoginPage(request, response);
                 return;
             }
+
+            System.out.println("User login: " + user.getTenDangNhap() + " with role: " + user.getVaiTro().name());
 
             // Create session
             HttpSession session = request.getSession(true);
@@ -124,7 +126,7 @@ public class AuthController extends HttpServlet {
                 response.addCookie(userCookie);
             }
 
-            // Redirect based on role
+            // Redirect based on user's role
             redirectToUserDashboard(user, response, request.getContextPath());
 
         } catch (Exception e) {
@@ -233,17 +235,21 @@ public class AuthController extends HttpServlet {
             throws IOException {
         switch (user.getVaiTro()) {
             case ADMIN:
-                response.sendRedirect(contextPath + "/admin/dashboard");
+                // Redirect đến trang admin products (có sẵn)
+                response.sendRedirect(contextPath + "/admin/products");
                 break;
             case VENDOR:
-                response.sendRedirect(contextPath + "/vendor/dashboard");
+                // Redirect đến trang home cho vendor (tạm thời)
+                response.sendRedirect(contextPath + "/guest/home");
                 break;
             case SHIPPER:
-                response.sendRedirect(contextPath + "/shipper/dashboard");
+                // Redirect đến trang home cho shipper (tạm thời)
+                response.sendRedirect(contextPath + "/guest/home");
                 break;
             case USER:
             default:
-                response.sendRedirect(contextPath + "/user/dashboard");
+                // Redirect đến trang home cho user
+                response.sendRedirect(contextPath + "/guest/home");
                 break;
         }
     }

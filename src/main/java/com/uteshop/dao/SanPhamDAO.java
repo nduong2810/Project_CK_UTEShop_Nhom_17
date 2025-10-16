@@ -2,26 +2,22 @@ package com.uteshop.dao;
 
 import com.uteshop.config.DBConnect;
 import com.uteshop.entity.SanPham;
-import com.uteshop.entity.DanhMuc;
-import com.uteshop.entity.CuaHang;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
-import jakarta.persistence.TypedQuery;
 import java.sql.*;
 import java.util.*;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 public class SanPhamDAO {
-    private EntityManagerFactory emf = Persistence.createEntityManagerFactory("uteshop-pu");
 
-    // Phương thức cũ sử dụng JDBC (giữ lại để tương thích)
+    // Lấy top 10 sản phẩm bán chạy nhất
     public List<SanPham> getTop10SanPhamBanChay() {
         List<SanPham> list = new ArrayList<>();
-        String sql = "SELECT TOP 10 MaSP, TenSP, DonGia, SoLuongBan, HinhAnh, MoTa " +
-                "FROM SanPham ORDER BY SoLuongBan DESC";
+        String sql = "SELECT TOP 10 sp.MaSP, sp.TenSP, sp.DonGia, sp.SoLuongBan, sp.HinhAnh, sp.MoTa, " +
+                "sp.SoLuongTon, sp.TrangThai, sp.LuotXem, sp.LuotYeuThich, sp.DiemDanhGiaTrungBinh, " +
+                "sp.SoLuongDanhGia, sp.MaCH, ch.TenCH " +
+                "FROM SanPham sp " +
+                "LEFT JOIN CuaHang ch ON sp.MaCH = ch.MaCH " +
+                "WHERE sp.TrangThai = 1 " +
+                "ORDER BY sp.SoLuongBan DESC, sp.MaSP ASC";
 
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -37,11 +33,18 @@ public class SanPhamDAO {
                 sp.setSoLuongBan(rs.getInt("SoLuongBan"));
                 sp.setHinhAnh(rs.getString("HinhAnh"));
                 sp.setMoTa(rs.getString("MoTa"));
+                sp.setSoLuongTon(rs.getInt("SoLuongTon"));
+                sp.setTrangThai(rs.getBoolean("TrangThai"));
+                sp.setLuotXem(rs.getInt("LuotXem"));
+                sp.setLuotYeuThich(rs.getInt("LuotYeuThich"));
+                sp.setDiemDanhGiaTrungBinh(rs.getBigDecimal("DiemDanhGiaTrungBinh"));
+                sp.setSoLuongDanhGia(rs.getInt("SoLuongDanhGia"));
+                sp.setMaCH(rs.getInt("MaCH"));
                 list.add(sp);
                 count++;
-                System.out.println("Found product: " + sp.getTenSP());
+                System.out.println("Top 10 Product #" + count + ": " + sp.getTenSP() + " (ID: " + sp.getMaSP() + ") - Sales: " + sp.getSoLuongBan());
             }
-            System.out.println("Total products found: " + count);
+            System.out.println("Total top 10 products found: " + count);
 
         } catch (Exception e) {
             System.err.println("Error in getTop10SanPhamBanChay: " + e.getMessage());
@@ -51,93 +54,102 @@ public class SanPhamDAO {
         return list;
     }
 
-    // Các phương thức mới sử dụng JPA
-    public List<SanPham> getTopSellingProducts(int limit) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            TypedQuery<SanPham> query = em.createQuery(
-                "SELECT s FROM SanPham s WHERE s.trangThai = true ORDER BY s.soLuongBan DESC", 
-                SanPham.class);
-            query.setMaxResults(limit);
-            return query.getResultList();
+    // Lấy sản phẩm với pagination (cho load more)
+    public List<SanPham> findAllWithPagination(int offset, int limit) {
+        List<SanPham> list = new ArrayList<>();
+        // Sử dụng cùng thứ tự sắp xếp với getTop10SanPhamBanChay để tránh trùng lặp
+        String sql = "SELECT sp.MaSP, sp.TenSP, sp.DonGia, sp.SoLuongBan, sp.HinhAnh, sp.MoTa, " +
+                "sp.SoLuongTon, sp.TrangThai, sp.LuotXem, sp.LuotYeuThich, sp.DiemDanhGiaTrungBinh, " +
+                "sp.SoLuongDanhGia, sp.MaCH, sp.MaDM, sp.NgayTao, sp.NgayCapNhat, " +
+                "ch.TenCH, ch.DiaChi as DiaChiCuaHang, ch.SoDienThoai as SdtCuaHang, " +
+                "dm.TenDM " +
+                "FROM SanPham sp " +
+                "LEFT JOIN CuaHang ch ON sp.MaCH = ch.MaCH " +
+                "LEFT JOIN DanhMuc dm ON sp.MaDM = dm.MaDM " +
+                "WHERE sp.TrangThai = 1 " +
+                "ORDER BY sp.SoLuongBan DESC, sp.MaSP ASC " +
+                "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, offset);
+            ps.setInt(2, limit);
+            
+            System.out.println("Executing pagination query: offset=" + offset + ", limit=" + limit);
+            System.out.println("SQL: " + sql);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                int count = 0;
+                while (rs.next()) {
+                    SanPham sp = new SanPham();
+                    sp.setMaSP(rs.getInt("MaSP"));
+                    sp.setTenSP(rs.getString("TenSP"));
+                    sp.setDonGia(rs.getBigDecimal("DonGia"));
+                    sp.setSoLuongBan(rs.getInt("SoLuongBan"));
+                    sp.setHinhAnh(rs.getString("HinhAnh"));
+                    sp.setMoTa(rs.getString("MoTa"));
+                    sp.setSoLuongTon(rs.getInt("SoLuongTon"));
+                    sp.setTrangThai(rs.getBoolean("TrangThai"));
+                    sp.setLuotXem(rs.getInt("LuotXem"));
+                    sp.setLuotYeuThich(rs.getInt("LuotYeuThich"));
+                    sp.setDiemDanhGiaTrungBinh(rs.getBigDecimal("DiemDanhGiaTrungBinh"));
+                    sp.setSoLuongDanhGia(rs.getInt("SoLuongDanhGia"));
+                    sp.setMaCH(rs.getInt("MaCH"));
+                    sp.setMaDM(rs.getInt("MaDM"));
+                    sp.setNgayTao(rs.getDate("NgayTao"));
+                    sp.setNgayCapNhat(rs.getDate("NgayCapNhat"));
+                    
+                    // Thêm thông tin bổ sung từ JOIN
+                    count++;
+                    System.out.println("LoadMore Product #" + count + ": " + sp.getTenSP() + " (ID: " + sp.getMaSP() + ") - Sales: " + sp.getSoLuongBan());
+                    
+                    list.add(sp);
+                }
+                System.out.println("Total products loaded with pagination: " + count);
+            }
+
         } catch (Exception e) {
-            // Fallback to JDBC method
-            return getTop10SanPhamBanChay();
-        } finally {
-            em.close();
+            System.err.println("Error in findAllWithPagination: " + e.getMessage());
+            e.printStackTrace();
         }
+
+        return list;
     }
 
-    public List<SanPham> getNewestProducts(int page, int pageSize) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            TypedQuery<SanPham> query = em.createQuery(
-                "SELECT s FROM SanPham s WHERE s.trangThai = true ORDER BY s.ngayTao DESC", 
-                SanPham.class);
-            query.setFirstResult(page * pageSize);
-            query.setMaxResults(pageSize);
-            return query.getResultList();
-        } catch (Exception e) {
-            // Fallback to top selling products
-            return getTopSellingProducts(pageSize);
-        } finally {
-            em.close();
-        }
+    // Lấy sản phẩm với pagination - overloaded method for AdminController
+    public List<SanPham> findAll(int offset, int limit) {
+        return findAllWithPagination(offset, limit);
     }
 
-    public List<SanPham> getBestSellingProducts(int page, int pageSize) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            TypedQuery<SanPham> query = em.createQuery(
-                "SELECT s FROM SanPham s WHERE s.trangThai = true ORDER BY s.soLuongBan DESC", 
-                SanPham.class);
-            query.setFirstResult(page * pageSize);
-            query.setMaxResults(pageSize);
-            return query.getResultList();
+    // Đếm tổng số sản phẩm
+    public long countProducts() {
+        String sql = "SELECT COUNT(*) FROM SanPham sp " +
+                "WHERE sp.TrangThai = 1";
+        
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                long count = rs.getLong(1);
+                System.out.println("Total products in database: " + count);
+                return count;
+            }
+
         } catch (Exception e) {
-            // Fallback to top selling products
-            return getTopSellingProducts(pageSize);
-        } finally {
-            em.close();
+            System.err.println("Error in countProducts: " + e.getMessage());
+            e.printStackTrace();
         }
+
+        return 0;
     }
 
-    public List<SanPham> getHighestRatedProducts(int page, int pageSize) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            TypedQuery<SanPham> query = em.createQuery(
-                "SELECT s FROM SanPham s WHERE s.trangThai = true AND s.soLuongDanhGia > 0 ORDER BY s.diemDanhGiaTrungBinh DESC, s.soLuongDanhGia DESC", 
-                SanPham.class);
-            query.setFirstResult(page * pageSize);
-            query.setMaxResults(pageSize);
-            return query.getResultList();
-        } catch (Exception e) {
-            // Fallback to top selling products
-            return getTopSellingProducts(pageSize);
-        } finally {
-            em.close();
-        }
-    }
-
-    public List<SanPham> getMostFavoriteProducts(int page, int pageSize) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            TypedQuery<SanPham> query = em.createQuery(
-                "SELECT s FROM SanPham s WHERE s.trangThai = true ORDER BY s.luotYeuThich DESC", 
-                SanPham.class);
-            query.setFirstResult(page * pageSize);
-            query.setMaxResults(pageSize);
-            return query.getResultList();
-        } catch (Exception e) {
-            // Fallback to top selling products
-            return getTopSellingProducts(pageSize);
-        } finally {
-            em.close();
-        }
-    }
-
+    // Tìm sản phẩm theo ID
     public SanPham findById(Integer id) {
-        String sql = "SELECT * FROM SanPham WHERE MaSP = ?";
+        String sql = "SELECT sp.*, ch.TenCH FROM SanPham sp " +
+                "LEFT JOIN CuaHang ch ON sp.MaCH = ch.MaCH " +
+                "WHERE sp.MaSP = ? AND sp.TrangThai = 1";
         SanPham sp = null;
 
         try (Connection conn = DBConnect.getConnection();
@@ -153,6 +165,13 @@ public class SanPhamDAO {
                     sp.setSoLuongBan(rs.getInt("SoLuongBan"));
                     sp.setHinhAnh(rs.getString("HinhAnh"));
                     sp.setMoTa(rs.getString("MoTa"));
+                    sp.setSoLuongTon(rs.getInt("SoLuongTon"));
+                    sp.setTrangThai(rs.getBoolean("TrangThai"));
+                    sp.setLuotXem(rs.getInt("LuotXem"));
+                    sp.setLuotYeuThich(rs.getInt("LuotYeuThich"));
+                    sp.setDiemDanhGiaTrungBinh(rs.getBigDecimal("DiemDanhGiaTrungBinh"));
+                    sp.setSoLuongDanhGia(rs.getInt("SoLuongDanhGia"));
+                    sp.setMaCH(rs.getInt("MaCH"));
                 }
             }
 
@@ -164,117 +183,125 @@ public class SanPhamDAO {
         return sp;
     }
 
-    // Lấy sản phẩm theo danh mục (có phân trang)
-    public List<SanPham> getProductsByCategory(int categoryId, int page, int pageSize) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            TypedQuery<SanPham> query = em.createQuery(
-                "SELECT s FROM SanPham s WHERE s.danhMuc.maDM = :categoryId AND s.trangThai = true ORDER BY s.ngayTao DESC", 
-                SanPham.class);
-            query.setParameter("categoryId", categoryId);
-            query.setFirstResult(page * pageSize);
-            query.setMaxResults(pageSize);
-            return query.getResultList();
-        } catch (Exception e) {
-            return new ArrayList<>();
-        } finally {
-            em.close();
-        }
-    }
-
-    // Tìm kiếm sản phẩm
-    public List<SanPham> searchProducts(String keyword, int page, int pageSize) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            TypedQuery<SanPham> query = em.createQuery(
-                "SELECT s FROM SanPham s WHERE s.trangThai = true AND (LOWER(s.tenSP) LIKE LOWER(:keyword) OR LOWER(s.moTa) LIKE LOWER(:keyword)) ORDER BY s.soLuongBan DESC", 
-                SanPham.class);
-            query.setParameter("keyword", "%" + keyword + "%");
-            query.setFirstResult(page * pageSize);
-            query.setMaxResults(pageSize);
-            return query.getResultList();
-        } catch (Exception e) {
-            return new ArrayList<>();
-        } finally {
-            em.close();
-        }
-    }
-
-    // CRUD Operations
+    // Thêm sản phẩm mới
     public boolean save(SanPham sanPham) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            em.getTransaction().begin();
-            if (sanPham.getMaSP() == 0) {
-                sanPham.setNgayTao(LocalDateTime.now());
-                sanPham.setNgayCapNhat(LocalDateTime.now());
-                em.persist(sanPham);
-            } else {
-                sanPham.setNgayCapNhat(LocalDateTime.now());
-                em.merge(sanPham);
+        String sql = "INSERT INTO SanPham (TenSP, MoTa, DonGia, SoLuongTon, SoLuongBan, HinhAnh, " +
+                "TrangThai, NgayTao, NgayCapNhat, LuotXem, LuotYeuThich, DiemDanhGiaTrungBinh, " +
+                "SoLuongDanhGia, MaDM, MaCH) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            
+            ps.setString(1, sanPham.getTenSP());
+            ps.setString(2, sanPham.getMoTa());
+            ps.setBigDecimal(3, sanPham.getDonGia());
+            ps.setInt(4, sanPham.getSoLuongTon());
+            ps.setInt(5, sanPham.getSoLuongBan() != null ? sanPham.getSoLuongBan() : 0);
+            ps.setString(6, sanPham.getHinhAnh());
+            ps.setBoolean(7, sanPham.getTrangThai() != null ? sanPham.getTrangThai() : true);
+            ps.setTimestamp(8, new Timestamp(System.currentTimeMillis()));
+            ps.setTimestamp(9, new Timestamp(System.currentTimeMillis()));
+            ps.setInt(10, sanPham.getLuotXem() != null ? sanPham.getLuotXem() : 0);
+            ps.setInt(11, sanPham.getLuotYeuThich() != null ? sanPham.getLuotYeuThich() : 0);
+            ps.setBigDecimal(12, sanPham.getDiemDanhGiaTrungBinh() != null ? sanPham.getDiemDanhGiaTrungBinh() : java.math.BigDecimal.ZERO);
+            ps.setInt(13, sanPham.getSoLuongDanhGia() != null ? sanPham.getSoLuongDanhGia() : 0);
+            ps.setObject(14, sanPham.getMaDM());
+            ps.setInt(15, sanPham.getMaCH());
+            
+            int result = ps.executeUpdate();
+            
+            if (result > 0) {
+                // Lấy ID được tạo tự động
+                try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        sanPham.setMaSP(generatedKeys.getInt(1));
+                    }
+                }
+                System.out.println("Product saved successfully: " + sanPham.getTenSP());
+                return true;
             }
-            em.getTransaction().commit();
-            return true;
+            
         } catch (Exception e) {
-            em.getTransaction().rollback();
+            System.err.println("Error in save: " + e.getMessage());
             e.printStackTrace();
-            return false;
-        } finally {
-            em.close();
         }
+        
+        return false;
     }
-
-    public List<SanPham> findAll(int page, int pageSize) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            TypedQuery<SanPham> query = em.createQuery(
-                "SELECT s FROM SanPham s WHERE s.trangThai = true ORDER BY s.ngayTao DESC", 
-                SanPham.class);
-            query.setFirstResult(page * pageSize);
-            query.setMaxResults(pageSize);
-            return query.getResultList();
+    
+    // Cập nhật sản phẩm
+    public boolean update(SanPham sanPham) {
+        String sql = "UPDATE SanPham SET TenSP = ?, MoTa = ?, DonGia = ?, SoLuongTon = ?, " +
+                "SoLuongBan = ?, HinhAnh = ?, TrangThai = ?, NgayCapNhat = ?, LuotXem = ?, " +
+                "LuotYeuThich = ?, DiemDanhGiaTrungBinh = ?, SoLuongDanhGia = ?, MaDM = ? " +
+                "WHERE MaSP = ?";
+        
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, sanPham.getTenSP());
+            ps.setString(2, sanPham.getMoTa());
+            ps.setBigDecimal(3, sanPham.getDonGia());
+            ps.setInt(4, sanPham.getSoLuongTon());
+            ps.setInt(5, sanPham.getSoLuongBan() != null ? sanPham.getSoLuongBan() : 0);
+            ps.setString(6, sanPham.getHinhAnh());
+            ps.setBoolean(7, sanPham.getTrangThai() != null ? sanPham.getTrangThai() : true);
+            ps.setTimestamp(8, new Timestamp(System.currentTimeMillis()));
+            ps.setInt(9, sanPham.getLuotXem() != null ? sanPham.getLuotXem() : 0);
+            ps.setInt(10, sanPham.getLuotYeuThich() != null ? sanPham.getLuotYeuThich() : 0);
+            ps.setBigDecimal(11, sanPham.getDiemDanhGiaTrungBinh() != null ? sanPham.getDiemDanhGiaTrungBinh() : java.math.BigDecimal.ZERO);
+            ps.setInt(12, sanPham.getSoLuongDanhGia() != null ? sanPham.getSoLuongDanhGia() : 0);
+            ps.setObject(13, sanPham.getMaDM());
+            ps.setInt(14, sanPham.getMaSP());
+            
+            int result = ps.executeUpdate();
+            
+            if (result > 0) {
+                System.out.println("Product updated successfully: " + sanPham.getTenSP());
+                return true;
+            }
+            
         } catch (Exception e) {
-            return new ArrayList<>();
-        } finally {
-            em.close();
+            System.err.println("Error in update: " + e.getMessage());
+            e.printStackTrace();
         }
+        
+        return false;
     }
-
-    public long countProducts() {
-        EntityManager em = emf.createEntityManager();
-        try {
-            TypedQuery<Long> query = em.createQuery(
-                "SELECT COUNT(s) FROM SanPham s WHERE s.trangThai = true", 
-                Long.class);
-            return query.getSingleResult();
+    
+    // Xóa sản phẩm (soft delete)
+    public boolean delete(int maSP) {
+        String sql = "UPDATE SanPham SET TrangThai = 0, NgayCapNhat = ? WHERE MaSP = ?";
+        
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+            ps.setInt(2, maSP);
+            
+            int result = ps.executeUpdate();
+            
+            if (result > 0) {
+                System.out.println("Product deleted successfully: ID = " + maSP);
+                return true;
+            }
+            
         } catch (Exception e) {
-            return 0;
-        } finally {
-            em.close();
+            System.err.println("Error in delete: " + e.getMessage());
+            e.printStackTrace();
         }
+        
+        return false;
     }
 
-    // Phương thức thiếu cho CategoryController
+    // Lấy sản phẩm theo danh mục
     public List<SanPham> findByCategoryId(Integer categoryId) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            TypedQuery<SanPham> query = em.createQuery(
-                "SELECT s FROM SanPham s WHERE s.danhMuc.maDM = :categoryId AND s.trangThai = true ORDER BY s.ngayTao DESC", 
-                SanPham.class);
-            query.setParameter("categoryId", categoryId);
-            return query.getResultList();
-        } catch (Exception e) {
-            // Fallback to JDBC if JPA fails
-            return findByCategoryIdJDBC(categoryId);
-        } finally {
-            em.close();
-        }
-    }
-
-    // Fallback JDBC method for findByCategoryId
-    private List<SanPham> findByCategoryIdJDBC(Integer categoryId) {
         List<SanPham> list = new ArrayList<>();
-        String sql = "SELECT MaSP, TenSP, DonGia, SoLuongBan, HinhAnh, MoTa FROM SanPham WHERE MaDM = ? ORDER BY MaSP DESC";
+        String sql = "SELECT sp.MaSP, sp.TenSP, sp.DonGia, sp.SoLuongBan, sp.HinhAnh, sp.MoTa, " +
+                "sp.MaCH, ch.TenCH FROM SanPham sp " +
+                "LEFT JOIN CuaHang ch ON sp.MaCH = ch.MaCH " +
+                "WHERE sp.MaDM = ? AND sp.TrangThai = 1 AND ch.TrangThai = 1 " +
+                "ORDER BY sp.SoLuongBan DESC";
 
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -289,15 +316,166 @@ public class SanPhamDAO {
                     sp.setSoLuongBan(rs.getInt("SoLuongBan"));
                     sp.setHinhAnh(rs.getString("HinhAnh"));
                     sp.setMoTa(rs.getString("MoTa"));
+                    sp.setMaCH(rs.getInt("MaCH"));
                     list.add(sp);
                 }
             }
 
         } catch (Exception e) {
-            System.err.println("Error in findByCategoryIdJDBC: " + e.getMessage());
+            System.err.println("Error in findByCategoryId: " + e.getMessage());
             e.printStackTrace();
         }
 
+        return list;
+    }
+
+    // Lấy tất cả sản phẩm sắp xếp theo số lượng bán (cho chức năng Xem thêm)
+    public List<SanPham> getAllProductsSorted() {
+        List<SanPham> list = new ArrayList<>();
+        String sql = "SELECT sp.MaSP, sp.TenSP, sp.DonGia, sp.SoLuongBan, sp.HinhAnh, sp.MoTa, " +
+                "sp.SoLuongTon, sp.TrangThai, sp.LuotXem, sp.LuotYeuThich, sp.DiemDanhGiaTrungBinh, " +
+                "sp.SoLuongDanhGia, sp.MaCH, ch.TenCH " +
+                "FROM SanPham sp " +
+                "LEFT JOIN CuaHang ch ON sp.MaCH = ch.MaCH " +
+                "WHERE sp.TrangThai = 1 " +
+                "ORDER BY sp.SoLuongBan DESC, sp.MaSP ASC";
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            System.out.println("Executing getAllProductsSorted query...");
+            int count = 0;
+            while (rs.next()) {
+                SanPham sp = new SanPham();
+                sp.setMaSP(rs.getInt("MaSP"));
+                sp.setTenSP(rs.getString("TenSP"));
+                sp.setDonGia(rs.getBigDecimal("DonGia"));
+                sp.setSoLuongBan(rs.getInt("SoLuongBan"));
+                sp.setHinhAnh(rs.getString("HinhAnh"));
+                sp.setMoTa(rs.getString("MoTa"));
+                sp.setSoLuongTon(rs.getInt("SoLuongTon"));
+                sp.setTrangThai(rs.getBoolean("TrangThai"));
+                sp.setLuotXem(rs.getInt("LuotXem"));
+                sp.setLuotYeuThich(rs.getInt("LuotYeuThich"));
+                sp.setDiemDanhGiaTrungBinh(rs.getBigDecimal("DiemDanhGiaTrungBinh"));
+                sp.setSoLuongDanhGia(rs.getInt("SoLuongDanhGia"));
+                sp.setMaCH(rs.getInt("MaCH"));
+                list.add(sp);
+                count++;
+            }
+            System.out.println("Total products loaded (sorted): " + count);
+
+        } catch (Exception e) {
+            System.err.println("Error in getAllProductsSorted: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    // Lấy tất cả sản phẩm
+    public List<SanPham> getAllProducts() {
+        List<SanPham> list = new ArrayList<>();
+        String sql = "SELECT sp.MaSP, sp.TenSP, sp.DonGia, sp.SoLuongBan, sp.HinhAnh, sp.MoTa, " +
+                "sp.MaCH, ch.TenCH FROM SanPham sp " +
+                "LEFT JOIN CuaHang ch ON sp.MaCH = ch.MaCH " +
+                "WHERE sp.TrangThai = 1 AND ch.TrangThai = 1 " +
+                "ORDER BY sp.SoLuongBan DESC";
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                SanPham sp = new SanPham();
+                sp.setMaSP(rs.getInt("MaSP"));
+                sp.setTenSP(rs.getString("TenSP"));
+                sp.setDonGia(rs.getBigDecimal("DonGia"));
+                sp.setSoLuongBan(rs.getInt("SoLuongBan"));
+                sp.setHinhAnh(rs.getString("HinhAnh"));
+                sp.setMoTa(rs.getString("MoTa"));
+                sp.setMaCH(rs.getInt("MaCH"));
+                list.add(sp);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error in getAllProducts: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+    
+    // Lấy sản phẩm của một cửa hàng
+    public List<SanPham> findByStoreId(Integer storeId) {
+        List<SanPham> list = new ArrayList<>();
+        String sql = "SELECT * FROM SanPham WHERE MaCH = ? AND TrangThai = 1 ORDER BY SoLuongBan DESC";
+
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, storeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    SanPham sp = new SanPham();
+                    sp.setMaSP(rs.getInt("MaSP"));
+                    sp.setTenSP(rs.getString("TenSP"));
+                    sp.setDonGia(rs.getBigDecimal("DonGia"));
+                    sp.setSoLuongBan(rs.getInt("SoLuongBan"));
+                    sp.setHinhAnh(rs.getString("HinhAnh"));
+                    sp.setMoTa(rs.getString("MoTa"));
+                    sp.setMaCH(rs.getInt("MaCH"));
+                    list.add(sp);
+                }
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error in findByStoreId: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+    
+    // Tìm kiếm sản phẩm theo tên
+    public List<SanPham> searchByName(String keyword) {
+        List<SanPham> list = new ArrayList<>();
+        String sql = "SELECT sp.*, ch.TenCH FROM SanPham sp " +
+                "LEFT JOIN CuaHang ch ON sp.MaCH = ch.MaCH " +
+                "WHERE sp.TenSP LIKE ? AND sp.TrangThai = 1 AND ch.TrangThai = 1 " +
+                "ORDER BY sp.SoLuongBan DESC";
+        
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, "%" + keyword + "%");
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    SanPham sp = new SanPham();
+                    sp.setMaSP(rs.getInt("MaSP"));
+                    sp.setTenSP(rs.getString("TenSP"));
+                    sp.setDonGia(rs.getBigDecimal("DonGia"));
+                    sp.setSoLuongBan(rs.getInt("SoLuongBan"));
+                    sp.setHinhAnh(rs.getString("HinhAnh"));
+                    sp.setMoTa(rs.getString("MoTa"));
+                    sp.setSoLuongTon(rs.getInt("SoLuongTon"));
+                    sp.setTrangThai(rs.getBoolean("TrangThai"));
+                    sp.setLuotXem(rs.getInt("LuotXem"));
+                    sp.setLuotYeuThich(rs.getInt("LuotYeuThich"));
+                    sp.setDiemDanhGiaTrungBinh(rs.getBigDecimal("DiemDanhGiaTrungBinh"));
+                    sp.setSoLuongDanhGia(rs.getInt("SoLuongDanhGia"));
+                    sp.setMaCH(rs.getInt("MaCH"));
+                    list.add(sp);
+                }
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error in searchByName: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
         return list;
     }
 }

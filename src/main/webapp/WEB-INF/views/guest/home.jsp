@@ -671,6 +671,162 @@
             }
         }
         
+        /* SECTION HEADER STYLING - ENHANCED */
+        .section-header-container {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 2rem 3rem;
+            margin-bottom: 3rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+        }
+        
+        .section-header-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shine 3s infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        
+        .section-title-main {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .fire-icon {
+            font-size: 3rem;
+            animation: fireFlicker 1.5s infinite;
+            filter: drop-shadow(0 0 10px rgba(255,165,0,0.8));
+        }
+        
+        @keyframes fireFlicker {
+            0%, 100% { 
+                transform: scale(1) rotate(-5deg);
+                color: #ff6b6b;
+            }
+            25% { 
+                transform: scale(1.1) rotate(5deg);
+                color: #ffa726;
+            }
+            50% { 
+                transform: scale(1.05) rotate(-3deg);
+                color: #ff9800;
+            }
+            75% { 
+                transform: scale(1.08) rotate(3deg);
+                color: #ff5722;
+            }
+        }
+        
+        .star-icon {
+            animation: starPulse 2s infinite;
+            filter: drop-shadow(0 0 10px rgba(255,215,0,0.8));
+        }
+        
+        @keyframes starPulse {
+            0%, 100% { 
+                transform: scale(1) rotate(0deg);
+                color: #ffd700;
+            }
+            50% { 
+                transform: scale(1.2) rotate(180deg);
+                color: #ffed4e;
+            }
+        }
+        
+        .badge-top10 {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+            color: white;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 5px 20px rgba(255,107,107,0.4);
+            position: relative;
+            z-index: 2;
+            animation: badgeBounce 2s infinite;
+            border: 3px solid rgba(255,255,255,0.5);
+        }
+        
+        @keyframes badgeBounce {
+            0%, 100% { 
+                transform: translateY(0) scale(1);
+                box-shadow: 0 5px 20px rgba(255,107,107,0.4);
+            }
+            50% { 
+                transform: translateY(-5px) scale(1.05);
+                box-shadow: 0 10px 30px rgba(255,107,107,0.6);
+            }
+        }
+        
+        .lightning-icon {
+            animation: lightning 1s infinite;
+            margin: 0 0.5rem;
+        }
+        
+        @keyframes lightning {
+            0%, 100% { 
+                opacity: 1;
+                transform: scale(1);
+                color: #ffeb3b;
+            }
+            50% { 
+                opacity: 0.5;
+                transform: scale(1.3);
+                color: #ffc107;
+            }
+        }
+        
+        .sparkle-effect {
+            position: absolute;
+            top: 50%;
+            right: 5%;
+            font-size: 2rem;
+            opacity: 0;
+            animation: sparkle 3s infinite;
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { 
+                opacity: 0;
+                transform: translateY(0) scale(0.5) rotate(0deg);
+            }
+            50% { 
+                opacity: 1;
+                transform: translateY(-10px) scale(1) rotate(180deg);
+            }
+        }
+        
+        .sparkle-effect:nth-child(2) {
+            right: 10%;
+            animation-delay: 1s;
+        }
+        
+        .sparkle-effect:nth-child(3) {
+            right: 15%;
+            animation-delay: 2s;
+        }
+        
         /* Enhanced icon styling for each slide */
         #banner1 .hero-icon {
             filter: drop-shadow(0 0 10px rgba(102, 126, 234, 0.4));
@@ -938,7 +1094,14 @@
             <h2 class="section-title">
                 <i class="fas fa-star text-warning me-2"></i>Sản phẩm nổi bật
             </h2>
-            <span class="badge bg-primary fs-6">Top 10 bán chạy</span>
+            <c:choose>
+                <c:when test="${showAll}">
+                    <span class="badge bg-success fs-6">Hiển thị tất cả ${fn:length(products)} sản phẩm</span>
+                </c:when>
+                <c:otherwise>
+                    <span class="badge bg-primary fs-6">Top 10 bán chạy</span>
+                </c:otherwise>
+            </c:choose>
         </div>
 
         <c:choose>
@@ -949,7 +1112,7 @@
                     <p>${errorMessage}</p>
                 </div>
             </c:when>
-            <c:when test="${empty top10}">
+            <c:when test="${empty products}">
                 <div class="alert alert-warning text-center py-5">
                     <i class="fas fa-box-open fa-3x mb-3"></i>
                     <h4>Chưa có sản phẩm</h4>
@@ -958,11 +1121,11 @@
             </c:when>
             <c:otherwise>
                 <div class="row" id="productsContainer">
-                    <c:forEach var="sp" items="${top10}" varStatus="status">
+                    <c:forEach var="sp" items="${products}" varStatus="status">
                         <div class="col-lg-3 col-md-4 col-sm-6 mb-4 fade-in-up" style="animation-delay: ${status.index * 0.1}s;">
                             <div class="product-card">
-                                <!-- Hot Badge for top 3 products -->
-                                <c:if test="${status.index < 3}">
+                                <!-- Hot Badge for top 3 products (chỉ hiển thị khi chưa showAll) -->
+                                <c:if test="${!showAll && status.index < 3}">
                                     <div class="badge-hot">
                                         <i class="fas fa-fire"></i> HOT
                                     </div>
@@ -999,16 +1162,18 @@
                                     <!-- Price -->
                                     <div class="price mb-2">
                                         <span class="h5 text-danger fw-bold">
-                                            <fmt:formatNumber value="${sp.donGia}" type="currency" currencySymbol="" maxFractionDigits="0"/>₫
+                                            <fmt:formatNumber value="${sp.donGia}" type="number" groupingUsed="true"/>₫
                                         </span>
                                     </div>
                                     
                                     <!-- Rating and Sales -->
                                     <div class="d-flex justify-content-between align-items-center mb-3">
                                         <div class="rating">
-                                            <c:forEach begin="1" end="5" var="i">
-                                                <i class="fas fa-star text-warning"></i>
-                                            </c:forEach>
+                                            <i class="fas fa-star text-warning"></i>
+                                            <i class="fas fa-star text-warning"></i>
+                                            <i class="fas fa-star text-warning"></i>
+                                            <i class="fas fa-star text-warning"></i>
+                                            <i class="fas fa-star text-warning"></i>
                                             <span class="ms-1 small text-muted">(4.8)</span>
                                         </div>
                                         <small class="text-muted">
@@ -1028,16 +1193,30 @@
                     </c:forEach>
                 </div>
                 
-                <!-- Load More Section -->
-                <div class="text-center mt-5">
-                    <button class="load-more-btn" onclick="loadMoreProducts()" id="loadMoreBtn">
-                        <i class="fas fa-plus me-2"></i>Xem thêm sản phẩm
-                        <div class="spinner-border spinner-border-sm ms-2 d-none" id="loadingSpinner"></div>
-                    </button>
-                    <p class="text-muted mt-3">
-                        <small>Đang hiển thị <span id="currentCount">${fn:length(top10)}</span> sản phẩm</small>
-                    </p>
-                </div>
+                <!-- Load More Section - CHỈ hiển thị khi chưa showAll -->
+                <c:if test="${!showAll && fn:length(products) < totalProducts}">
+                    <div class="text-center mt-5">
+                        <a href="${pageContext.request.contextPath}/guest/home?showAll=true" class="load-more-btn text-decoration-none">
+                            <i class="fas fa-plus me-2"></i>Xem thêm sản phẩm
+                        </a>
+                        <p class="text-muted mt-3">
+                            <small>Đang hiển thị <span id="currentCount">${fn:length(products)}</span> / ${totalProducts} sản phẩm</small>
+                        </p>
+                    </div>
+                </c:if>
+                
+                <!-- Message khi đã hiển thị tất cả -->
+                <c:if test="${showAll}">
+                    <div class="text-center mt-5">
+                        <p class="text-success fw-bold">
+                            <i class="fas fa-check-circle me-2"></i>
+                            🎉 Đã hiển thị tất cả ${totalProducts} sản phẩm!
+                        </p>
+                        <a href="${pageContext.request.contextPath}/guest/home" class="btn btn-outline-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Quay lại Top 10
+                        </a>
+                    </div>
+                </c:if>
             </c:otherwise>
         </c:choose>
     </section>
@@ -1379,105 +1558,223 @@ notificationStyles.textContent = `
 `;
 document.head.appendChild(notificationStyles);
 
-// Load more products
+// Load more products - REAL IMPLEMENTATION
 let currentPage = 1;
+const PRODUCTS_PER_PAGE = 4; // Thay đổi từ 8 thành 4 sản phẩm mỗi lần load
+
 function loadMoreProducts() {
-    const btn = document.getElementById('loadMoreBtn');
-    const spinner = document.getElementById('loadingSpinner');
-    const counter = document.getElementById('currentCount');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const currentCount = document.getElementById('currentCount');
     
     // Show loading state
-    btn.disabled = true;
-    spinner.classList.remove('d-none');
+    loadMoreBtn.disabled = true;
+    loadingSpinner.classList.remove('d-none');
     
-    // Simulate API call
-    setTimeout(() => {
-        currentPage++;
-        const currentCount = parseInt(counter.textContent);
-        const newCount = currentCount + 10;
-        counter.textContent = newCount;
-        
-        // Hide loading
-        btn.disabled = false;
-        spinner.classList.add('d-none');
-        
-        showNotification('Đã tải thêm 10 sản phẩm! Tổng: ' + newCount, 'success');
-        
-        // Hide button after 3 pages
-        if (currentPage >= 3) {
-            btn.innerHTML = '<i class="fas fa-check me-2"></i>Đã hiển thị tất cả sản phẩm';
-            btn.disabled = true;
-        }
-    }, 1500);
+    // GỬI currentPage trước khi tăng (KHÔNG tăng trước!)
+    console.log('Loading more products - Page:', currentPage, 'Size:', PRODUCTS_PER_PAGE);
+    
+    // Make AJAX request to load more products
+    fetch('${pageContext.request.contextPath}/guest/home/loadmore?page=' + currentPage + '&size=' + PRODUCTS_PER_PAGE)
+        .then(response => response.json())
+        .then(data => {
+            console.log('Load more response:', data);
+            
+            if (data.success && data.products && data.products.length > 0) {
+                // Add new products to container
+                const productsContainer = document.getElementById('productsContainer');
+                
+                data.products.forEach((product, index) => {
+                    const productCard = createProductCard(product, (currentPage - 1) * PRODUCTS_PER_PAGE + index);
+                    productsContainer.appendChild(productCard);
+                });
+                
+                // Tăng currentPage SAU khi load thành công
+                currentPage++;
+                
+                // Update current count
+                const newCount = parseInt(currentCount.textContent) + data.products.length;
+                currentCount.textContent = newCount;
+                
+                // Show success notification
+                showNotification(data.message || 'Đã tải thêm ' + data.products.length + ' sản phẩm!', 'success');
+                
+                // Hide load more button if no more products
+                if (!data.hasMore || newCount >= data.totalProducts) {
+                    loadMoreBtn.style.display = 'none';
+                    
+                    // Show completion message
+                    const completionMsg = document.createElement('p');
+                    completionMsg.className = 'text-muted text-center mt-3';
+                    completionMsg.innerHTML = '<small><i class="fas fa-check-circle me-2 text-success"></i>🎉 Đã hiển thị tất cả ' + data.totalProducts + ' sản phẩm!</small>';
+                    loadMoreBtn.parentElement.appendChild(completionMsg);
+                    
+                    // Show final notification
+                    setTimeout(() => {
+                        showNotification('🎉 Đã hiển thị hết tất cả sản phẩm trong cửa hàng!', 'info');
+                    }, 500);
+                }
+                
+                // Initialize images for new products
+                initializeProductImages();
+                
+            } else {
+                // No more products
+                loadMoreBtn.style.display = 'none';
+                showNotification('🎉 Đã hiển thị hết tất cả sản phẩm!', 'info');
+                
+                // Show completion message
+                const completionMsg = document.createElement('p');
+                completionMsg.className = 'text-muted text-center mt-3';
+                completionMsg.innerHTML = '<small><i class="fas fa-check-circle me-2 text-success"></i>Đã hiển thị tất cả sản phẩm có sẵn</small>';
+                loadMoreBtn.parentElement.appendChild(completionMsg);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading more products:', error);
+            showNotification('Có lỗi xảy ra khi tải sản phẩm. Vui lòng thử lại!', 'error');
+            // KHÔNG cần revert currentPage vì chưa tăng
+        })
+        .finally(() => {
+            // Hide loading state
+            loadMoreBtn.disabled = false;
+            loadingSpinner.classList.add('d-none');
+        });
 }
 
-// Quick add to cart - simplified for guest
-function quickAddToCart(productId) {
-    const button = event.target;
-    const originalText = button.innerHTML;
+// Create product card HTML
+function createProductCard(product, index) {
+    const colDiv = document.createElement('div');
+    colDiv.className = 'col-lg-3 col-md-4 col-sm-6 mb-4 fade-in-up';
+    colDiv.style.animationDelay = (index * 0.1) + 's';
     
-    // Loading state
-    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang thêm...';
-    button.disabled = true;
+    const contextPath = '${pageContext.request.contextPath}';
+    const formattedPrice = new Intl.NumberFormat('vi-VN').format(product.donGia);
     
-    // For guest users, show message to login/register
-    setTimeout(() => {
-        button.innerHTML = '<i class="fas fa-info-circle"></i> Cần đăng nhập';
-        button.classList.replace('btn-success', 'btn-warning');
-        
-        showNotification('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!', 'warning');
-        
-        setTimeout(() => {
-            button.innerHTML = '<i class="fas fa-cart-plus"></i> Mua';
-            button.classList.replace('btn-warning', 'btn-success');
-            button.disabled = false;
-        }, 2000);
-    }, 1000);
+    colDiv.innerHTML = `
+        <div class="product-card">
+            ${index < 3 ? '<div class="badge-hot"><i class="fas fa-fire"></i> HOT</div>' : ''}
+            
+            <div class="product-image-container">
+                <img src="${contextPath}/img/${product.hinhAnh}"
+                     alt="${product.tenSP}"
+                     class="product-image"
+                     onerror="this.src='${contextPath}/img/Logo_HCMUTE.png';">
+                
+                <div class="product-overlay">
+                    <div class="d-flex gap-2">
+                        <a href="${contextPath}/guest/product?id=${product.maSP}" 
+                           class="btn btn-warning btn-sm">
+                            <i class="fas fa-eye"></i> Xem chi tiết
+                        </a>
+                        <button class="btn btn-success btn-sm" onclick="quickAddToCart(${product.maSP})">
+                            <i class="fas fa-cart-plus"></i> Mua
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-body p-3">
+                <h6 class="card-title fw-bold mb-2" style="height: 48px; overflow: hidden;">
+                    <a href="${contextPath}/guest/product?id=${product.maSP}" 
+                       class="text-decoration-none text-dark">${product.tenSP}</a>
+                </h6>
+                
+                <div class="price mb-2">
+                    <span class="h5 text-danger fw-bold">
+                        ${formattedPrice}₫
+                    </span>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="rating">
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <i class="fas fa-star text-warning"></i>
+                        <span class="ms-1 small text-muted">(4.8)</span>
+                    </div>
+                    <small class="text-muted">
+                        <i class="fas fa-chart-line"></i> ${product.soLuongBan}
+                    </small>
+                </div>
+                
+                <div class="d-grid">
+                    <button class="btn btn-primary" onclick="addToCart(${product.maSP})">
+                        <i class="fas fa-shopping-cart me-2"></i>Thêm vào giỏ
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    return colDiv;
 }
 
-// Add to cart - simplified for guest
+// Add to cart functionality
 function addToCart(productId) {
-    const button = event.target;
-    const originalText = button.innerHTML;
+    // Check if user is logged in
+    const isLoggedIn = '${sessionScope.user}' !== '';
     
-    // Loading state
-    button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang thêm...';
-    button.disabled = true;
-    
-    // For guest users, show message to login/register
-    setTimeout(() => {
-        button.innerHTML = '<i class="fas fa-info-circle me-2"></i>Cần đăng nhập';
-        button.classList.replace('btn-primary', 'btn-warning');
-        
+    if (!isLoggedIn) {
         showNotification('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng!', 'warning');
-        
         setTimeout(() => {
-            button.innerHTML = originalText;
-            button.classList.replace('btn-warning', 'btn-primary');
-            button.disabled = false;
+            window.location.href = '${pageContext.request.contextPath}/auth/login';
         }, 2000);
-    }, 1000);
+        return;
+    }
+    
+    // Show loading
+    showNotification('Đang thêm vào giỏ hàng...', 'info');
+    
+    // Make AJAX request to add to cart
+    fetch('${pageContext.request.contextPath}/user/cart/add', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'productId=' + productId + '&quantity=1'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Đã thêm sản phẩm vào giỏ hàng!', 'success');
+            // Update cart count in header if exists
+            updateCartCount();
+        } else {
+            showNotification(data.message || 'Có lỗi xảy ra khi thêm vào giỏ hàng!', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding to cart:', error);
+        showNotification('Có lỗi xảy ra khi thêm vào giỏ hàng!', 'error');
+    });
 }
 
-// Remove authentication-related functions
-// Check if user is logged in - always false for guest page
-function isUserLoggedIn() {
-    return false; // Guest page always returns false
+// Quick add to cart (same as addToCart but with different notification)
+function quickAddToCart(productId) {
+    addToCart(productId);
 }
 
-// Remove pending actions handling as it's not needed for guest
-function handlePendingActions() {
-    // No pending actions for guest users
-    console.log('Guest page - no pending actions to handle');
-}
-
-// Remove execute functions as they're not needed for guest
-function executeAddToCart(productId) {
-    console.log('Guest page - redirecting to login');
-}
-
-function executeQuickAdd(productId) {
-    console.log('Guest page - redirecting to login');
+// Update cart count in header
+function updateCartCount() {
+    const cartCountElement = document.querySelector('.cart-count, .badge');
+    if (cartCountElement) {
+        fetch('${pageContext.request.contextPath}/user/cart/count')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    cartCountElement.textContent = data.count;
+                    // Add animation to cart icon
+                    cartCountElement.classList.add('animate__animated', 'animate__bounceIn');
+                    setTimeout(() => {
+                        cartCountElement.classList.remove('animate__animated', 'animate__bounceIn');
+                    }, 1000);
+                }
+            })
+            .catch(error => console.error('Error updating cart count:', error));
+    }
 }
 </script>
 </body>

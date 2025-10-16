@@ -235,7 +235,7 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li>
-                            <a class="dropdown-item" href="${pageContext.request.contextPath}/guest/products">
+                            <a class="dropdown-item" href="${pageContext.request.contextPath}/guest/home?showAll=true">
                                 <i class="fas fa-list me-2"></i>Tất cả sản phẩm
                             </a>
                         </li>
@@ -270,11 +270,6 @@
                         <li>
                             <a class="dropdown-item" href="${pageContext.request.contextPath}/guest/supplier/featured">
                                 <i class="fas fa-star me-2"></i>Nhà cung cấp nổi bật
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="${pageContext.request.contextPath}/guest/supplier/new">
-                                <i class="fas fa-plus me-2"></i>Nhà cung cấp mới
                             </a>
                         </li>
                     </ul>

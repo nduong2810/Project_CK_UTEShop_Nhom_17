@@ -45,8 +45,14 @@ public class GuestServlet extends HttpServlet {
                 loadHomeData(req);
                 view = "/WEB-INF/views/guest/home.jsp";
                 break;
+            case "/loadMoreProducts":
+                // Forward request đến LoadMoreController để xử lý AJAX
+                System.out.println("GuestServlet - Forwarding loadMoreProducts to LoadMoreController");
+                req.getRequestDispatcher("/guest/loadMoreProducts").include(req, resp);
+                return;
             default:
                 // Redirect về /guest/home nếu path không hợp lệ
+                System.out.println("GuestServlet - Unknown path: " + path + ", redirecting to home");
                 resp.sendRedirect(req.getContextPath() + "/guest/home");
                 return;
         }

@@ -2,6 +2,8 @@ package com.uteshop.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "CuaHang")
@@ -9,7 +11,7 @@ public class CuaHang {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MaCH")
-    private int maCH;
+    private Integer maCH;
     
     @Column(name = "TenCH", nullable = false, length = 255)
     private String tenCH;
@@ -26,12 +28,15 @@ public class CuaHang {
     @Column(name = "Email", length = 100)
     private String email;
     
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaND", nullable = false)
+    @Column(name = "MaND", nullable = false)
+    private Integer maND;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaND", insertable = false, updatable = false)
     private NguoiDung nguoiDung;
     
     @Column(name = "TrangThai", nullable = false)
-    private boolean trangThai = true;
+    private Boolean trangThai = true;
     
     @Column(name = "NgayTao", nullable = false)
     private LocalDateTime ngayTao;
@@ -39,48 +44,122 @@ public class CuaHang {
     @Column(name = "NgayCapNhat")
     private LocalDateTime ngayCapNhat;
 
+    // One-to-many relationship with products
+    @OneToMany(mappedBy = "cuaHang", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<SanPham> sanPhams = new ArrayList<>();
+
     // Constructors
     public CuaHang() {
         this.ngayTao = LocalDateTime.now();
+        this.trangThai = true;
     }
 
-    public CuaHang(String tenCH, String diaChi, NguoiDung nguoiDung) {
+    public CuaHang(String tenCH, String diaChi, Integer maND) {
         this();
         this.tenCH = tenCH;
         this.diaChi = diaChi;
-        this.nguoiDung = nguoiDung;
+        this.maND = maND;
     }
 
     // Getters and Setters
-    public int getMaCH() { return maCH; }
-    public void setMaCH(int maCH) { this.maCH = maCH; }
+    public Integer getMaCH() { 
+        return maCH; 
+    }
+    
+    public void setMaCH(Integer maCH) { 
+        this.maCH = maCH; 
+    }
 
-    public String getTenCH() { return tenCH; }
-    public void setTenCH(String tenCH) { this.tenCH = tenCH; }
+    public String getTenCH() { 
+        return tenCH; 
+    }
+    
+    public void setTenCH(String tenCH) { 
+        this.tenCH = tenCH; 
+    }
 
-    public String getMoTa() { return moTa; }
-    public void setMoTa(String moTa) { this.moTa = moTa; }
+    public String getMoTa() { 
+        return moTa; 
+    }
+    
+    public void setMoTa(String moTa) { 
+        this.moTa = moTa; 
+    }
 
-    public String getDiaChi() { return diaChi; }
-    public void setDiaChi(String diaChi) { this.diaChi = diaChi; }
+    public String getDiaChi() { 
+        return diaChi; 
+    }
+    
+    public void setDiaChi(String diaChi) { 
+        this.diaChi = diaChi; 
+    }
 
-    public String getSoDienThoai() { return soDienThoai; }
-    public void setSoDienThoai(String soDienThoai) { this.soDienThoai = soDienThoai; }
+    public String getSoDienThoai() { 
+        return soDienThoai; 
+    }
+    
+    public void setSoDienThoai(String soDienThoai) { 
+        this.soDienThoai = soDienThoai; 
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public String getEmail() { 
+        return email; 
+    }
+    
+    public void setEmail(String email) { 
+        this.email = email; 
+    }
 
-    public NguoiDung getNguoiDung() { return nguoiDung; }
-    public void setNguoiDung(NguoiDung nguoiDung) { this.nguoiDung = nguoiDung; }
+    public Integer getMaND() {
+        return maND;
+    }
 
-    public boolean isTrangThai() { return trangThai; }
-    public void setTrangThai(boolean trangThai) { this.trangThai = trangThai; }
+    public void setMaND(Integer maND) {
+        this.maND = maND;
+    }
 
-    public LocalDateTime getNgayTao() { return ngayTao; }
-    public void setNgayTao(LocalDateTime ngayTao) { this.ngayTao = ngayTao; }
+    public NguoiDung getNguoiDung() { 
+        return nguoiDung; 
+    }
+    
+    public void setNguoiDung(NguoiDung nguoiDung) { 
+        this.nguoiDung = nguoiDung;
+        if (nguoiDung != null) {
+            this.maND = nguoiDung.getMaND();
+        }
+    }
 
-    public LocalDateTime getNgayCapNhat() { return ngayCapNhat; }
-    public void setNgayCapNhat(LocalDateTime ngayCapNhat) { this.ngayCapNhat = ngayCapNhat; }
+    public Boolean getTrangThai() { 
+        return trangThai; 
+    }
+    
+    public void setTrangThai(Boolean trangThai) { 
+        this.trangThai = trangThai; 
+    }
+
+    public LocalDateTime getNgayTao() { 
+        return ngayTao; 
+    }
+    
+    public void setNgayTao(LocalDateTime ngayTao) { 
+        this.ngayTao = ngayTao; 
+    }
+
+    public LocalDateTime getNgayCapNhat() { 
+        return ngayCapNhat; 
+    }
+    
+    public void setNgayCapNhat(LocalDateTime ngayCapNhat) { 
+        this.ngayCapNhat = ngayCapNhat; 
+    }
+
+    public List<SanPham> getSanPhams() {
+        return sanPhams;
+    }
+
+    public void setSanPhams(List<SanPham> sanPhams) {
+        this.sanPhams = sanPhams;
+    }
 
     @PreUpdate
     public void preUpdate() {
@@ -94,6 +173,7 @@ public class CuaHang {
                 ", tenCH='" + tenCH + '\'' +
                 ", diaChi='" + diaChi + '\'' +
                 ", trangThai=" + trangThai +
+                ", nguoiDung=" + (nguoiDung != null ? nguoiDung.getHoTen() : "null") +
                 '}';
     }
 }

@@ -196,6 +196,15 @@
                                     <div class="fw-bold">Người bán</div>
                                     <small class="text-muted">Quản lý shop và bán hàng</small>
                                 </label>
+                                
+                                <label class="role-card" for="roleAdmin">
+                                    <input type="radio" name="role" value="ADMIN" id="roleAdmin">
+                                    <div class="role-icon">
+                                        <i class="fas fa-crown"></i>
+                                    </div>
+                                    <div class="fw-bold">Quản trị viên</div>
+                                    <small class="text-muted">Quản lý hệ thống</small>
+                                </label>
                             </div>
                             
                             <!-- Username/Email -->

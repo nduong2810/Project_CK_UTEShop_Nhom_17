@@ -42,6 +42,15 @@ public class ChiTietGioHang {
         this.ngayThem = LocalDateTime.now();
     }
     
+    // Constructor nhận Double (để tương thích với SanPham.getDonGia())
+    public ChiTietGioHang(GioHang gioHang, SanPham sanPham, int soLuong, Double donGia) {
+        this.gioHang = gioHang;
+        this.sanPham = sanPham;
+        this.soLuong = soLuong;
+        this.donGia = BigDecimal.valueOf(donGia);
+        this.ngayThem = LocalDateTime.now();
+    }
+    
     // Getters and Setters
     public int getMaCTGH() { return maCTGH; }
     public void setMaCTGH(int maCTGH) { this.maCTGH = maCTGH; }
