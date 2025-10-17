@@ -22,26 +22,46 @@ public class HomeController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
+        System.out.println("============================================");
+        System.out.println("HomeController.doGet() CALLED!");
+        System.out.println("Request URI: " + request.getRequestURI());
+        System.out.println("Context Path: " + request.getContextPath());
+        System.out.println("============================================");
+        
+        // Ensure request/response use UTF-8 to avoid mojibake
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("text/html;charset=UTF-8");
+
         String requestURI = request.getRequestURI();
         String contextPath = request.getContextPath();
         String path = requestURI.substring(contextPath.length());
         
+        System.out.println("Processing path: " + path);
+        
         // Xử lý load more products
         if (path.equals("/guest/home/loadmore")) {
+            System.out.println("Handling loadmore request");
             handleLoadMore(request, response);
             return;
         }
         
         // Xử lý trang home bình thường
+        System.out.println("Handling home page request");
         handleHomePage(request, response);
     }
     
     private void handleHomePage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
+        System.out.println(">>> handleHomePage() started");
+        
         try {
             // Kiểm tra xem có yêu cầu hiển thị tất cả sản phẩm không
             String showAllParam = request.getParameter("showAll");
             boolean showAll = "true".equals(showAllParam);
+            
+            System.out.println("ShowAll parameter: " + showAll);
             
             List<SanPham> products;
             
@@ -57,6 +77,7 @@ public class HomeController extends HttpServlet {
             
             // Lấy danh sách danh mục để hiển thị bộ lọc
             List<DanhMuc> categories = danhMucDAO.getAllCategories();
+            System.out.println("Loaded categories: " + categories.size());
             
             // Đếm tổng số sản phẩm
             long totalProducts = sanPhamDAO.countProducts();
@@ -69,11 +90,16 @@ public class HomeController extends HttpServlet {
             request.setAttribute("totalProducts", totalProducts);
             request.setAttribute("showAll", showAll);
             
+            System.out.println("All attributes set, forwarding to JSP...");
+            
             // Forward to JSP
             request.getRequestDispatcher("/WEB-INF/views/guest/home.jsp").forward(request, response);
             
+            System.out.println(">>> handleHomePage() completed successfully");
+            
         } catch (Exception e) {
-            System.err.println("Error in HomeController: " + e.getMessage());
+            System.err.println("!!! ERROR in HomeController.handleHomePage()");
+            System.err.println("Error message: " + e.getMessage());
             e.printStackTrace();
             request.setAttribute("errorMessage", "Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
             request.getRequestDispatcher("/WEB-INF/views/guest/home.jsp").forward(request, response);

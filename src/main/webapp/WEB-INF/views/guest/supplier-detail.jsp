@@ -150,10 +150,10 @@
                                         <div class="product-card">
                                             <!-- Product Image -->
                                             <div class="product-image-container">
-                                                <img src="${pageContext.request.contextPath}/img/${sp.hinhAnh}"
+                                                <img src="${pageContext.request.contextPath}/assets/img/${sp.hinhAnh}"
                                                      alt="${sp.tenSP}"
                                                      class="product-image"
-                                                     onerror="this.src='${pageContext.request.contextPath}/img/Logo_HCMUTE.png';">
+                                                     onerror="this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png';">
                                             </div>
                                             
                                             <!-- Product Info -->

@@ -8,8 +8,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DanhMucDAO {
+
+    private static final Logger LOGGER = Logger.getLogger(DanhMucDAO.class.getName());
 
     public List<DanhMuc> getAllCategories() {
         List<DanhMuc> categoryList = new ArrayList<>();
@@ -20,20 +24,19 @@ public class DanhMucDAO {
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
-            System.out.println("Loading categories from database...");
+            LOGGER.info("Loading categories from database...");
             while (rs.next()) {
                 DanhMuc danhMuc = new DanhMuc();
                 danhMuc.setMaDM(rs.getInt("MaDM"));
                 danhMuc.setTenDM(rs.getString("TenDM"));
                 danhMuc.setMoTa(rs.getString("moTa"));
-                
+
                 categoryList.add(danhMuc);
-                System.out.println("Found category: " + danhMuc.getTenDM());
+                LOGGER.info("Found category: " + danhMuc.getTenDM());
             }
-            System.out.println("Total categories loaded: " + categoryList.size());
+            LOGGER.info("Total categories loaded: " + categoryList.size());
         } catch (Exception e) {
-            System.err.println("Error in DanhMucDAO.getAllCategories: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error in DanhMucDAO.getAllCategories", e);
         }
 
         return categoryList;
@@ -61,8 +64,7 @@ public class DanhMucDAO {
             }
 
         } catch (Exception e) {
-            System.err.println("Error in DanhMucDAO.findById: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error in DanhMucDAO.findById", e);
         }
 
         return danhMuc;
@@ -88,13 +90,12 @@ public class DanhMucDAO {
                 danhMuc.setTenDM(rs.getString("TenDM"));
                 danhMuc.setMoTa(rs.getString("moTa"));
                 categoryList.add(danhMuc);
-                System.out.println("Category with products: " + danhMuc.getTenDM() + 
+                LOGGER.info("Category with products: " + danhMuc.getTenDM() + 
                                  " (" + rs.getInt("SoLuongSanPham") + " products)");
             }
 
         } catch (Exception e) {
-            System.err.println("Error in DanhMucDAO.getCategoriesWithProducts: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error in DanhMucDAO.getCategoriesWithProducts", e);
         }
 
         return categoryList;
@@ -103,7 +104,7 @@ public class DanhMucDAO {
     // Đếm tổng số danh mục
     public long countCategories() {
         String sql = "SELECT COUNT(*) FROM DanhMuc";
-        
+
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -113,8 +114,7 @@ public class DanhMucDAO {
             }
 
         } catch (Exception e) {
-            System.err.println("Error in countCategories: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Error in countCategories", e);
         }
 
         return 0;

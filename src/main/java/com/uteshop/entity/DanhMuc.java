@@ -1,147 +1,159 @@
 package com.uteshop.entity;
 
-import jakarta.persistence.*;
 import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.List;
+import java.sql.Timestamp;
 
-@Entity
-@Table(name = "DanhMuc")
+/**
+ * Entity class for DanhMuc (Category)
+ */
 public class DanhMuc implements Serializable {
     private static final long serialVersionUID = 1L;
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "MaDM")
-    private Integer maDM;
-
-    @Column(name = "TenDM", nullable = false, length = 255)
-    private String tenDM;
-
-    @Column(name = "MoTa", columnDefinition = "NVARCHAR(MAX)")
-    private String moTa;
-
-    @Column(name = "TrangThai")
-    private Integer trangThai = 1;
-
-    @Column(name = "MaCha")
-    private Integer maCha;
-
-    @Column(name = "NgayTao")
-    private LocalDateTime ngayTao;
-
-    @Column(name = "NgayCapNhat")
-    private LocalDateTime ngayCapNhat;
-
-    // Self-referencing relationship for parent category
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaCha", insertable = false, updatable = false)
-    private DanhMuc danhMucCha;
-
-    // One-to-many relationship for child categories
-    @OneToMany(mappedBy = "danhMucCha", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<DanhMuc> danhMucCon;
-
+    
+    private int maDM;           // MaDM - Category ID
+    private String tenDM;       // TenDM - Category Name  
+    private String moTa;        // MoTa - Description
+    private String hinhAnh;     // HinhAnh - Image path
+    private Timestamp ngayTao;  // NgayTao - Created date
+    private Timestamp ngayCapNhat; // NgayCapNhat - Updated date
+    private int trangThai;      // TrangThai - Status (1=active, 0=inactive)
+    
     // Default constructor
     public DanhMuc() {
-        this.ngayTao = LocalDateTime.now();
-        this.ngayCapNhat = LocalDateTime.now();
     }
-
-    // Constructor with parameters
-    public DanhMuc(String tenDM, String moTa) {
-        this();
+    
+    // Constructor with essential fields
+    public DanhMuc(int maDM, String tenDM) {
+        this.maDM = maDM;
+        this.tenDM = tenDM;
+    }
+    
+    // Full constructor
+    public DanhMuc(int maDM, String tenDM, String moTa, String hinhAnh, 
+                   Timestamp ngayTao, Timestamp ngayCapNhat, int trangThai) {
+        this.maDM = maDM;
         this.tenDM = tenDM;
         this.moTa = moTa;
-        this.trangThai = 1;
+        this.hinhAnh = hinhAnh;
+        this.ngayTao = ngayTao;
+        this.ngayCapNhat = ngayCapNhat;
+        this.trangThai = trangThai;
     }
-
+    
     // Getters and Setters
-    public Integer getMaDM() {
+    public int getMaDM() {
         return maDM;
     }
-
-    public void setMaDM(Integer maDM) {
+    
+    public void setMaDM(int maDM) {
         this.maDM = maDM;
     }
-
+    
     public String getTenDM() {
         return tenDM;
     }
-
+    
     public void setTenDM(String tenDM) {
         this.tenDM = tenDM;
     }
-
+    
     public String getMoTa() {
         return moTa;
     }
-
+    
     public void setMoTa(String moTa) {
         this.moTa = moTa;
     }
-
-    public Integer getTrangThai() {
-        return trangThai;
+    
+    public String getHinhAnh() {
+        return hinhAnh;
     }
-
-    public void setTrangThai(Integer trangThai) {
-        this.trangThai = trangThai;
+    
+    public void setHinhAnh(String hinhAnh) {
+        this.hinhAnh = hinhAnh;
     }
-
-    public Integer getMaCha() {
-        return maCha;
-    }
-
-    public void setMaCha(Integer maCha) {
-        this.maCha = maCha;
-    }
-
-    public LocalDateTime getNgayTao() {
+    
+    public Timestamp getNgayTao() {
         return ngayTao;
     }
-
-    public void setNgayTao(LocalDateTime ngayTao) {
+    
+    public void setNgayTao(Timestamp ngayTao) {
         this.ngayTao = ngayTao;
     }
-
-    public LocalDateTime getNgayCapNhat() {
+    
+    public Timestamp getNgayCapNhat() {
         return ngayCapNhat;
     }
-
-    public void setNgayCapNhat(LocalDateTime ngayCapNhat) {
+    
+    public void setNgayCapNhat(Timestamp ngayCapNhat) {
         this.ngayCapNhat = ngayCapNhat;
     }
-
-    public DanhMuc getDanhMucCha() {
-        return danhMucCha;
+    
+    public int getTrangThai() {
+        return trangThai;
     }
-
-    public void setDanhMucCha(DanhMuc danhMucCha) {
-        this.danhMucCha = danhMucCha;
+    
+    public void setTrangThai(int trangThai) {
+        this.trangThai = trangThai;
     }
-
-    public List<DanhMuc> getDanhMucCon() {
-        return danhMucCon;
+    
+    // JSP-friendly alias methods for compatibility
+    public int getCategoryId() {
+        return this.maDM;
     }
-
-    public void setDanhMucCon(List<DanhMuc> danhMucCon) {
-        this.danhMucCon = danhMucCon;
+    
+    public String getCategoryName() {
+        return this.tenDM;
     }
-
-    @PreUpdate
-    public void preUpdate() {
-        this.ngayCapNhat = LocalDateTime.now();
+    
+    public String getDescription() {
+        return this.moTa;
     }
-
+    
+    public String getImage() {
+        return this.hinhAnh;
+    }
+    
+    public Timestamp getCreatedDate() {
+        return this.ngayTao;
+    }
+    
+    public Timestamp getUpdatedDate() {
+        return this.ngayCapNhat;
+    }
+    
+    public int getStatus() {
+        return this.trangThai;
+    }
+    
+    public boolean isActive() {
+        return this.trangThai == 1;
+    }
+    
+    // toString method for debugging
     @Override
     public String toString() {
         return "DanhMuc{" +
                 "maDM=" + maDM +
                 ", tenDM='" + tenDM + '\'' +
-                ", maCha=" + maCha +
+                ", moTa='" + moTa + '\'' +
+                ", hinhAnh='" + hinhAnh + '\'' +
                 ", ngayTao=" + ngayTao +
                 ", ngayCapNhat=" + ngayCapNhat +
+                ", trangThai=" + trangThai +
                 '}';
+    }
+    
+    // equals and hashCode
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        DanhMuc danhMuc = (DanhMuc) obj;
+        return maDM == danhMuc.maDM;
+    }
+    
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(maDM);
     }
 }

@@ -18,10 +18,10 @@
                 <!-- Product Image Gallery -->
                 <div class="col-lg-6 mb-4">
                     <div class="main-image-container mb-3">
-                        <img src="${pageContext.request.contextPath}/img/${product.hinhAnh}"
+                        <img src="${pageContext.request.contextPath}/assets/img/${product.hinhAnh}"
                              id="mainProductImage" class="img-fluid rounded shadow-sm"
                              alt="${product.tenSP}"
-                             onerror="this.src='${pageContext.request.contextPath}/img/no-image.png'">
+                             onerror="this.src='${pageContext.request.contextPath}/assets/img/no-image.png'">
                     </div>
                 </div>
 

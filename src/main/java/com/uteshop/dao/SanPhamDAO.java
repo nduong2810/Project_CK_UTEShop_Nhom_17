@@ -28,11 +28,11 @@ public class SanPhamDAO {
             while (rs.next()) {
                 SanPham sp = new SanPham();
                 sp.setMaSP(rs.getInt("MaSP"));
-                sp.setTenSP(rs.getString("TenSP"));
+                sp.setTenSP(rs.getNString("TenSP")); // ✅ FIXED: Dùng getNString thay vì getString
                 sp.setDonGia(rs.getBigDecimal("DonGia"));
                 sp.setSoLuongBan(rs.getInt("SoLuongBan"));
-                sp.setHinhAnh(rs.getString("HinhAnh"));
-                sp.setMoTa(rs.getString("MoTa"));
+                sp.setHinhAnh(rs.getNString("HinhAnh")); // ✅ FIXED
+                sp.setMoTa(rs.getNString("MoTa")); // ✅ FIXED
                 sp.setSoLuongTon(rs.getInt("SoLuongTon"));
                 sp.setTrangThai(rs.getBoolean("TrangThai"));
                 sp.setLuotXem(rs.getInt("LuotXem"));
@@ -57,7 +57,6 @@ public class SanPhamDAO {
     // Lấy sản phẩm với pagination (cho load more)
     public List<SanPham> findAllWithPagination(int offset, int limit) {
         List<SanPham> list = new ArrayList<>();
-        // Sử dụng cùng thứ tự sắp xếp với getTop10SanPhamBanChay để tránh trùng lặp
         String sql = "SELECT sp.MaSP, sp.TenSP, sp.DonGia, sp.SoLuongBan, sp.HinhAnh, sp.MoTa, " +
                 "sp.SoLuongTon, sp.TrangThai, sp.LuotXem, sp.LuotYeuThich, sp.DiemDanhGiaTrungBinh, " +
                 "sp.SoLuongDanhGia, sp.MaCH, sp.MaDM, sp.NgayTao, sp.NgayCapNhat, " +
@@ -77,18 +76,17 @@ public class SanPhamDAO {
             ps.setInt(2, limit);
             
             System.out.println("Executing pagination query: offset=" + offset + ", limit=" + limit);
-            System.out.println("SQL: " + sql);
             
             try (ResultSet rs = ps.executeQuery()) {
                 int count = 0;
                 while (rs.next()) {
                     SanPham sp = new SanPham();
                     sp.setMaSP(rs.getInt("MaSP"));
-                    sp.setTenSP(rs.getString("TenSP"));
+                    sp.setTenSP(rs.getNString("TenSP")); // ✅ FIXED
                     sp.setDonGia(rs.getBigDecimal("DonGia"));
                     sp.setSoLuongBan(rs.getInt("SoLuongBan"));
-                    sp.setHinhAnh(rs.getString("HinhAnh"));
-                    sp.setMoTa(rs.getString("MoTa"));
+                    sp.setHinhAnh(rs.getNString("HinhAnh")); // ✅ FIXED
+                    sp.setMoTa(rs.getNString("MoTa")); // ✅ FIXED
                     sp.setSoLuongTon(rs.getInt("SoLuongTon"));
                     sp.setTrangThai(rs.getBoolean("TrangThai"));
                     sp.setLuotXem(rs.getInt("LuotXem"));
@@ -100,7 +98,6 @@ public class SanPhamDAO {
                     sp.setNgayTao(rs.getDate("NgayTao"));
                     sp.setNgayCapNhat(rs.getDate("NgayCapNhat"));
                     
-                    // Thêm thông tin bổ sung từ JOIN
                     count++;
                     System.out.println("LoadMore Product #" + count + ": " + sp.getTenSP() + " (ID: " + sp.getMaSP() + ") - Sales: " + sp.getSoLuongBan());
                     
@@ -160,11 +157,11 @@ public class SanPhamDAO {
                 if (rs.next()) {
                     sp = new SanPham();
                     sp.setMaSP(rs.getInt("MaSP"));
-                    sp.setTenSP(rs.getString("TenSP"));
+                    sp.setTenSP(rs.getNString("TenSP")); // ✅ FIXED
                     sp.setDonGia(rs.getBigDecimal("DonGia"));
                     sp.setSoLuongBan(rs.getInt("SoLuongBan"));
-                    sp.setHinhAnh(rs.getString("HinhAnh"));
-                    sp.setMoTa(rs.getString("MoTa"));
+                    sp.setHinhAnh(rs.getNString("HinhAnh")); // ✅ FIXED
+                    sp.setMoTa(rs.getNString("MoTa")); // ✅ FIXED
                     sp.setSoLuongTon(rs.getInt("SoLuongTon"));
                     sp.setTrangThai(rs.getBoolean("TrangThai"));
                     sp.setLuotXem(rs.getInt("LuotXem"));
@@ -192,12 +189,12 @@ public class SanPhamDAO {
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             
-            ps.setString(1, sanPham.getTenSP());
-            ps.setString(2, sanPham.getMoTa());
+            ps.setNString(1, sanPham.getTenSP()); // ✅ FIXED: Dùng setNString
+            ps.setNString(2, sanPham.getMoTa()); // ✅ FIXED
             ps.setBigDecimal(3, sanPham.getDonGia());
             ps.setInt(4, sanPham.getSoLuongTon());
             ps.setInt(5, sanPham.getSoLuongBan() != null ? sanPham.getSoLuongBan() : 0);
-            ps.setString(6, sanPham.getHinhAnh());
+            ps.setNString(6, sanPham.getHinhAnh()); // ✅ FIXED
             ps.setBoolean(7, sanPham.getTrangThai() != null ? sanPham.getTrangThai() : true);
             ps.setTimestamp(8, new Timestamp(System.currentTimeMillis()));
             ps.setTimestamp(9, new Timestamp(System.currentTimeMillis()));
@@ -211,7 +208,6 @@ public class SanPhamDAO {
             int result = ps.executeUpdate();
             
             if (result > 0) {
-                // Lấy ID được tạo tự động
                 try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         sanPham.setMaSP(generatedKeys.getInt(1));
@@ -239,12 +235,12 @@ public class SanPhamDAO {
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, sanPham.getTenSP());
-            ps.setString(2, sanPham.getMoTa());
+            ps.setNString(1, sanPham.getTenSP()); // ✅ FIXED
+            ps.setNString(2, sanPham.getMoTa()); // ✅ FIXED
             ps.setBigDecimal(3, sanPham.getDonGia());
             ps.setInt(4, sanPham.getSoLuongTon());
             ps.setInt(5, sanPham.getSoLuongBan() != null ? sanPham.getSoLuongBan() : 0);
-            ps.setString(6, sanPham.getHinhAnh());
+            ps.setNString(6, sanPham.getHinhAnh()); // ✅ FIXED
             ps.setBoolean(7, sanPham.getTrangThai() != null ? sanPham.getTrangThai() : true);
             ps.setTimestamp(8, new Timestamp(System.currentTimeMillis()));
             ps.setInt(9, sanPham.getLuotXem() != null ? sanPham.getLuotXem() : 0);
@@ -311,11 +307,11 @@ public class SanPhamDAO {
                 while (rs.next()) {
                     SanPham sp = new SanPham();
                     sp.setMaSP(rs.getInt("MaSP"));
-                    sp.setTenSP(rs.getString("TenSP"));
+                    sp.setTenSP(rs.getNString("TenSP")); // ✅ FIXED
                     sp.setDonGia(rs.getBigDecimal("DonGia"));
                     sp.setSoLuongBan(rs.getInt("SoLuongBan"));
-                    sp.setHinhAnh(rs.getString("HinhAnh"));
-                    sp.setMoTa(rs.getString("MoTa"));
+                    sp.setHinhAnh(rs.getNString("HinhAnh")); // ✅ FIXED
+                    sp.setMoTa(rs.getNString("MoTa")); // ✅ FIXED
                     sp.setMaCH(rs.getInt("MaCH"));
                     list.add(sp);
                 }
@@ -349,11 +345,11 @@ public class SanPhamDAO {
             while (rs.next()) {
                 SanPham sp = new SanPham();
                 sp.setMaSP(rs.getInt("MaSP"));
-                sp.setTenSP(rs.getString("TenSP"));
+                sp.setTenSP(rs.getNString("TenSP")); // ✅ FIXED
                 sp.setDonGia(rs.getBigDecimal("DonGia"));
                 sp.setSoLuongBan(rs.getInt("SoLuongBan"));
-                sp.setHinhAnh(rs.getString("HinhAnh"));
-                sp.setMoTa(rs.getString("MoTa"));
+                sp.setHinhAnh(rs.getNString("HinhAnh")); // ✅ FIXED
+                sp.setMoTa(rs.getNString("MoTa")); // ✅ FIXED
                 sp.setSoLuongTon(rs.getInt("SoLuongTon"));
                 sp.setTrangThai(rs.getBoolean("TrangThai"));
                 sp.setLuotXem(rs.getInt("LuotXem"));
@@ -390,11 +386,11 @@ public class SanPhamDAO {
             while (rs.next()) {
                 SanPham sp = new SanPham();
                 sp.setMaSP(rs.getInt("MaSP"));
-                sp.setTenSP(rs.getString("TenSP"));
+                sp.setTenSP(rs.getNString("TenSP")); // ✅ FIXED
                 sp.setDonGia(rs.getBigDecimal("DonGia"));
                 sp.setSoLuongBan(rs.getInt("SoLuongBan"));
-                sp.setHinhAnh(rs.getString("HinhAnh"));
-                sp.setMoTa(rs.getString("MoTa"));
+                sp.setHinhAnh(rs.getNString("HinhAnh")); // ✅ FIXED
+                sp.setMoTa(rs.getNString("MoTa")); // ✅ FIXED
                 sp.setMaCH(rs.getInt("MaCH"));
                 list.add(sp);
             }
@@ -420,11 +416,11 @@ public class SanPhamDAO {
                 while (rs.next()) {
                     SanPham sp = new SanPham();
                     sp.setMaSP(rs.getInt("MaSP"));
-                    sp.setTenSP(rs.getString("TenSP"));
+                    sp.setTenSP(rs.getNString("TenSP")); // ✅ FIXED
                     sp.setDonGia(rs.getBigDecimal("DonGia"));
                     sp.setSoLuongBan(rs.getInt("SoLuongBan"));
-                    sp.setHinhAnh(rs.getString("HinhAnh"));
-                    sp.setMoTa(rs.getString("MoTa"));
+                    sp.setHinhAnh(rs.getNString("HinhAnh")); // ✅ FIXED
+                    sp.setMoTa(rs.getNString("MoTa")); // ✅ FIXED
                     sp.setMaCH(rs.getInt("MaCH"));
                     list.add(sp);
                 }
@@ -455,11 +451,11 @@ public class SanPhamDAO {
                 while (rs.next()) {
                     SanPham sp = new SanPham();
                     sp.setMaSP(rs.getInt("MaSP"));
-                    sp.setTenSP(rs.getString("TenSP"));
+                    sp.setTenSP(rs.getNString("TenSP")); // ✅ FIXED
                     sp.setDonGia(rs.getBigDecimal("DonGia"));
                     sp.setSoLuongBan(rs.getInt("SoLuongBan"));
-                    sp.setHinhAnh(rs.getString("HinhAnh"));
-                    sp.setMoTa(rs.getString("MoTa"));
+                    sp.setHinhAnh(rs.getNString("HinhAnh")); // ✅ FIXED
+                    sp.setMoTa(rs.getNString("MoTa")); // ✅ FIXED
                     sp.setSoLuongTon(rs.getInt("SoLuongTon"));
                     sp.setTrangThai(rs.getBoolean("TrangThai"));
                     sp.setLuotXem(rs.getInt("LuotXem"));
@@ -477,5 +473,20 @@ public class SanPhamDAO {
         }
         
         return list;
+    }
+
+    // Cập nhật các trường text cho sản phẩm
+    public void updateSanPhamTextFields(SanPham sp) {
+        String sql = "UPDATE SanPham SET TenSP = ?, MoTa = ?, HinhAnh = ? WHERE MaSP = ?";
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setNString(1, sp.getTenSP());
+            ps.setNString(2, sp.getMoTa());
+            ps.setNString(3, sp.getHinhAnh());
+            ps.setInt(4, sp.getMaSP());
+            ps.executeUpdate();
+        } catch (Exception e) {
+            System.err.println("Error in updateSanPhamTextFields: " + e.getMessage());
+        }
     }
 }

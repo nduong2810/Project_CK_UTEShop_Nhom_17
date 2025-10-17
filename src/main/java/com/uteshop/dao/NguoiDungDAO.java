@@ -3,6 +3,7 @@ package com.uteshop.dao;
 import com.uteshop.config.DBConnect;
 import com.uteshop.entity.NguoiDung;
 import com.uteshop.util.PasswordUtil;
+import com.uteshop.util.VietnameseEncodingUtil;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -20,12 +21,13 @@ public class NguoiDungDAO {
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, usernameOrEmail);
-            ps.setString(2, usernameOrEmail);
+            // Ensure UTF-8 encoding for parameters
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 1, usernameOrEmail);
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 2, usernameOrEmail);
             
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    String storedPassword = rs.getString("MatKhau");
+                    String storedPassword = VietnameseEncodingUtil.getVietnameseString(rs, "MatKhau");
                     
                     // Check if password matches (support both plain text and BCrypt)
                     boolean passwordMatches = false;
@@ -59,7 +61,7 @@ public class NguoiDungDAO {
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, username);
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 1, username);
             
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -82,7 +84,7 @@ public class NguoiDungDAO {
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, email);
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 1, email);
             
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -97,7 +99,7 @@ public class NguoiDungDAO {
     }
 
     /**
-     * Save new user
+     * Save new user with proper Vietnamese encoding
      */
     public boolean save(NguoiDung user) {
         String sql = "INSERT INTO NguoiDung (TenDangNhap, MatKhau, Email, HoTen, SoDienThoai, DiaChi, VaiTro, TrangThai, NgayTao) " +
@@ -106,13 +108,14 @@ public class NguoiDungDAO {
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             
-            ps.setString(1, user.getTenDangNhap());
-            ps.setString(2, user.getMatKhau());
-            ps.setString(3, user.getEmail());
-            ps.setString(4, user.getHoTen());
-            ps.setString(5, user.getSoDienThoai());
-            ps.setString(6, user.getDiaChi());
-            ps.setString(7, user.getVaiTro().name());
+            // Use VietnameseEncodingUtil for proper Unicode handling
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 1, user.getTenDangNhap());
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 2, user.getMatKhau());
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 3, user.getEmail());
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 4, VietnameseEncodingUtil.prepareVietnameseText(user.getHoTen()));
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 5, user.getSoDienThoai());
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 6, VietnameseEncodingUtil.prepareVietnameseText(user.getDiaChi()));
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 7, user.getVaiTro().name());
             ps.setBoolean(8, user.isTrangThai());
             ps.setTimestamp(9, Timestamp.valueOf(user.getNgayTao()));
             
@@ -157,7 +160,7 @@ public class NguoiDungDAO {
     }
 
     /**
-     * Update user information
+     * Update user information with proper Vietnamese encoding
      */
     public boolean update(NguoiDung user) {
         String sql = "UPDATE NguoiDung SET HoTen = ?, Email = ?, SoDienThoai = ?, DiaChi = ?, NgayCapNhat = ? WHERE MaND = ?";
@@ -165,10 +168,11 @@ public class NguoiDungDAO {
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, user.getHoTen());
-            ps.setString(2, user.getEmail());
-            ps.setString(3, user.getSoDienThoai());
-            ps.setString(4, user.getDiaChi());
+            // Use VietnameseEncodingUtil for proper Unicode handling
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 1, VietnameseEncodingUtil.prepareVietnameseText(user.getHoTen()));
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 2, user.getEmail());
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 3, user.getSoDienThoai());
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 4, VietnameseEncodingUtil.prepareVietnameseText(user.getDiaChi()));
             ps.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now()));
             ps.setInt(6, user.getMaND());
             
@@ -181,25 +185,26 @@ public class NguoiDungDAO {
     }
 
     /**
-     * Map ResultSet to NguoiDung object
+     * Map ResultSet to NguoiDung object with proper UTF-8 handling
      */
     private NguoiDung mapResultSetToNguoiDung(ResultSet rs) throws SQLException {
         NguoiDung user = new NguoiDung();
         user.setMaND(rs.getInt("MaND"));
-        user.setTenDangNhap(rs.getString("TenDangNhap"));
-        user.setMatKhau(rs.getString("MatKhau"));
-        user.setEmail(rs.getString("Email"));
-        user.setHoTen(rs.getString("HoTen"));
-        user.setSoDienThoai(rs.getString("SoDienThoai"));
-        user.setDiaChi(rs.getString("DiaChi"));
-        user.setVaiTro(NguoiDung.VaiTro.valueOf(rs.getString("VaiTro")));
+        // Use VietnameseEncodingUtil for proper Unicode handling
+        user.setTenDangNhap(VietnameseEncodingUtil.getVietnameseString(rs, "TenDangNhap"));
+        user.setMatKhau(VietnameseEncodingUtil.getVietnameseString(rs, "MatKhau"));
+        user.setEmail(VietnameseEncodingUtil.getVietnameseString(rs, "Email"));
+        user.setHoTen(VietnameseEncodingUtil.getVietnameseString(rs, "HoTen"));
+        user.setSoDienThoai(VietnameseEncodingUtil.getVietnameseString(rs, "SoDienThoai"));
+        user.setDiaChi(VietnameseEncodingUtil.getVietnameseString(rs, "DiaChi"));
+        user.setVaiTro(NguoiDung.VaiTro.valueOf(VietnameseEncodingUtil.getVietnameseString(rs, "VaiTro")));
         user.setTrangThai(rs.getBoolean("TrangThai"));
         
         Timestamp ngayTao = rs.getTimestamp("NgayTao");
         if (ngayTao != null) {
             user.setNgayTao(ngayTao.toLocalDateTime());
         }
-        
+
         Timestamp ngayCapNhat = rs.getTimestamp("NgayCapNhat");
         if (ngayCapNhat != null) {
             user.setNgayCapNhat(ngayCapNhat.toLocalDateTime());

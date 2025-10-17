@@ -73,13 +73,18 @@ public class AuthController extends HttpServlet {
 
     private void handleLogin(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
+        // Ensure UTF-8 encoding for request parameters
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("text/html; charset=UTF-8");
+        
         String username = request.getParameter("username");
         String password = request.getParameter("password");
-        String selectedRole = request.getParameter("role");
         boolean remember = "on".equals(request.getParameter("remember"));
 
         try {
-            // Validate input
+            // Validate input with proper encoding handling
             if (username == null || username.trim().isEmpty() ||
                 password == null || password.trim().isEmpty()) {
                 request.setAttribute("error", "Vui lòng nhập đầy đủ thông tin đăng nhập");
@@ -87,8 +92,11 @@ public class AuthController extends HttpServlet {
                 return;
             }
 
+            // Trim and handle Unicode characters properly
+            username = username.trim();
+            
             // Authenticate user
-            NguoiDung user = nguoiDungDAO.authenticate(username.trim(), password);
+            NguoiDung user = nguoiDungDAO.authenticate(username, password);
             
             if (user == null) {
                 request.setAttribute("error", "Tên đăng nhập hoặc mật khẩu không chính xác");
@@ -96,26 +104,24 @@ public class AuthController extends HttpServlet {
                 return;
             }
 
+            // Check if account is active
             if (!user.isTrangThai()) {
                 request.setAttribute("error", "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ admin");
                 showLoginPage(request, response);
                 return;
             }
 
-            // Check if selected role matches user's actual role
-            if (selectedRole != null && !selectedRole.equals(user.getVaiTro().name())) {
-                request.setAttribute("error", "Bạn không có quyền truy cập với vai trò đã chọn");
-                showLoginPage(request, response);
-                return;
-            }
-
-            System.out.println("User login: " + user.getTenDangNhap() + " with role: " + user.getVaiTro().name());
+            // Log successful login with role information
+            System.out.println("User login successful: " + user.getTenDangNhap() + 
+                             " | Role: " + user.getVaiTro().name() + 
+                             " | Full Name: " + user.getHoTen());
 
             // Create session
             HttpSession session = request.getSession(true);
             session.setAttribute("user", user);
             session.setAttribute("userId", user.getMaND());
             session.setAttribute("userRole", user.getVaiTro().name());
+            session.setAttribute("userName", user.getHoTen());
             session.setMaxInactiveInterval(remember ? 30 * 24 * 60 * 60 : 2 * 60 * 60); // 30 days or 2 hours
 
             // Set remember me cookie
@@ -126,7 +132,7 @@ public class AuthController extends HttpServlet {
                 response.addCookie(userCookie);
             }
 
-            // Redirect based on user's role
+            // Redirect based on user's role from database
             redirectToUserDashboard(user, response, request.getContextPath());
 
         } catch (Exception e) {
@@ -138,6 +144,12 @@ public class AuthController extends HttpServlet {
 
     private void handleRegister(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
+        // Ensure UTF-8 encoding for request parameters
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+        response.setContentType("text/html; charset=UTF-8");
+        
         String fullName = request.getParameter("fullName");
         String username = request.getParameter("username");
         String email = request.getParameter("email");
@@ -149,7 +161,7 @@ public class AuthController extends HttpServlet {
         boolean newsletter = "on".equals(request.getParameter("newsletter"));
 
         try {
-            // Validate input
+            // Validate input with proper Unicode handling
             if (fullName == null || fullName.trim().isEmpty() ||
                 username == null || username.trim().isEmpty() ||
                 email == null || email.trim().isEmpty() ||
@@ -158,6 +170,13 @@ public class AuthController extends HttpServlet {
                 showRegisterPage(request, response);
                 return;
             }
+
+            // Trim inputs and handle Unicode properly
+            fullName = fullName.trim();
+            username = username.trim();
+            email = email.trim();
+            phone = phone != null ? phone.trim() : null;
+            address = address != null ? address.trim() : null;
 
             if (!password.equals(confirmPassword)) {
                 request.setAttribute("error", "Mật khẩu xác nhận không khớp");
@@ -172,14 +191,14 @@ public class AuthController extends HttpServlet {
             }
 
             // Check if username exists
-            if (nguoiDungDAO.findByUsername(username.trim()) != null) {
+            if (nguoiDungDAO.findByUsername(username) != null) {
                 request.setAttribute("error", "Tên đăng nhập đã tồn tại");
                 showRegisterPage(request, response);
                 return;
             }
 
             // Check if email exists
-            if (nguoiDungDAO.findByEmail(email.trim()) != null) {
+            if (nguoiDungDAO.findByEmail(email) != null) {
                 request.setAttribute("error", "Email đã được sử dụng");
                 showRegisterPage(request, response);
                 return;
@@ -187,11 +206,11 @@ public class AuthController extends HttpServlet {
 
             // Create new user
             NguoiDung newUser = new NguoiDung();
-            newUser.setHoTen(fullName.trim());
-            newUser.setTenDangNhap(username.trim());
-            newUser.setEmail(email.trim());
-            newUser.setSoDienThoai(phone != null ? phone.trim() : null);
-            newUser.setDiaChi(address != null ? address.trim() : null);
+            newUser.setHoTen(fullName);
+            newUser.setTenDangNhap(username);
+            newUser.setEmail(email);
+            newUser.setSoDienThoai(phone);
+            newUser.setDiaChi(address);
             newUser.setMatKhau(PasswordUtil.hashPassword(password));
             newUser.setVaiTro(NguoiDung.VaiTro.valueOf(role != null ? role : "USER"));
             newUser.setTrangThai(true);
@@ -233,24 +252,45 @@ public class AuthController extends HttpServlet {
 
     private void redirectToUserDashboard(NguoiDung user, HttpServletResponse response, String contextPath)
             throws IOException {
+        // Redirect dựa trên role từ database
         switch (user.getVaiTro()) {
             case ADMIN:
-                // Redirect đến trang admin products (có sẵn)
+                // Admin -> trang quản lý sản phẩm
                 response.sendRedirect(contextPath + "/admin/products");
                 break;
             case VENDOR:
-                // Redirect đến trang home cho vendor (tạm thời)
+                // Vendor -> TẠM THỜI về trang home (dashboard chưa có view)
+                // TODO: Sau khi tạo vendor/dashboard.jsp, đổi lại thành /vendor/dashboard
                 response.sendRedirect(contextPath + "/guest/home");
                 break;
             case SHIPPER:
-                // Redirect đến trang home cho shipper (tạm thời)
+                // Shipper -> TẠM THỜI về trang home (dashboard chưa có view)
+                // TODO: Sau khi tạo shipper/dashboard.jsp, đổi lại thành /shipper/dashboard
                 response.sendRedirect(contextPath + "/guest/home");
                 break;
             case USER:
             default:
-                // Redirect đến trang home cho user
+                // User -> trang home
                 response.sendRedirect(contextPath + "/guest/home");
                 break;
+        }
+    }
+    
+    /**
+     * Helper method to convert role names to Vietnamese
+     */
+    private String getVietneseRoleName(String roleName) {
+        switch (roleName.toUpperCase()) {
+            case "ADMIN":
+                return "Quản trị viên";
+            case "VENDOR":
+                return "Người bán";
+            case "SHIPPER":
+                return "Shipper";
+            case "USER":
+                return "Người dùng";
+            default:
+                return roleName;
         }
     }
 }

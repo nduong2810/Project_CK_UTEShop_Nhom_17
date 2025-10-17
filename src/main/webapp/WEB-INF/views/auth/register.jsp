@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page session="false" %>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -13,6 +14,9 @@
         :root {
             --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-ute: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            --gradient-shipper: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --gradient-user: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         }
         
         body {
@@ -21,319 +25,699 @@
             display: flex;
             align-items: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            position: relative;
+            overflow-x: hidden;
             padding: 2rem 0;
+            margin: 0;
+        }
+        
+        /* Background Animation */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png') no-repeat center center;
+            background-size: 30%;
+            opacity: 0.03;
+            z-index: -1;
+            animation: float 8s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg) scale(1); }
+            50% { transform: translateY(-30px) rotate(5deg) scale(1.05); }
         }
         
         .register-container {
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            border-radius: 25px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.25);
             overflow: hidden;
-            max-width: 1000px;
+            max-width: 1100px;
             width: 100%;
+            position: relative;
+            backdrop-filter: blur(10px);
         }
         
         .register-left {
-            background: var(--gradient-secondary);
+            background: var(--gradient-ute);
             color: white;
-            padding: 3rem 2rem;
+            padding: 3rem 2.5rem;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .register-left::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: shine 5s infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
         }
         
         .register-right {
-            padding: 3rem 2rem;
+            padding: 3rem 2.5rem;
+            position: relative;
         }
         
         .brand-logo {
-            width: 60px;
-            height: 60px;
+            width: 100px;
+            height: 100px;
             background: rgba(255,255,255,0.2);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 1.5rem;
-            font-size: 1.5rem;
+            margin: 0 auto 2rem;
+            position: relative;
+            z-index: 2;
+            backdrop-filter: blur(10px);
+            border: 3px solid rgba(255,255,255,0.3);
+            overflow: hidden;
         }
         
-        .form-control {
+        .brand-logo img {
+            width: 70px;
+            height: 70px;
+            object-fit: contain;
+        }
+        
+        /* Fix logo loading */
+        .brand-logo .logo-fallback {
+            font-size: 2.5rem;
+            color: #1e3c72;
+        }
+
+        .brand-logo::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            background: linear-gradient(45deg, rgba(255,255,255,0.4), transparent) border-box;
+            mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            mask-composite: exclude;
+            animation: rotate 4s linear infinite;
+        }
+        
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .welcome-text {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .welcome-text h2 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .welcome-text p {
+            font-size: 1rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+        
+        .form-floating {
+            margin-bottom: 1.2rem;
+        }
+        
+        .form-control, .form-select {
             border: 2px solid #e9ecef;
             border-radius: 12px;
-            padding: 12px 16px;
+            padding: 0.8rem 1.2rem;
+            font-size: 0.95rem;
             transition: all 0.3s ease;
+            background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(10px);
         }
         
-        .form-control:focus {
+        .form-control:focus, .form-select:focus {
             border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+            background: white;
+            transform: translateY(-2px);
+        }
+        
+        .form-floating label {
+            color: #6c757d;
+            font-weight: 500;
+            font-size: 0.9rem;
         }
         
         .btn-register {
             background: var(--gradient-primary);
             border: none;
             color: white;
-            padding: 12px 24px;
-            border-radius: 12px;
+            padding: 1rem 2rem;
+            border-radius: 15px;
             font-weight: 600;
+            font-size: 1.1rem;
             transition: all 0.3s ease;
-            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
         }
         
         .btn-register:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            background: var(--gradient-secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.6);
             color: white;
         }
         
-        .role-selection {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+        .divider {
+            text-align: center;
+            margin: 1.5rem 0;
+            position: relative;
         }
         
-        .role-card {
-            flex: 1;
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
-            padding: 1rem;
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, #ddd, transparent);
+        }
+        
+        .divider span {
+            background: white;
+            padding: 0 1rem;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .login-link {
             text-align: center;
-            cursor: pointer;
+            margin-top: 1.5rem;
+        }
+        
+        .login-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
             transition: all 0.3s ease;
         }
         
-        .role-card:hover, .role-card.active {
-            border-color: #667eea;
-            background: #f8f9ff;
-        }
-        
-        .role-card input[type="radio"] {
-            display: none;
-        }
-        
-        .role-icon {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-            color: #667eea;
+        .login-link a:hover {
+            color: #764ba2;
+            text-decoration: underline;
         }
         
         .alert {
             border-radius: 12px;
             border: none;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(10px);
+            font-size: 0.9rem;
+        }
+        
+        .alert-danger {
+            background: rgba(220, 53, 69, 0.1);
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .alert-success {
+            background: rgba(40, 167, 69, 0.1);
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .role-selector {
+            margin-bottom: 1.5rem;
+        }
+        
+        .role-tabs {
+            display: flex;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 15px;
+            padding: 0.4rem;
+            margin-bottom: 1rem;
+            gap: 0.3rem;
+        }
+        
+        .role-tab {
+            flex: 1;
+            padding: 0.7rem 0.8rem;
+            text-align: center;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .role-tab.active {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .role-tab.shipper.active {
+            background: var(--gradient-shipper);
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.3);
+        }
+        
+        .role-tab:not(.active) {
+            color: #667eea;
+        }
+        
+        .role-tab:not(.active):hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+        
+        .register-title {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .register-title h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+        
+        .register-subtitle {
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+        
+        .row.g-3 .col-md-6 {
+            padding-right: 0.5rem;
+            padding-left: 0.5rem;
         }
         
         .password-strength {
-            height: 4px;
-            border-radius: 2px;
-            margin-top: 0.5rem;
-            transition: all 0.3s ease;
-        }
-        
-        .strength-weak { background: #dc3545; }
-        .strength-medium { background: #ffc107; }
-        .strength-strong { background: #28a745; }
-        
-        .vendor-info {
-            background: #f8f9ff;
-            border: 1px solid #e3e8ff;
-            border-radius: 12px;
-            padding: 1rem;
             margin-bottom: 1rem;
-            display: none;
         }
         
-        .vendor-info.show {
-            display: block;
+        .strength-bar {
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        
+        .strength-fill {
+            height: 100%;
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+        
+        .strength-text {
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
+            font-weight: 500;
+        }
+        
+        .terms-checkbox {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+        
+        .form-check-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .form-check-label a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .form-check-label a:hover {
+            text-decoration: underline;
+        }
+        
+        .home-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+        
+        .home-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            text-decoration: none;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem 0;
+            }
+            
+            .register-container {
+                margin: 0.5rem;
+                border-radius: 20px;
+            }
+            
+            .register-left {
+                padding: 2rem 1.5rem;
+            }
+            
+            .register-right {
+                padding: 2rem 1.5rem;
+            }
+            
+            .welcome-text h2 {
+                font-size: 1.8rem;
+            }
+            
+            .brand-logo {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .brand-logo img {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .role-tabs {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .role-tab {
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .row.g-3 .col-md-6 {
+                padding-right: 0.75rem;
+                padding-left: 0.75rem;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Nút về trang chủ -->
+    <a href="${pageContext.request.contextPath}/guest/home" class="home-btn">
+        <i class="fas fa-home me-2"></i>Trang chủ
+    </a>
+    
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-12">
                 <div class="register-container row g-0">
-                    <!-- Left Side - Info -->
-                    <div class="col-md-5 register-left">
+                    <!-- Left Panel -->
+                    <div class="col-lg-4 register-left">
                         <div class="brand-logo">
-                            <i class="fas fa-shopping-bag"></i>
+                            <img src="${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png" 
+                                 alt="HCMUTE Logo" 
+                                 onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-university fa-3x\'></i>';">
                         </div>
-                        <h3 class="fw-bold mb-3">Tham gia UTESHOP</h3>
-                        <p class="mb-4">Bắt đầu hành trình mua sắm hoặc kinh doanh của bạn</p>
-                        
-                        <div class="benefits">
-                            <div class="benefit-item mb-3">
-                                <i class="fas fa-user-friends me-2"></i>
-                                Cộng đồng HCMUTE tin cậy
-                            </div>
-                            <div class="benefit-item mb-3">
-                                <i class="fas fa-shield-alt me-2"></i>
-                                Bảo mật thông tin tuyệt đối
-                            </div>
-                            <div class="benefit-item mb-3">
-                                <i class="fas fa-headset me-2"></i>
-                                Hỗ trợ 24/7
-                            </div>
-                            <div class="benefit-item">
-                                <i class="fas fa-gift me-2"></i>
-                                Ưu đãi đặc biệt cho sinh viên
+                        <div class="welcome-text">
+                            <h2>Tham gia UTESHOP</h2>
+                            <p>Tạo tài khoản để trở thành thành viên của cộng đồng mua sắm HCMUTE. Khám phá hàng ngàn sản phẩm chất lượng với giá ưu đãi!</p>
+                            <div class="mt-4">
+                                <div class="d-flex justify-content-center gap-3 mb-3">
+                                    <i class="fas fa-users fa-2x" style="opacity: 0.7;"></i>
+                                    <i class="fas fa-shipping-fast fa-2x" style="opacity: 0.7;"></i>
+                                    <i class="fas fa-shield-check fa-2x" style="opacity: 0.7;"></i>
+                                </div>
+                                <p style="font-size: 0.85rem; opacity: 0.8;">Cộng đồng • Giao hàng • Bảo mật</p>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- Right Side - Register Form -->
-                    <div class="col-md-7 register-right">
-                        <div class="text-center mb-4">
-                            <h3 class="fw-bold">Đăng Ký Tài Khoản</h3>
-                            <p class="text-muted">Tạo tài khoản mới để bắt đầu</p>
+                    <!-- Right Panel -->
+                    <div class="col-lg-8 register-right">
+                        <div class="register-title">
+                            <h3>Đăng ký tài khoản</h3>
+                            <p class="register-subtitle">Chọn loại tài khoản và điền thông tin để đăng ký</p>
+                        </div>
+                        
+                        <!-- Role Selector -->
+                        <div class="role-selector">
+                            <div class="role-tabs">
+                                <div class="role-tab active" data-role="user">
+                                    <i class="fas fa-user me-1"></i>Khách hàng
+                                </div>
+                                <div class="role-tab shipper" data-role="shipper">
+                                    <i class="fas fa-shipping-fast me-1"></i>Shipper
+                                </div>
+                                <div class="role-tab" data-role="supplier">
+                                    <i class="fas fa-store me-1"></i>Nhà cung cấp
+                                </div>
+                            </div>
                         </div>
                         
                         <!-- Error/Success Messages -->
                         <c:if test="${not empty error}">
-                            <div class="alert alert-danger">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                ${error}
+                            <div class="alert alert-danger" role="alert">
+                                <i class="fas fa-exclamation-triangle me-2"></i>${error}
                             </div>
                         </c:if>
                         
-                        <c:if test="${not empty success}">
-                            <div class="alert alert-success">
-                                <i class="fas fa-check-circle me-2"></i>
-                                ${success}
+                        <c:if test="${not empty message}">
+                            <div class="alert alert-success" role="alert">
+                                <i class="fas fa-check-circle me-2"></i>${message}
                             </div>
                         </c:if>
                         
-                        <form method="POST" action="${pageContext.request.contextPath}/auth/register" id="registerForm">
-                            <!-- Role Selection -->
-                            <div class="role-selection">
-                                <label class="role-card" for="roleUser">
-                                    <input type="radio" name="role" value="USER" id="roleUser" checked>
-                                    <div class="role-icon">
-                                        <i class="fas fa-user"></i>
+                        <!-- Register Form -->
+                        <form method="post" action="${pageContext.request.contextPath}/auth/register" id="registerForm">
+                            <input type="hidden" name="role" id="selectedRole" value="user">
+                            
+                            <!-- Basic Info Row -->
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="username" name="username" 
+                                               placeholder="Tên đăng nhập" required>
+                                        <label for="username">
+                                            <i class="fas fa-user me-2"></i>Tên đăng nhập
+                                        </label>
                                     </div>
-                                    <div class="fw-bold">Khách hàng</div>
-                                    <small class="text-muted">Mua sắm và đặt hàng</small>
-                                </label>
-                                
-                                <label class="role-card" for="roleVendor">
-                                    <input type="radio" name="role" value="VENDOR" id="roleVendor">
-                                    <div class="role-icon">
-                                        <i class="fas fa-store"></i>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="email" class="form-control" id="email" name="email" 
+                                               placeholder="name@example.com" required>
+                                        <label for="email">
+                                            <i class="fas fa-envelope me-2"></i>Email
+                                        </label>
                                     </div>
-                                    <div class="fw-bold">Người bán</div>
-                                    <small class="text-muted">Mở shop và bán hàng</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Name Row -->
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="firstName" name="firstName" 
+                                               placeholder="Tên" required>
+                                        <label for="firstName">
+                                            <i class="fas fa-id-card me-2"></i>Tên
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" class="form-control" id="lastName" name="lastName" 
+                                               placeholder="Họ" required>
+                                        <label for="lastName">
+                                            <i class="fas fa-id-card me-2"></i>Họ
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Phone & Gender -->
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="tel" class="form-control" id="phone" name="phone" 
+                                               placeholder="Số điện thoại" required>
+                                        <label for="phone">
+                                            <i class="fas fa-phone me-2"></i>Số điện thoại
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <select class="form-select" id="gender" name="gender" required>
+                                            <option value="">Chọn giới tính</option>
+                                            <option value="male">Nam</option>
+                                            <option value="female">Nữ</option>
+                                            <option value="other">Khác</option>
+                                        </select>
+                                        <label for="gender">
+                                            <i class="fas fa-venus-mars me-2"></i>Giới tính
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Password Row -->
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="password" class="form-control" id="password" name="password" 
+                                               placeholder="Mật khẩu" required>
+                                        <label for="password">
+                                            <i class="fas fa-lock me-2"></i>Mật khẩu
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" 
+                                               placeholder="Xác nhận mật khẩu" required>
+                                        <label for="confirmPassword">
+                                            <i class="fas fa-lock me-2"></i>Xác nhận mật khẩu
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Password Strength Indicator -->
+                            <div class="password-strength">
+                                <div class="strength-bar">
+                                    <div class="strength-fill" id="strengthFill"></div>
+                                </div>
+                                <div class="strength-text" id="strengthText">Nhập mật khẩu để kiểm tra độ mạnh</div>
+                            </div>
+                            
+                            <!-- Address (Optional) -->
+                            <div class="form-floating">
+                                <textarea class="form-control" id="address" name="address" 
+                                          placeholder="Địa chỉ" style="height: 80px"></textarea>
+                                <label for="address">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Địa chỉ (tùy chọn)
                                 </label>
-                            </div>
-                            
-                            <!-- Vendor Additional Info -->
-                            <div class="vendor-info" id="vendorInfo">
-                                <div class="d-flex align-items-center mb-2">
-                                    <i class="fas fa-info-circle text-primary me-2"></i>
-                                    <strong>Thông tin bổ sung cho Người bán</strong>
-                                </div>
-                                <p class="small text-muted mb-0">
-                                    Để trở thành người bán, bạn cần cung cấp thêm thông tin về shop và được phê duyệt bởi admin.
-                                </p>
-                            </div>
-                            
-                            <div class="row">
-                                <!-- Full Name -->
-                                <div class="col-md-6 mb-3">
-                                    <label for="fullName" class="form-label">Họ và tên *</label>
-                                    <input type="text" class="form-control" id="fullName" name="fullName" required 
-                                           placeholder="Nguyễn Văn A">
-                                </div>
-                                
-                                <!-- Username -->
-                                <div class="col-md-6 mb-3">
-                                    <label for="username" class="form-label">Tên đăng nhập *</label>
-                                    <input type="text" class="form-control" id="username" name="username" required 
-                                           placeholder="username123" pattern="[a-zA-Z0-9_]{3,20}">
-                                    <div class="form-text">3-20 ký tự, chỉ chữ, số và dấu gạch dưới</div>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <!-- Email -->
-                                <div class="col-md-6 mb-3">
-                                    <label for="email" class="form-label">Email *</label>
-                                    <input type="email" class="form-control" id="email" name="email" required 
-                                           placeholder="student@student.hcmute.edu.vn">
-                                    <div class="form-text">Khuyến khích dùng email sinh viên HCMUTE</div>
-                                </div>
-                                
-                                <!-- Phone -->
-                                <div class="col-md-6 mb-3">
-                                    <label for="phone" class="form-label">Số điện thoại</label>
-                                    <input type="tel" class="form-control" id="phone" name="phone" 
-                                           placeholder="0901234567" pattern="[0-9]{10,11}">
-                                </div>
-                            </div>
-                            
-                            <!-- Address -->
-                            <div class="mb-3">
-                                <label for="address" class="form-label">Địa chỉ</label>
-                                <textarea class="form-control" id="address" name="address" rows="2" 
-                                          placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố"></textarea>
-                            </div>
-                            
-                            <div class="row">
-                                <!-- Password -->
-                                <div class="col-md-6 mb-3">
-                                    <label for="password" class="form-label">Mật khẩu *</label>
-                                    <input type="password" class="form-control" id="password" name="password" required 
-                                           placeholder="Nhập mật khẩu" onkeyup="checkPasswordStrength()">
-                                    <div class="password-strength" id="passwordStrength"></div>
-                                    <div class="form-text">Tối thiểu 6 ký tự, có chữ hoa, chữ thường và số</div>
-                                </div>
-                                
-                                <!-- Confirm Password -->
-                                <div class="col-md-6 mb-3">
-                                    <label for="confirmPassword" class="form-label">Xác nhận mật khẩu *</label>
-                                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required 
-                                           placeholder="Nhập lại mật khẩu" onkeyup="checkPasswordMatch()">
-                                    <div id="passwordMatch" class="form-text"></div>
-                                </div>
                             </div>
                             
                             <!-- Terms and Conditions -->
-                            <div class="mb-4">
+                            <div class="terms-checkbox">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
-                                    <label class="form-check-label" for="terms">
-                                        Tôi đồng ý với 
-                                        <a href="${pageContext.request.contextPath}/terms" target="_blank">Điều khoản sử dụng</a> 
-                                        và 
-                                        <a href="${pageContext.request.contextPath}/privacy" target="_blank">Chính sách bảo mật</a>
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="newsletter" name="newsletter">
-                                    <label class="form-check-label" for="newsletter">
-                                        Đăng ký nhận thông báo khuyến mãi và tin tức
+                                    <input class="form-check-input" type="checkbox" id="agreeTerms" name="agreeTerms" required>
+                                    <label class="form-check-label" for="agreeTerms">
+                                        Tôi đồng ý với <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Điều khoản sử dụng</a> 
+                                        và <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Chính sách bảo mật</a>
                                     </label>
                                 </div>
                             </div>
                             
-                            <!-- Submit Button -->
-                            <button type="submit" class="btn btn-register mb-3">
-                                <i class="fas fa-user-plus me-2"></i>Đăng Ký Tài Khoản
-                            </button>
-                            
-                            <!-- Login Link -->
-                            <div class="text-center">
-                                <span class="text-muted">Đã có tài khoản? </span>
-                                <a href="${pageContext.request.contextPath}/auth/login" 
-                                   class="text-decoration-none fw-bold">Đăng nhập ngay</a>
-                            </div>
-                            
-                            <!-- Back to Home -->
-                            <div class="text-center mt-3">
-                                <a href="${pageContext.request.contextPath}/guest/home" 
-                                   class="text-muted text-decoration-none">
-                                    <i class="fas fa-arrow-left me-1"></i>Về trang chủ
-                                </a>
+                            <div class="d-grid mb-3">
+                                <button type="submit" class="btn btn-register" id="registerBtn">
+                                    <i class="fas fa-user-plus me-2"></i>Đăng ký tài khoản
+                                </button>
                             </div>
                         </form>
+                        
+                        <div class="divider">
+                            <span>hoặc</span>
+                        </div>
+                        
+                        <div class="login-link">
+                            <p>Đã có tài khoản? 
+                                <a href="${pageContext.request.contextPath}/auth/login">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập ngay
+                                </a>
+                            </p>
+                        </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Terms Modal -->
+    <div class="modal fade" id="termsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Điều khoản sử dụng</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>1. Chấp nhận điều khoản</h6>
+                    <p>Bằng việc sử dụng UTESHOP, bạn đồng ý tuân thủ các điều khoản và điều kiện này.</p>
+                    
+                    <h6>2. Tài khoản người dùng</h6>
+                    <p>Bạn có trách nhiệm bảo mật thông tin tài khoản và mật khẩu của mình.</p>
+                    
+                    <h6>3. Quy định giao dịch</h6>
+                    <p>Mọi giao dịch trên UTESHOP phải tuân thủ quy định của pháp luật Việt Nam.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Privacy Modal -->
+    <div class="modal fade" id="privacyModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Chính sách bảo mật</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h6>1. Thu thập thông tin</h6>
+                    <p>UTESHOP chỉ thu thập thông tin cần thiết để cung cấp dịch vụ tốt nhất cho bạn.</p>
+                    
+                    <h6>2. Bảo mật thông tin</h6>
+                    <p>Chúng tôi cam kết bảo vệ thông tin cá nhân của bạn bằng các biện pháp bảo mật hiện đại.</p>
+                    
+                    <h6>3. Chia sẻ thông tin</h6>
+                    <p>Thông tin của bạn sẽ không được chia sẻ với bên thứ ba mà không có sự đồng ý.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                 </div>
             </div>
         </div>
@@ -341,87 +725,168 @@
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Role selection
-        document.querySelectorAll('input[name="role"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                document.querySelectorAll('.role-card').forEach(card => {
-                    card.classList.remove('active');
+        document.addEventListener('DOMContentLoaded', function() {
+            const roleTabs = document.querySelectorAll('.role-tab');
+            const selectedRoleInput = document.getElementById('selectedRole');
+            const registerBtn = document.getElementById('registerBtn');
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            const strengthFill = document.getElementById('strengthFill');
+            const strengthText = document.getElementById('strengthText');
+            
+            // Role tab functionality
+            roleTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs
+                    roleTabs.forEach(t => t.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Update hidden input value
+                    const role = this.getAttribute('data-role');
+                    selectedRoleInput.value = role;
+                    
+                    // Update button text based on role
+                    const buttonTexts = {
+                        'user': '<i class="fas fa-user-plus me-2"></i>Đăng ký Khách hàng',
+                        'shipper': '<i class="fas fa-shipping-fast me-2"></i>Đăng ký Shipper',
+                        'supplier': '<i class="fas fa-store me-2"></i>Đăng ký Nhà cung cấp'
+                    };
+                    
+                    registerBtn.innerHTML = buttonTexts[role] || buttonTexts['user'];
                 });
-                this.parentElement.classList.add('active');
+            });
+            
+            // Password strength checker
+            passwordInput.addEventListener('input', function() {
+                const password = this.value;
+                const strength = checkPasswordStrength(password);
+                updatePasswordStrength(strength);
+            });
+            
+            // Form validation
+            const form = document.getElementById('registerForm');
+            form.addEventListener('submit', function(e) {
+                if (!validateForm()) {
+                    e.preventDefault();
+                    return;
+                }
                 
-                // Show/hide vendor info
-                const vendorInfo = document.getElementById('vendorInfo');
-                if (this.value === 'VENDOR') {
-                    vendorInfo.classList.add('show');
+                // Show loading state
+                registerBtn.disabled = true;
+                registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang đăng ký...';
+            });
+            
+            // Real-time password confirmation check
+            confirmPasswordInput.addEventListener('input', function() {
+                if (this.value && this.value !== passwordInput.value) {
+                    this.setCustomValidity('Mật khẩu xác nhận không khớp');
                 } else {
-                    vendorInfo.classList.remove('show');
+                    this.setCustomValidity('');
                 }
             });
         });
         
-        // Password strength checker
-        function checkPasswordStrength() {
-            const password = document.getElementById('password').value;
-            const strengthBar = document.getElementById('passwordStrength');
-            let strength = 0;
+        function checkPasswordStrength(password) {
+            let score = 0;
+            let feedback = '';
             
-            if (password.length >= 6) strength++;
-            if (password.match(/[a-z]/)) strength++;
-            if (password.match(/[A-Z]/)) strength++;
-            if (password.match(/[0-9]/)) strength++;
-            if (password.match(/[^A-Za-z0-9]/)) strength++;
+            if (password.length >= 8) score += 1;
+            if (/[a-z]/.test(password)) score += 1;
+            if (/[A-Z]/.test(password)) score += 1;
+            if (/[0-9]/.test(password)) score += 1;
+            if (/[^A-Za-z0-9]/.test(password)) score += 1;
             
-            strengthBar.classList.remove('strength-weak', 'strength-medium', 'strength-strong');
+            const strengthLevels = [
+                { score: 0, text: 'Rất yếu', color: '#dc3545', width: '0%' },
+                { score: 1, text: 'Yếu', color: '#fd7e14', width: '20%' },
+                { score: 2, text: 'Trung bình', color: '#ffc107', width: '40%' },
+                { score: 3, text: 'Khá', color: '#20c997', width: '60%' },
+                { score: 4, text: 'Mạnh', color: '#198754', width: '80%' },
+                { score: 5, text: 'Rất mạnh', color: '#0d6efd', width: '100%' }
+            ];
             
-            if (strength <= 2) {
-                strengthBar.classList.add('strength-weak');
-            } else if (strength <= 3) {
-                strengthBar.classList.add('strength-medium');
-            } else {
-                strengthBar.classList.add('strength-strong');
-            }
+            return strengthLevels[score] || strengthLevels[0];
         }
         
-        // Password match checker
-        function checkPasswordMatch() {
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            const matchDiv = document.getElementById('passwordMatch');
+        function updatePasswordStrength(strength) {
+            const strengthFill = document.getElementById('strengthFill');
+            const strengthText = document.getElementById('strengthText');
             
-            if (confirmPassword === '') {
-                matchDiv.textContent = '';
-                return;
-            }
-            
-            if (password === confirmPassword) {
-                matchDiv.textContent = '✓ Mật khẩu khớp';
-                matchDiv.style.color = '#28a745';
-            } else {
-                matchDiv.textContent = '✗ Mật khẩu không khớp';
-                matchDiv.style.color = '#dc3545';
-            }
+            strengthFill.style.width = strength.width;
+            strengthFill.style.backgroundColor = strength.color;
+            strengthText.textContent = `Độ mạnh mật khẩu: ${strength.text}`;
+            strengthText.style.color = strength.color;
         }
         
-        // Form validation
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
+        function validateForm() {
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
+            const phone = document.getElementById('phone').value.trim();
+            const agreeTerms = document.getElementById('agreeTerms').checked;
+            
+            // Username validation
+            if (username.length < 3) {
+                showNotification('Tên đăng nhập phải có ít nhất 3 ký tự!', 'error');
+                return false;
+            }
+            
+            // Email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showNotification('Email không hợp lệ!', 'error');
+                return false;
+            }
+            
+            // Password validation
+            if (password.length < 6) {
+                showNotification('Mật khẩu phải có ít nhất 6 ký tự!', 'error');
+                return false;
+            }
             
             if (password !== confirmPassword) {
-                e.preventDefault();
-                alert('Mật khẩu xác nhận không khớp!');
+                showNotification('Mật khẩu xác nhận không khớp!', 'error');
                 return false;
             }
             
-            if (password.length < 6) {
-                e.preventDefault();
-                alert('Mật khẩu phải có ít nhất 6 ký tự!');
+            // Phone validation
+            const phoneRegex = /^[0-9]{10,11}$/;
+            if (!phoneRegex.test(phone)) {
+                showNotification('Số điện thoại phải có 10-11 chữ số!', 'error');
                 return false;
             }
-        });
+            
+            // Terms validation
+            if (!agreeTerms) {
+                showNotification('Bạn phải đồng ý với điều khoản sử dụng!', 'error');
+                return false;
+            }
+            
+            return true;
+        }
         
-        // Initialize role selection
-        document.getElementById('roleUser').parentElement.classList.add('active');
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'alert alert-' + (type === 'error' ? 'danger' : 'success') + ' position-fixed';
+            notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 400px;';
+            notification.innerHTML = 
+                '<i class="fas fa-' + (type === 'error' ? 'exclamation-triangle' : 'check-circle') + ' me-2"></i>' +
+                message +
+                '<button type="button" class="btn-close ms-2" onclick="this.parentElement.remove()"></button>';
+            
+            document.body.appendChild(notification);
+            
+            // Auto remove after 4 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 4000);
+        }
     </script>
 </body>
 </html>

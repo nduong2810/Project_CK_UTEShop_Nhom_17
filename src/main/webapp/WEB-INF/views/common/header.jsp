@@ -409,22 +409,6 @@
                                         <a class="dropdown-item" href="${pageContext.request.contextPath}/vendor/dashboard">
                                             <i class="fas fa-tachometer-alt me-2"></i>Dashboard
                                         </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/vendor/products">
-                                            <i class="fas fa-box me-2"></i>Quản lý sản phẩm
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/vendor/orders">
-                                            <i class="fas fa-clipboard-list me-2"></i>Đơn hàng shop
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/vendor/promotions">
-                                            <i class="fas fa-tags me-2"></i>Khuyến mãi
-                                        </a>
-                                    </li>
                                 </c:if>
                                 
                                 <!-- Admin-specific features -->
@@ -440,16 +424,7 @@
                                             <i class="fas fa-chart-line me-2"></i>Dashboard Admin
                                         </a>
                                     </li>
-                                    <li>
-                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/admin/users">
-                                            <i class="fas fa-users me-2"></i>Quản lý người dùng
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item" href="${pageContext.request.contextPath}/admin/shops">
-                                            <i class="fas fa-store-alt me-2"></i>Quản lý shop
-                                        </a>
-                                    </li>
+                     
                                 </c:if>
                                 
                                 <li><hr class="dropdown-divider"></li>

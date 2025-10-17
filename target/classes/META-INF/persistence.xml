@@ -27,20 +27,23 @@
         <properties>
             <!-- Database connection properties -->
             <property name="jakarta.persistence.jdbc.driver" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
-            <property name="jakarta.persistence.jdbc.url" value="jdbc:sqlserver://localhost:1433;databaseName=UTESHOP;encrypt=false"/>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:sqlserver://localhost:1433;databaseName=UTESHOP;encrypt=false;trustServerCertificate=true;sendStringParametersAsUnicode=true;characterEncoding=UTF-8;useUnicode=true"/>
             <property name="jakarta.persistence.jdbc.user" value="sa"/>
             <property name="jakarta.persistence.jdbc.password" value="1"/>
             
             <!-- Hibernate properties -->
             <property name="hibernate.dialect" value="org.hibernate.dialect.SQLServerDialect"/>
-            <!-- Changed from 'update' to 'validate' to prevent automatic schema changes -->
             <property name="hibernate.hbm2ddl.auto" value="validate"/>
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
             <property name="hibernate.use_sql_comments" value="true"/>
             
+            <!-- UTF-8 Character encoding settings (corrected) -->
+            <property name="hibernate.connection.characterEncoding" value="UTF-8"/>
+            <property name="hibernate.connection.useUnicode" value="true"/>
+            <property name="hibernate.connection.charSet" value="UTF-8"/>
+            
             <!-- SQL Server specific settings -->
-            <property name="hibernate.dialect.storage_engine" value="innodb"/>
             <property name="hibernate.temp.use_jdbc_metadata_defaults" value="false"/>
             
             <!-- Connection pool settings -->
@@ -53,11 +56,6 @@
             
             <!-- Validation -->
             <property name="hibernate.validator.apply_to_ddl" value="false"/>
-            
-            <!-- Additional SQL Server compatibility settings -->
-            <property name="hibernate.connection.CharSet" value="utf8"/>
-            <property name="hibernate.connection.characterEncoding" value="utf8"/>
-            <property name="hibernate.connection.useUnicode" value="true"/>
         </properties>
     </persistence-unit>
 </persistence>

@@ -11,26 +11,26 @@ public class NguoiDung {
     @Column(name = "MaND")
     private int maND;
     
-    @Column(name = "TenDangNhap", unique = true, nullable = false, length = 50, columnDefinition = "varchar(50) NOT NULL DEFAULT ''")
+    @Column(name = "TenDangNhap", unique = true, nullable = false, length = 50, columnDefinition = "NVARCHAR(50) NOT NULL DEFAULT ''")
     private String tenDangNhap = "";
     
-    @Column(name = "MatKhau", nullable = false, length = 255)
+    @Column(name = "MatKhau", nullable = false, length = 255, columnDefinition = "NVARCHAR(255)")
     private String matKhau;
     
-    @Column(name = "Email", unique = true, nullable = false, length = 100)
+    @Column(name = "Email", unique = true, nullable = false, length = 100, columnDefinition = "NVARCHAR(100)")
     private String email;
     
-    @Column(name = "HoTen", nullable = false, length = 100)
+    @Column(name = "HoTen", nullable = false, length = 100, columnDefinition = "NVARCHAR(100)")
     private String hoTen;
     
-    @Column(name = "SoDienThoai", length = 15)
+    @Column(name = "SoDienThoai", length = 15, columnDefinition = "NVARCHAR(15)")
     private String soDienThoai;
     
-    @Column(name = "DiaChi", length = 255)
+    @Column(name = "DiaChi", length = 255, columnDefinition = "NVARCHAR(255)")
     private String diaChi;
     
     @Enumerated(EnumType.STRING)
-    @Column(name = "VaiTro", nullable = false, length = 20)
+    @Column(name = "VaiTro", nullable = false, length = 20, columnDefinition = "NVARCHAR(20)")
     private VaiTro vaiTro;
     
     @Column(name = "TrangThai", nullable = false, columnDefinition = "bit NOT NULL DEFAULT 1")
