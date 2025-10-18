@@ -23,6 +23,10 @@ public class PasswordUtil {
      * @return The hashed password with salt
      */
     public static String hashPassword(String plainPassword) {
+        if (plainPassword == null || plainPassword.trim().isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be null or empty");
+        }
+        
         try {
             // Generate salt
             byte[] salt = new byte[16];
@@ -39,6 +43,7 @@ public class PasswordUtil {
             
             return saltBase64 + ":" + hashBase64;
         } catch (Exception e) {
+            System.err.println("PBKDF2 hashing failed, falling back to SHA-256: " + e.getMessage());
             // Fallback to simple SHA-256 if PBKDF2 fails
             return hashPasswordSHA256(plainPassword);
         }
@@ -55,21 +60,26 @@ public class PasswordUtil {
             return false;
         }
         
-        // Handle different hash formats
-        if (hashedPassword.contains(":")) {
-            // PBKDF2 format: salt:hash
-            return verifyPBKDF2Password(plainPassword, hashedPassword);
-        } else if (hashedPassword.startsWith("$2a$")) {
-            // BCrypt format - not supported, return false for security
-            System.err.println("BCrypt format detected but not supported in this implementation");
+        try {
+            // Handle different hash formats
+            if (hashedPassword.contains(":")) {
+                // PBKDF2 format: salt:hash
+                return verifyPBKDF2Password(plainPassword, hashedPassword);
+            } else if (hashedPassword.startsWith("$2a$")) {
+                // BCrypt format - not supported, return false for security
+                System.err.println("BCrypt format detected but not supported in this implementation");
+                return false;
+            } else if (hashedPassword.length() == 64) {
+                // SHA-256 format
+                return verifySHA256Password(plainPassword, hashedPassword);
+            } else {
+                // Plain text comparison (for backward compatibility)
+                System.out.println("Warning: Plain text password comparison detected for: " + hashedPassword.substring(0, Math.min(hashedPassword.length(), 5)) + "...");
+                return plainPassword.equals(hashedPassword);
+            }
+        } catch (Exception e) {
+            System.err.println("Password verification failed: " + e.getMessage());
             return false;
-        } else if (hashedPassword.length() == 64) {
-            // SHA-256 format
-            return verifySHA256Password(plainPassword, hashedPassword);
-        } else {
-            // Plain text comparison (for backward compatibility)
-            System.out.println("Warning: Plain text password comparison detected");
-            return plainPassword.equals(hashedPassword);
         }
     }
     
@@ -80,6 +90,7 @@ public class PasswordUtil {
         try {
             String[] parts = hashedPassword.split(":");
             if (parts.length != 2) {
+                System.err.println("Invalid PBKDF2 format: expected salt:hash");
                 return false;
             }
             
@@ -92,7 +103,7 @@ public class PasswordUtil {
             
             return MessageDigest.isEqual(expectedHash, actualHash);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("PBKDF2 verification failed: " + e.getMessage());
             return false;
         }
     }
@@ -102,8 +113,8 @@ public class PasswordUtil {
      */
     private static String hashPasswordSHA256(String plainPassword) {
         try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] hash = md.digest(plainPassword.getBytes("UTF-8"));
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(plainPassword.getBytes("UTF-8"));
             StringBuilder hexString = new StringBuilder();
             
             for (byte b : hash) {
@@ -116,8 +127,7 @@ public class PasswordUtil {
             
             return hexString.toString();
         } catch (Exception e) {
-            e.printStackTrace();
-            return plainPassword; // Return plain text as last resort
+            throw new RuntimeException("SHA-256 hashing failed", e);
         }
     }
     
@@ -125,43 +135,43 @@ public class PasswordUtil {
      * Verify SHA-256 hashed password
      */
     private static boolean verifySHA256Password(String plainPassword, String hashedPassword) {
-        String newHash = hashPasswordSHA256(plainPassword);
-        return newHash.equals(hashedPassword);
+        try {
+            String hashedPlain = hashPasswordSHA256(plainPassword);
+            return hashedPlain.equals(hashedPassword);
+        } catch (Exception e) {
+            System.err.println("SHA-256 verification failed: " + e.getMessage());
+            return false;
+        }
     }
     
     /**
-     * Check if a password is already hashed
-     * @param password The password to check
-     * @return true if it appears to be hashed, false otherwise
+     * Check if a password meets minimum requirements
      */
-    public static boolean isHashed(String password) {
-        if (password == null) return false;
+    public static boolean isValidPassword(String password) {
+        if (password == null || password.length() < 6) {
+            return false;
+        }
+        // Add more validation rules as needed
+        return true;
+    }
+    
+    /**
+     * Test method to verify password utility is working correctly
+     */
+    public static void testPasswordUtil() {
+        String testPassword = "testPassword123";
         
-        return password.contains(":") || // PBKDF2 format
-               password.startsWith("$2a$") || // BCrypt format
-               (password.length() == 64 && password.matches("[a-f0-9]+")); // SHA-256 format
-    }
-    
-    /**
-     * Check if a password is BCrypt encoded (for backward compatibility)
-     * @param password The password to check
-     * @return true if it's BCrypt encoded, false otherwise
-     */
-    public static boolean isBCryptEncoded(String password) {
-        return password != null && password.startsWith("$2a$") && password.length() == 60;
-    }
-    
-    /**
-     * Alias for hashPassword for backward compatibility
-     */
-    public static String encodePassword(String plainPassword) {
-        return hashPassword(plainPassword);
-    }
-    
-    /**
-     * Alias for verifyPassword for backward compatibility
-     */
-    public static boolean checkPassword(String plainPassword, String encodedPassword) {
-        return verifyPassword(plainPassword, encodedPassword);
+        // Test PBKDF2 hashing
+        String hashedPBKDF2 = hashPassword(testPassword);
+        System.out.println("PBKDF2 Hash: " + hashedPBKDF2);
+        System.out.println("PBKDF2 Verify: " + verifyPassword(testPassword, hashedPBKDF2));
+        
+        // Test SHA-256 hashing
+        String hashedSHA256 = hashPasswordSHA256(testPassword);
+        System.out.println("SHA-256 Hash: " + hashedSHA256);
+        System.out.println("SHA-256 Verify: " + verifyPassword(testPassword, hashedSHA256));
+        
+        // Test wrong password
+        System.out.println("Wrong password test: " + verifyPassword("wrongPassword", hashedPBKDF2));
     }
 }

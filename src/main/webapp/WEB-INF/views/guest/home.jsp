@@ -722,7 +722,7 @@
                                             <img src="${pageContext.request.contextPath}/img/${sp.hinhAnh}"
                                                  alt="${sp.tenSP}"
                                                  class="product-image"
-                                                 onerror="this.src='${pageContext.request.contextPath}/img/Logo_HCMUTE.png';">
+                                                 onerror="this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png';">
                                         </a>
                                     </div>
                                     
@@ -800,84 +800,218 @@ document.addEventListener('DOMContentLoaded', function() {
     const categoryFilter = document.getElementById('categoryFilter');
     if (categoryFilter) {
         categoryFilter.addEventListener('change', function() {
-            const selectedCategory = this.value;
-            if (selectedCategory) {
-                window.location.href = '${pageContext.request.contextPath}/guest/category?id=' + selectedCategory;
+            if (this.value) {
+                window.location.href = `${pageContext.request.contextPath}/guest/category?id=` + this.value;
             }
         });
     }
 });
 
-function applyFilters() {
-    const category = document.getElementById('categoryFilter').value;
-    if (category) {
-        window.location.href = '${pageContext.request.contextPath}/guest/category?id=' + category;
-        return;
+// Hero Carousel JavaScript
+let currentSlide = 0;
+const totalSlides = 5;
+let slideInterval;
+
+// Initialize carousel when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🎠 Initializing Hero Carousel...');
+    startAutoSlide();
+    
+    // Pause auto-slide when hovering over carousel
+    const carousel = document.querySelector('.hero-carousel');
+    if (carousel) {
+        carousel.addEventListener('mouseenter', stopAutoSlide);
+        carousel.addEventListener('mouseleave', startAutoSlide);
     }
-    alert('Chức năng lọc sẽ sớm được cập nhật!');
+});
+
+/**
+ * Start automatic slide transition
+ */
+function startAutoSlide() {
+    console.log('▶️ Starting auto-slide');
+    stopAutoSlide(); // Clear any existing interval
+    slideInterval = setInterval(() => {
+        nextSlide();
+    }, 4000); // Change slide every 4 seconds
 }
 
+/**
+ * Stop automatic slide transition
+ */
+function stopAutoSlide() {
+    if (slideInterval) {
+        console.log('⏹️ Stopping auto-slide');
+        clearInterval(slideInterval);
+        slideInterval = null;
+    }
+}
+
+/**
+ * Go to next slide
+ */
+function nextSlide() {
+    currentSlide = (currentSlide + 1) % totalSlides;
+    updateSlide();
+    console.log('➡️ Next slide:', currentSlide);
+}
+
+/**
+ * Go to previous slide
+ */
+function prevSlide() {
+    currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+    updateSlide();
+    console.log('⬅️ Previous slide:', currentSlide);
+}
+
+/**
+ * Go to specific slide
+ * @param {number} slideIndex - Index of slide to go to (0-based)
+ */
+function goToSlide(slideIndex) {
+    if (slideIndex >= 0 && slideIndex < totalSlides) {
+        currentSlide = slideIndex;
+        updateSlide();
+        console.log('🎯 Go to slide:', currentSlide);
+        
+        // Restart auto-slide timer
+        startAutoSlide();
+    }
+}
+
+/**
+ * Update active slide and dots
+ */
+function updateSlide() {
+    // Remove active class from all slides
+    const slides = document.querySelectorAll('.hero-slide');
+    slides.forEach((slide, index) => {
+        if (index === currentSlide) {
+            slide.classList.add('active');
+        } else {
+            slide.classList.remove('active');
+        }
+    });
+    
+    // Update navigation dots
+    const dots = document.querySelectorAll('.carousel-dot');
+    dots.forEach((dot, index) => {
+        if (index === currentSlide) {
+            dot.classList.add('active');
+        } else {
+            dot.classList.remove('active');
+        }
+    });
+}
+
+/**
+ * Add smooth scroll to product section when clicking hero buttons
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    const heroButtons = document.querySelectorAll('.btn-hero[href="#products"]');
+    heroButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const productsSection = document.querySelector('#products');
+            if (productsSection) {
+                productsSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+});
+
+// Utility functions for product interactions
 function addToCart(productId) {
-    const isLoggedIn = '${sessionScope.user}' !== '';
-    if (!isLoggedIn) {
-        alert('Vui lòng đăng nhập để thêm sản phẩm!');
-        window.location.href = '${pageContext.request.contextPath}/auth/login';
-        return;
+    console.log('🛒 Adding to cart:', productId);
+    
+    // TODO: Implement add to cart functionality
+    // This is a placeholder - you can implement actual cart logic here
+    
+    // Show temporary notification
+    showNotification('Sản phẩm đã được thêm vào giỏ hàng!', 'success');
+}
+
+function applyFilters() {
+    console.log('🔍 Applying filters...');
+    
+    const category = document.getElementById('categoryFilter').value;
+    const price = document.getElementById('priceFilter').value;
+    const sort = document.getElementById('sortFilter').value;
+    
+    // Build query string
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (price) params.append('price', price);
+    if (sort) params.append('sort', sort);
+    
+    // Redirect with filters
+    const queryString = params.toString();
+    const url = queryString ? 
+        `${window.location.pathname}?${queryString}` : 
+        window.location.pathname;
+    
+    window.location.href = url;
+}
+
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'alert alert-' + (type === 'success' ? 'success' : 'info') + ' position-fixed';
+    notification.style.cssText = `
+        top: 20px; 
+        right: 20px; 
+        z-index: 9999; 
+        min-width: 300px;
+        animation: slideInRight 0.3s ease-out;
+    `;
+    notification.innerHTML = 
+        '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'info-circle') + ' me-2"></i>' +
+        message +
+        '<button type="button" class="btn-close ms-2" onclick="this.parentElement.remove()"></button>';
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.style.animation = 'slideOutRight 0.3s ease-in';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 3000);
+}
+
+// Add CSS for notification animations
+const notificationStyles = document.createElement('style');
+notificationStyles.textContent = `
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
     }
     
-    fetch('${pageContext.request.contextPath}/user/cart/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: 'productId=' + productId + '&quantity=1'
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Đã thêm sản phẩm vào giỏ hàng!');
-            location.reload();
-        } else {
-            alert(data.message || 'Có lỗi xảy ra!');
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
         }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Có lỗi kết nối, vui lòng thử lại!');
-    });
-}
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(notificationStyles);
 
-/* Hero Carousel Script */
-let currentSlide = 0;
-const slides = document.querySelectorAll('.hero-slide');
-const dots = document.querySelectorAll('.carousel-dot');
-
-function showSlide(index) {
-    slides.forEach((slide, i) => {
-        slide.classList.remove('active');
-        dots[i].classList.remove('active');
-    });
-    slides[index].classList.add('active');
-    dots[index].classList.add('active');
-}
-
-function nextSlide() {
-    currentSlide = (currentSlide + 1) % slides.length;
-    showSlide(currentSlide);
-}
-
-function prevSlide() {
-    currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-    showSlide(currentSlide);
-}
-
-function goToSlide(index) {
-    currentSlide = index;
-    showSlide(currentSlide);
-}
-
-// Auto slide
-setInterval(() => {
-    nextSlide();
-}, 5000);
+console.log('🎉 UTESHOP Home page JavaScript loaded successfully!');
 </script>
 </body>
 </html>

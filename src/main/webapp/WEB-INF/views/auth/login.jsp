@@ -230,8 +230,8 @@
         }
         
         .forgot-password {
-            text-align: right;
-            margin-top: -1rem;
+            text-align: center;
+            margin-top: 0.5rem;
             margin-bottom: 1.5rem;
         }
         
@@ -442,12 +442,18 @@
                             </div>
                             
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div class="form-check">
+                                <div class="form-check mb-3">
                                     <input type="checkbox" class="form-check-input" id="remember" name="remember">
                                     <label class="form-check-label" for="remember">
                                         Ghi nhớ đăng nhập
                                     </label>
                                 </div>
+                            </div>
+                            
+                            <div class="forgot-password">
+                                <a href="${pageContext.request.contextPath}/auth/forgot-password">
+                                    <i class="fas fa-key me-1"></i>Quên mật khẩu?
+                                </a>
                             </div>
                             
                             <div class="d-grid mb-3">

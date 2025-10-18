@@ -3,6 +3,7 @@ package com.uteshop.controller.auth;
 import com.uteshop.dao.NguoiDungDAO;
 import com.uteshop.entity.NguoiDung;
 import com.uteshop.util.PasswordUtil;
+import com.uteshop.service.EmailService;
 
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebServlet;
@@ -150,34 +151,45 @@ public class AuthController extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         response.setContentType("text/html; charset=UTF-8");
         
-        String fullName = request.getParameter("fullName");
+        // Get form parameters
+        String firstName = request.getParameter("firstName");
+        String lastName = request.getParameter("lastName");
         String username = request.getParameter("username");
         String email = request.getParameter("email");
         String phone = request.getParameter("phone");
         String address = request.getParameter("address");
         String password = request.getParameter("password");
         String confirmPassword = request.getParameter("confirmPassword");
+        String gender = request.getParameter("gender");
         String role = request.getParameter("role");
-        boolean newsletter = "on".equals(request.getParameter("newsletter"));
 
         try {
-            // Validate input with proper Unicode handling
-            if (fullName == null || fullName.trim().isEmpty() ||
+            // Validate input
+            if (firstName == null || firstName.trim().isEmpty() ||
+                lastName == null || lastName.trim().isEmpty() ||
                 username == null || username.trim().isEmpty() ||
                 email == null || email.trim().isEmpty() ||
-                password == null || password.trim().isEmpty()) {
+                phone == null || phone.trim().isEmpty() ||
+                address == null || address.trim().isEmpty() ||
+                password == null || password.trim().isEmpty() ||
+                gender == null || gender.trim().isEmpty()) {
                 request.setAttribute("error", "Vui lòng điền đầy đủ thông tin bắt buộc");
                 showRegisterPage(request, response);
                 return;
             }
 
-            // Trim inputs and handle Unicode properly
-            fullName = fullName.trim();
+            // Trim inputs
+            firstName = firstName.trim();
+            lastName = lastName.trim();
             username = username.trim();
             email = email.trim();
-            phone = phone != null ? phone.trim() : null;
-            address = address != null ? address.trim() : null;
+            phone = phone.trim();
+            address = address.trim();
 
+            // Combine first and last name
+            String fullName = lastName + " " + firstName;
+
+            // Validate password match
             if (!password.equals(confirmPassword)) {
                 request.setAttribute("error", "Mật khẩu xác nhận không khớp");
                 showRegisterPage(request, response);
@@ -190,16 +202,49 @@ public class AuthController extends HttpServlet {
                 return;
             }
 
+            // Check OTP verification
+            HttpSession session = request.getSession(false);
+            if (session == null || 
+                !Boolean.TRUE.equals(session.getAttribute("otp_verified"))) {
+                request.setAttribute("error", "Vui lòng xác thực OTP trước khi đăng ký");
+                showRegisterPage(request, response);
+                return;
+            }
+
+            // Get verified contact info from session
+            String verifiedIdentifier = (String) session.getAttribute("verified_identifier");
+            String verifiedType = (String) session.getAttribute("verified_type");
+            
+            if (verifiedIdentifier == null || verifiedType == null) {
+                request.setAttribute("error", "Phiên xác thực OTP đã hết hạn. Vui lòng thử lại");
+                showRegisterPage(request, response);
+                return;
+            }
+
+            // Validate that the verified contact matches form input (chỉ EMAIL)
+            if (!verifiedType.equals("EMAIL") || !verifiedIdentifier.equalsIgnoreCase(email)) {
+                request.setAttribute("error", "Email đã xác thực không khớp với email trong form");
+                showRegisterPage(request, response);
+                return;
+            }
+
             // Check if username exists
-            if (nguoiDungDAO.findByUsername(username) != null) {
+            if (nguoiDungDAO.isUsernameExists(username)) {
                 request.setAttribute("error", "Tên đăng nhập đã tồn tại");
                 showRegisterPage(request, response);
                 return;
             }
 
             // Check if email exists
-            if (nguoiDungDAO.findByEmail(email) != null) {
+            if (nguoiDungDAO.isEmailExists(email)) {
                 request.setAttribute("error", "Email đã được sử dụng");
+                showRegisterPage(request, response);
+                return;
+            }
+
+            // Check if phone exists
+            if (nguoiDungDAO.isPhoneExists(phone)) {
+                request.setAttribute("error", "Số điện thoại đã được sử dụng");
                 showRegisterPage(request, response);
                 return;
             }
@@ -212,7 +257,19 @@ public class AuthController extends HttpServlet {
             newUser.setSoDienThoai(phone);
             newUser.setDiaChi(address);
             newUser.setMatKhau(PasswordUtil.hashPassword(password));
-            newUser.setVaiTro(NguoiDung.VaiTro.valueOf(role != null ? role : "USER"));
+            
+            // Set role
+            if (role != null && !role.trim().isEmpty()) {
+                try {
+                    NguoiDung.VaiTro vaiTro = NguoiDung.VaiTro.valueOf(role.toUpperCase());
+                    newUser.setVaiTro(vaiTro);
+                } catch (IllegalArgumentException e) {
+                    newUser.setVaiTro(NguoiDung.VaiTro.USER); // Default to USER
+                }
+            } else {
+                newUser.setVaiTro(NguoiDung.VaiTro.USER);
+            }
+            
             newUser.setTrangThai(true);
             newUser.setNgayTao(LocalDateTime.now());
 
@@ -220,8 +277,26 @@ public class AuthController extends HttpServlet {
             boolean success = nguoiDungDAO.save(newUser);
             
             if (success) {
-                request.setAttribute("success", "Đăng ký thành công! Vui lòng đăng nhập để tiếp tục");
-                showLoginPage(request, response);
+                // Clear OTP session data
+                session.removeAttribute("otp_verified");
+                session.removeAttribute("verified_identifier");
+                session.removeAttribute("verified_type");
+                session.removeAttribute("otp_identifier");
+                session.removeAttribute("otp_type");
+                
+                // Send welcome email
+                try {
+                    EmailService.getInstance().sendWelcomeEmail(email, firstName);
+                } catch (Exception e) {
+                    System.err.println("Failed to send welcome email: " + e.getMessage());
+                    // Don't fail registration if welcome message fails
+                }
+                
+                request.setAttribute("message", "Đăng ký thành công! Chào mừng bạn đến với UTESHOP. Vui lòng đăng nhập để tiếp tục");
+                
+                // Forward to login page
+                RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/auth/login.jsp");
+                dispatcher.forward(request, response);
             } else {
                 request.setAttribute("error", "Đăng ký thất bại. Vui lòng thử lại");
                 showRegisterPage(request, response);
@@ -229,7 +304,7 @@ public class AuthController extends HttpServlet {
 
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("error", "Đã xảy ra lỗi trong quá trình đăng ký. Vui lòng thử lại");
+            request.setAttribute("error", "Đã xảy ra lỗi trong quá trình đăng ký: " + e.getMessage());
             showRegisterPage(request, response);
         }
     }

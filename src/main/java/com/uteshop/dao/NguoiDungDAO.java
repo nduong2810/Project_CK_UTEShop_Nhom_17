@@ -25,27 +25,30 @@ public class NguoiDungDAO {
             VietnameseEncodingUtil.setVietnameseParameter(ps, 1, usernameOrEmail);
             VietnameseEncodingUtil.setVietnameseParameter(ps, 2, usernameOrEmail);
             
+            System.out.println("🔍 Attempting authentication for: " + usernameOrEmail);
+            
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     String storedPassword = VietnameseEncodingUtil.getVietnameseString(rs, "MatKhau");
+                    System.out.println("🔐 Stored password hash: " + storedPassword);
+                    System.out.println("🔑 Input password: " + password);
                     
-                    // Check if password matches (support both plain text and BCrypt)
-                    boolean passwordMatches = false;
-                    
-                    if (PasswordUtil.isBCryptEncoded(storedPassword)) {
-                        // If stored password is BCrypt encoded, use BCrypt verification
-                        passwordMatches = PasswordUtil.verifyPassword(password, storedPassword);
-                    } else {
-                        // If stored password is plain text, do direct comparison
-                        passwordMatches = password.equals(storedPassword);
-                    }
+                    // Sử dụng PasswordUtil.verifyPassword cho tất cả loại hash
+                    boolean passwordMatches = PasswordUtil.verifyPassword(password, storedPassword);
+                    System.out.println("✅ Password match result: " + passwordMatches);
                     
                     if (passwordMatches) {
+                        System.out.println("🎉 Authentication successful for user: " + usernameOrEmail);
                         return mapResultSetToNguoiDung(rs);
+                    } else {
+                        System.out.println("❌ Password verification failed for user: " + usernameOrEmail);
                     }
+                } else {
+                    System.out.println("❌ User not found: " + usernameOrEmail);
                 }
             }
         } catch (Exception e) {
+            System.err.println("💥 Authentication error: " + e.getMessage());
             e.printStackTrace();
         }
         
@@ -204,12 +207,232 @@ public class NguoiDungDAO {
         if (ngayTao != null) {
             user.setNgayTao(ngayTao.toLocalDateTime());
         }
-
+        
         Timestamp ngayCapNhat = rs.getTimestamp("NgayCapNhat");
         if (ngayCapNhat != null) {
             user.setNgayCapNhat(ngayCapNhat.toLocalDateTime());
         }
         
         return user;
+    }
+    
+    /**
+     * Check if username exists
+     */
+    public boolean isUsernameExists(String username) {
+        String sql = "SELECT COUNT(*) FROM NguoiDung WHERE TenDangNhap = ?";
+        
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 1, username);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Check if email exists
+     */
+    public boolean isEmailExists(String email) {
+        String sql = "SELECT COUNT(*) FROM NguoiDung WHERE Email = ?";
+        
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 1, email);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Check if phone number exists
+     */
+    public boolean isPhoneExists(String phone) {
+        String sql = "SELECT COUNT(*) FROM NguoiDung WHERE SoDienThoai = ?";
+        
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 1, phone);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Get all users (for admin management)
+     */
+    public List<NguoiDung> getAllUsers() {
+        List<NguoiDung> users = new ArrayList<>();
+        String sql = "SELECT * FROM NguoiDung ORDER BY NgayTao DESC";
+        
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            
+            while (rs.next()) {
+                users.add(mapResultSetToNguoiDung(rs));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return users;
+    }
+    
+    /**
+     * Get users by role
+     */
+    public List<NguoiDung> getUsersByRole(NguoiDung.VaiTro vaiTro) {
+        List<NguoiDung> users = new ArrayList<>();
+        String sql = "SELECT * FROM NguoiDung WHERE VaiTro = ? ORDER BY NgayTao DESC";
+        
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 1, vaiTro.name());
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    users.add(mapResultSetToNguoiDung(rs));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return users;
+    }
+    
+    /**
+     * Update user status (activate/deactivate account)
+     */
+    public boolean updateUserStatus(int userId, boolean status) {
+        String sql = "UPDATE NguoiDung SET TrangThai = ?, NgayCapNhat = ? WHERE MaND = ?";
+        
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setBoolean(1, status);
+            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(3, userId);
+            
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Change user password
+     */
+    public boolean changePassword(int userId, String newPassword) {
+        String sql = "UPDATE NguoiDung SET MatKhau = ?, NgayCapNhat = ? WHERE MaND = ?";
+        
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 1, PasswordUtil.hashPassword(newPassword));
+            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(3, userId);
+            
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+
+    /**
+     * Update user password with proper hashing
+     * @param userId User ID
+     * @param newPassword Plain text new password
+     * @return true if password updated successfully
+     */
+    public boolean updatePassword(int userId, String newPassword) {
+        String sql = "UPDATE NguoiDung SET MatKhau = ?, NgayCapNhat = ? WHERE MaND = ?";
+        
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            // Hash the new password before storing
+            String hashedPassword = PasswordUtil.hashPassword(newPassword);
+            System.out.println("🔐 Updating password for user ID: " + userId);
+            System.out.println("🔑 New hashed password: " + hashedPassword);
+            
+            ps.setString(1, hashedPassword);
+            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setInt(3, userId);
+            
+            int result = ps.executeUpdate();
+            System.out.println("✅ Password update result: " + (result > 0 ? "SUCCESS" : "FAILED"));
+            
+            return result > 0;
+        } catch (Exception e) {
+            System.err.println("💥 Password update error: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    /**
+     * Update user password by email (for forgot password feature)
+     * @param email User email
+     * @param newPassword Plain text new password
+     * @return true if password updated successfully
+     */
+    public boolean updatePasswordByEmail(String email, String newPassword) {
+        String sql = "UPDATE NguoiDung SET MatKhau = ?, NgayCapNhat = ? WHERE Email = ?";
+        
+        try (Connection conn = DBConnect.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            // Hash the new password before storing
+            String hashedPassword = PasswordUtil.hashPassword(newPassword);
+            System.out.println("🔐 Updating password for email: " + email);
+            System.out.println("🔑 New hashed password: " + hashedPassword);
+            
+            ps.setString(1, hashedPassword);
+            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            VietnameseEncodingUtil.setVietnameseParameter(ps, 3, email);
+            
+            int result = ps.executeUpdate();
+            System.out.println("✅ Password update result: " + (result > 0 ? "SUCCESS" : "FAILED"));
+            
+            return result > 0;
+        } catch (Exception e) {
+            System.err.println("💥 Password update error: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
     }
 }

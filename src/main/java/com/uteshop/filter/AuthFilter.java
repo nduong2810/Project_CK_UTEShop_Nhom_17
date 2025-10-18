@@ -23,6 +23,13 @@ public class AuthFilter implements Filter {
         "/auth/login",
         "/auth/register",
         "/auth/logout",
+        "/auth/send-otp",      // Thêm endpoint gửi OTP
+        "/auth/verify-otp",    // Thêm endpoint xác thực OTP
+        "/auth/resend-otp",    // Thêm endpoint gửi lại OTP
+        "/auth/forgot-password",    // Thêm trang quên mật khẩu
+        "/auth/reset-password",     // Thêm trang đặt lại mật khẩu
+        "/auth/forgot-send-otp",    // Thêm endpoint gửi OTP quên mật khẩu
+        "/auth/forgot-verify-otp",  // Thêm endpoint xác thực OTP quên mật khẩu
         "/guest",  // Tất cả guest URLs đều public
         "/assets",
         "/css",

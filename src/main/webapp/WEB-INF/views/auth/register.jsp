@@ -1,6 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
-<%@ page session="false" %>
+<%@ page session="true" %>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -337,6 +337,60 @@
             padding-left: 0.5rem;
         }
         
+        /* Password strength và requirements styles */
+        .password-requirements {
+            background: rgba(13, 202, 240, 0.1);
+            border-left: 4px solid #0dcaf0;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+        }
+        
+        .requirement {
+            margin: 0.3rem 0;
+            color: #6c757d;
+        }
+        
+        .requirement.valid {
+            color: #28a745;
+        }
+        
+        .requirement i {
+            width: 16px;
+            margin-right: 0.5rem;
+        }
+        
+        .password-strength {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+        }
+        
+        .strength-weak {
+            background: rgba(220, 53, 69, 0.1);
+            color: #721c24;
+            border-left: 3px solid #dc3545;
+        }
+        
+        .strength-medium {
+            background: rgba(255, 193, 7, 0.1);
+            color: #664d03;
+            border-left: 3px solid #ffc107;
+        }
+        
+        .strength-strong {
+            background: rgba(40, 167, 69, 0.1);
+            color: #155724;
+            border-left: 3px solid #28a745;
+        }
+        
+        .row.g-3 .col-md-6 {
+            padding-right: 0.5rem;
+            padding-left: 0.5rem;
+        }
+        
         .password-strength {
             margin-bottom: 1rem;
         }
@@ -456,6 +510,65 @@
                 padding-right: 0.75rem;
                 padding-left: 0.75rem;
             }
+        }
+        
+        /* OTP Styles */
+        .otp-method-card {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .otp-method-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        }
+        
+        .otp-method-card .form-check-input:checked ~ .form-check-label {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .otp-method-content {
+            pointer-events: none;
+        }
+        
+        .otp-input-section {
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 2px solid rgba(102, 126, 234, 0.2);
+        }
+        
+        #otpCode {
+            font-size: 1.2rem;
+            letter-spacing: 0.3rem;
+            font-weight: bold;
+        }
+        
+        .alert-info {
+            background: rgba(13, 202, 240, 0.1);
+            color: #055160;
+            border-left: 4px solid #0dcaf0;
+        }
+        
+        .alert-warning {
+            background: rgba(255, 193, 7, 0.1);
+            color: #664d03;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        #resendTimer {
+            font-weight: bold;
         }
     </style>
 </head>
@@ -599,12 +712,32 @@
                                 </div>
                             </div>
                             
+                            <!-- Password Requirements -->
+                            <div class="password-requirements">
+                                <strong><i class="fas fa-info-circle me-2"></i>Yêu cầu mật khẩu:</strong>
+                                <div class="requirement" id="req-length">
+                                    <i class="fas fa-times text-danger"></i>Ít nhất 8 ký tự
+                                </div>
+                                <div class="requirement" id="req-uppercase">
+                                    <i class="fas fa-times text-danger"></i>Có ít nhất 1 chữ hoa
+                                </div>
+                                <div class="requirement" id="req-lowercase">
+                                    <i class="fas fa-times text-danger"></i>Có ít nhất 1 chữ thường
+                                </div>
+                                <div class="requirement" id="req-number">
+                                    <i class="fas fa-times text-danger"></i>Có ít nhất 1 chữ số
+                                </div>
+                                <div class="requirement" id="req-special">
+                                    <i class="fas fa-times text-danger"></i>Có ít nhất 1 ký tự đặc biệt (!@#$%^&*)
+                                </div>
+                            </div>
+                            
                             <!-- Password Row -->
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="form-floating">
                                         <input type="password" class="form-control" id="password" name="password" 
-                                               placeholder="Mật khẩu" required>
+                                               placeholder="Mật khẩu" required minlength="6">
                                         <label for="password">
                                             <i class="fas fa-lock me-2"></i>Mật khẩu
                                         </label>
@@ -613,7 +746,7 @@
                                 <div class="col-md-6">
                                     <div class="form-floating">
                                         <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" 
-                                               placeholder="Xác nhận mật khẩu" required>
+                                               placeholder="Xác nhận mật khẩu" required minlength="6">
                                         <label for="confirmPassword">
                                             <i class="fas fa-lock me-2"></i>Xác nhận mật khẩu
                                         </label>
@@ -621,50 +754,80 @@
                                 </div>
                             </div>
                             
-                            <!-- Password Strength Indicator -->
-                            <div class="password-strength">
-                                <div class="strength-bar">
-                                    <div class="strength-fill" id="strengthFill"></div>
-                                </div>
-                                <div class="strength-text" id="strengthText">Nhập mật khẩu để kiểm tra độ mạnh</div>
-                            </div>
-                            
-                            <!-- Address (Optional) -->
+                            <!-- Address -->
                             <div class="form-floating">
-                                <textarea class="form-control" id="address" name="address" 
-                                          placeholder="Địa chỉ" style="height: 80px"></textarea>
+                                <input type="text" class="form-control" id="address" name="address" 
+                                       placeholder="Địa chỉ" required>
                                 <label for="address">
-                                    <i class="fas fa-map-marker-alt me-2"></i>Địa chỉ (tùy chọn)
+                                    <i class="fas fa-map-marker-alt me-2"></i>Địa chỉ
                                 </label>
+                            </div>
+
+                            <!-- OTP Verification Section -->
+                            <div class="otp-section" id="otpSection" style="display: none;">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-shield-alt me-2"></i>
+                                    <strong>Bước cuối:</strong> Xác thực email để hoàn tất đăng ký
+                                </div>
+                                
+                                <!-- Send OTP Button -->
+                                <div class="text-center mb-3">
+                                    <button type="button" class="btn btn-primary" id="sendOTPBtn">
+                                        <i class="fas fa-paper-plane me-2"></i>Gửi mã xác thực qua Email
+                                    </button>
+                                </div>
+                                
+                                <!-- OTP Input (hidden initially) -->
+                                <div class="otp-input-section" id="otpInputSection" style="display: none;">
+                                    <div class="form-floating mb-3">
+                                        <input type="text" class="form-control text-center" id="otpCode" name="otpCode" 
+                                               placeholder="123456" maxlength="6" pattern="[0-9]{6}">
+                                        <label for="otpCode">
+                                            <i class="fas fa-key me-2"></i>Nhập mã OTP (6 chữ số)
+                                        </label>
+                                    </div>
+                                    
+                                    <div class="text-center mb-3">
+                                        <button type="button" class="btn btn-success" id="verifyOTPBtn">
+                                            <i class="fas fa-check-circle me-2"></i>Xác thực OTP
+                                        </button>
+                                        <button type="button" class="btn btn-outline-secondary ms-2" id="resendOTPBtn" disabled>
+                                            <i class="fas fa-redo me-2"></i>Gửi lại (<span id="resendTimer">60</span>s)
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-clock me-2"></i>
+                                        Mã OTP có hiệu lực trong <strong>5 phút</strong>. Kiểm tra hộp thư spam nếu không thấy email.
+                                    </div>
+                                </div>
                             </div>
                             
                             <!-- Terms and Conditions -->
                             <div class="terms-checkbox">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="agreeTerms" name="agreeTerms" required>
-                                    <label class="form-check-label" for="agreeTerms">
-                                        Tôi đồng ý với <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Điều khoản sử dụng</a> 
-                                        và <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Chính sách bảo mật</a>
+                                    <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+                                    <label class="form-check-label" for="terms">
+                                        Tôi đồng ý với 
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Điều khoản sử dụng</a> 
+                                        và 
+                                        <a href="#" data-bs-toggle="modal" data-bs-target="#privacyModal">Chính sách bảo mật</a>
                                     </label>
                                 </div>
                             </div>
                             
-                            <div class="d-grid mb-3">
-                                <button type="submit" class="btn btn-register" id="registerBtn">
+                            <!-- Submit Button -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-register" id="submitBtn" disabled>
                                     <i class="fas fa-user-plus me-2"></i>Đăng ký tài khoản
                                 </button>
                             </div>
                         </form>
                         
-                        <div class="divider">
-                            <span>hoặc</span>
-                        </div>
-                        
+                        <!-- Login Link -->
                         <div class="login-link">
                             <p>Đã có tài khoản? 
-                                <a href="${pageContext.request.contextPath}/auth/login">
-                                    <i class="fas fa-sign-in-alt me-1"></i>Đăng nhập ngay
-                                </a>
+                                <a href="${pageContext.request.contextPath}/auth/login">Đăng nhập ngay</a>
                             </p>
                         </div>
                     </div>
@@ -672,7 +835,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Terms Modal -->
     <div class="modal fade" id="termsModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
@@ -887,6 +1050,225 @@
                 }
             }, 4000);
         }
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elements
+        const registerForm = document.getElementById('registerForm');
+        const roleTabs = document.querySelectorAll('.role-tab');
+        const selectedRoleInput = document.getElementById('selectedRole');
+        const otpSection = document.getElementById('otpSection');
+        const sendOTPBtn = document.getElementById('sendOTPBtn');
+        const otpInputSection = document.getElementById('otpInputSection');
+        const verifyOTPBtn = document.getElementById('verifyOTPBtn');
+        const resendOTPBtn = document.getElementById('resendOTPBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        
+        let otpVerified = false;
+        let resendTimer = null;
+        let resendCountdown = 60;
+        
+        // Role selection
+        roleTabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                roleTabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                selectedRoleInput.value = this.dataset.role;
+            });
+        });
+        
+        // Form validation - Cải thiện để không ẩn OTP section
+        function validateForm() {
+            const isValid = registerForm.checkValidity();
+            const passwordsMatch = passwordInput.value === confirmPasswordInput.value;
+            
+            if (!passwordsMatch) {
+                confirmPasswordInput.setCustomValidity('Mật khẩu xác nhận không khớp');
+            } else {
+                confirmPasswordInput.setCustomValidity('');
+            }
+            
+            // Chỉ hiển thị OTP section khi form hợp lệ và chưa hiển thị trước đó
+            if (isValid && passwordsMatch && otpSection.style.display === 'none') {
+                otpSection.style.display = 'block';
+            }
+            // Không ẩn OTP section nếu đã hiển thị, trừ khi form hoàn toàn không hợp lệ
+            else if ((!isValid || !passwordsMatch) && !otpVerified && otpInputSection.style.display === 'none') {
+                // Chỉ ẩn nếu chưa bắt đầu quá trình OTP
+                otpSection.style.display = 'none';
+            }
+            
+            // Enable submit only when OTP is verified
+            submitBtn.disabled = !otpVerified;
+        }
+        
+        // Form change listeners
+        registerForm.addEventListener('input', validateForm);
+        registerForm.addEventListener('change', validateForm);
+        
+        // Password confirmation validation
+        confirmPasswordInput.addEventListener('input', function() {
+            if (this.value !== passwordInput.value) {
+                this.setCustomValidity('Mật khẩu xác nhận không khớp');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+        
+        // Send OTP
+        sendOTPBtn.addEventListener('click', function() {
+            const emailInput = document.getElementById('email');
+            let identifier = emailInput.value;
+            
+            if (!identifier) {
+                alert('Vui lòng nhập email');
+                return;
+            }
+            
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang gửi...';
+            
+            // Send OTP request
+            fetch('${pageContext.request.contextPath}/auth/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'identifier=' + encodeURIComponent(identifier) + '&otpType=EMAIL'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    otpInputSection.style.display = 'block';
+                    startResendTimer();
+                    alert('Mã OTP đã được gửi đến email của bạn!');
+                } else {
+                    alert('Lỗi: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi gửi OTP');
+            })
+            .finally(() => {
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Gửi mã xác thực qua Email';
+            });
+        });
+        
+        // Verify OTP
+        verifyOTPBtn.addEventListener('click', function() {
+            const otpCode = document.getElementById('otpCode').value;
+            
+            if (!otpCode || otpCode.length !== 6) {
+                alert('Vui lòng nhập mã OTP 6 chữ số');
+                return;
+            }
+            
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xác thực...';
+            
+            fetch('${pageContext.request.contextPath}/auth/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'otpCode=' + encodeURIComponent(otpCode)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    otpVerified = true;
+                    submitBtn.disabled = false;
+                    otpInputSection.style.display = 'none';
+                    
+                    // Show success message
+                    const successDiv = document.createElement('div');
+                    successDiv.className = 'alert alert-success';
+                    successDiv.innerHTML = '<i class="fas fa-check-circle me-2"></i>Xác thực OTP thành công! Bạn có thể hoàn tất đăng ký.';
+                    otpSection.appendChild(successDiv);
+                    
+                    clearInterval(resendTimer);
+                    alert('Xác thực OTP thành công!');
+                } else {
+                    alert('Lỗi: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi xác thực OTP');
+            })
+            .finally(() => {
+                this.disabled = false;
+                this.innerHTML = '<i class="fas fa-check-circle me-2"></i>Xác thực OTP';
+            });
+        });
+        
+        // Resend OTP
+        resendOTPBtn.addEventListener('click', function() {
+            if (this.disabled) return;
+            
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang gửi lại...';
+            
+            fetch('${pageContext.request.contextPath}/auth/resend-otp', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    startResendTimer();
+                    alert('Mã OTP đã được gửi lại thành công!');
+                } else {
+                    alert('Lỗi: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi gửi lại OTP');
+            });
+        });
+        
+        // Resend timer
+        function startResendTimer() {
+            resendCountdown = 60;
+            resendOTPBtn.disabled = true;
+            
+            resendTimer = setInterval(() => {
+                resendCountdown--;
+                document.getElementById('resendTimer').textContent = resendCountdown;
+                resendOTPBtn.innerHTML = `<i class="fas fa-redo me-2"></i>Gửi lại (${resendCountdown}s)`;
+                
+                if (resendCountdown <= 0) {
+                    clearInterval(resendTimer);
+                    resendOTPBtn.disabled = false;
+                    resendOTPBtn.innerHTML = '<i class="fas fa-redo me-2"></i>Gửi lại';
+                }
+            }, 1000);
+        }
+        
+        // OTP input formatting
+        document.getElementById('otpCode').addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+            if (this.value.length > 6) {
+                this.value = this.value.slice(0, 6);
+            }
+        });
+        
+        // Form submission validation
+        registerForm.addEventListener('submit', function(e) {
+            if (!otpVerified) {
+                e.preventDefault();
+                alert('Vui lòng xác thực OTP trước khi đăng ký');
+                return;
+            }
+            
+            if (passwordInput.value !== confirmPasswordInput.value) {
+                e.preventDefault();
+                alert('Mật khẩu xác nhận không khớp');
+                return;
+            }
+        });
+    });
     </script>
 </body>
 </html>
