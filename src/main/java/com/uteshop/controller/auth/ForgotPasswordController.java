@@ -125,7 +125,7 @@ public class ForgotPasswordController extends HttpServlet {
             }
             
             // Kiểm tra tài khoản có bị khóa không
-            if (!user.isTrangThai()) {
+            if (!user.getTrangThai()) { // Changed from user.getTrangThai() != 1
                 sendErrorResponse(response, "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ admin", 400);
                 return;
             }

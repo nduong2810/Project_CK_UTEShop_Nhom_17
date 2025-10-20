@@ -1,13 +1,16 @@
 package com.uteshop.entity;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Entity
 @Table(name = "CuaHang")
-public class CuaHang {
+public class CuaHang implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MaCH")
@@ -36,29 +39,22 @@ public class CuaHang {
     private NguoiDung nguoiDung;
     
     @Column(name = "TrangThai", nullable = false)
-    private Boolean trangThai = true;
+    private Boolean trangThai; // Changed to Boolean
     
     @Column(name = "NgayTao", nullable = false)
-    private LocalDateTime ngayTao;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date ngayTao; // Changed to Date
     
     @Column(name = "NgayCapNhat")
-    private LocalDateTime ngayCapNhat;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date ngayCapNhat; // Changed to Date
 
-    // One-to-many relationship with products
     @OneToMany(mappedBy = "cuaHang", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<SanPham> sanPhams = new ArrayList<>();
 
-    // Constructors
     public CuaHang() {
-        this.ngayTao = LocalDateTime.now();
-        this.trangThai = true;
-    }
-
-    public CuaHang(String tenCH, String diaChi, Integer maND) {
-        this();
-        this.tenCH = tenCH;
-        this.diaChi = diaChi;
-        this.maND = maND;
+        this.ngayTao = new Date();
+        this.trangThai = true; // Use Boolean
     }
 
     // Getters and Setters
@@ -124,9 +120,6 @@ public class CuaHang {
     
     public void setNguoiDung(NguoiDung nguoiDung) { 
         this.nguoiDung = nguoiDung;
-        if (nguoiDung != null) {
-            this.maND = nguoiDung.getMaND();
-        }
     }
 
     public Boolean getTrangThai() { 
@@ -137,19 +130,19 @@ public class CuaHang {
         this.trangThai = trangThai; 
     }
 
-    public LocalDateTime getNgayTao() { 
+    public Date getNgayTao() { 
         return ngayTao; 
     }
     
-    public void setNgayTao(LocalDateTime ngayTao) { 
+    public void setNgayTao(Date ngayTao) { 
         this.ngayTao = ngayTao; 
     }
 
-    public LocalDateTime getNgayCapNhat() { 
+    public Date getNgayCapNhat() { 
         return ngayCapNhat; 
     }
     
-    public void setNgayCapNhat(LocalDateTime ngayCapNhat) { 
+    public void setNgayCapNhat(Date ngayCapNhat) { 
         this.ngayCapNhat = ngayCapNhat; 
     }
 
@@ -163,17 +156,6 @@ public class CuaHang {
 
     @PreUpdate
     public void preUpdate() {
-        this.ngayCapNhat = LocalDateTime.now();
-    }
-
-    @Override
-    public String toString() {
-        return "CuaHang{" +
-                "maCH=" + maCH +
-                ", tenCH='" + tenCH + '\'' +
-                ", diaChi='" + diaChi + '\'' +
-                ", trangThai=" + trangThai +
-                ", nguoiDung=" + (nguoiDung != null ? nguoiDung.getHoTen() : "null") +
-                '}';
+        this.ngayCapNhat = new Date();
     }
 }

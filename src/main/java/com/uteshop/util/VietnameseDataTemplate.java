@@ -6,6 +6,7 @@ import com.uteshop.entity.NguoiDung;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Arrays;
+import java.util.Date;
 
 /**
  * Template class for adding Vietnamese data to prevent encoding issues
@@ -121,8 +122,8 @@ public class VietnameseDataTemplate {
         user.setDiaChi(VietnameseEncodingUtil.prepareVietnameseText(vietnameseAddress));
         user.setSoDienThoai("09" + String.format("%08d", (int)(Math.random() * 100000000)));
         user.setVaiTro(NguoiDung.VaiTro.USER);
-        user.setTrangThai(true);
-        user.setNgayTao(LocalDateTime.now());
+        user.setTrangThai(true); // Changed from 1 to true
+        user.setNgayTao(new java.util.Date());
         
         return user;
     }
@@ -175,8 +176,8 @@ public class VietnameseDataTemplate {
         user.setDiaChi(VietnameseEncodingUtil.prepareVietnameseText(address));
         user.setSoDienThoai(phone);
         user.setVaiTro(role);
-        user.setTrangThai(true);
-        user.setNgayTao(LocalDateTime.now());
+        user.setTrangThai(true); // Changed from 1 to true
+        user.setNgayTao(new java.util.Date());
         
         return user;
     }
@@ -281,7 +282,7 @@ public class VietnameseDataTemplate {
         System.out.println("Address validation: " + (addressValid ? "✅ VALID" : "❌ INVALID"));
         
         // Uncomment to run demonstrations
-        // insertSampleVietnameseUsers();
+        // insertMultipleVietnameseUsers(5);
         // demonstrateVietnameseUsers();
         
         System.out.println("\n📋 Hướng dẫn sử dụng:");

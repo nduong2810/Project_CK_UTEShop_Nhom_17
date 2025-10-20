@@ -9,6 +9,7 @@ import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Date;
 
 public class NguoiDungDAO {
 
@@ -16,7 +17,7 @@ public class NguoiDungDAO {
      * Authenticate user by username/email and password
      */
     public NguoiDung authenticate(String usernameOrEmail, String password) {
-        String sql = "SELECT * FROM NguoiDung WHERE (TenDangNhap = ? OR Email = ?) AND TrangThai = 1";
+        String sql = "SELECT * FROM NguoiDung WHERE (TenDangNhap = ? OR Email = ?) AND TrangThai = ?";
         
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -24,6 +25,7 @@ public class NguoiDungDAO {
             // Ensure UTF-8 encoding for parameters
             VietnameseEncodingUtil.setVietnameseParameter(ps, 1, usernameOrEmail);
             VietnameseEncodingUtil.setVietnameseParameter(ps, 2, usernameOrEmail);
+            ps.setBoolean(3, true); // Set TrangThai to true
             
             System.out.println("🔍 Attempting authentication for: " + usernameOrEmail);
             
@@ -119,8 +121,8 @@ public class NguoiDungDAO {
             VietnameseEncodingUtil.setVietnameseParameter(ps, 5, user.getSoDienThoai());
             VietnameseEncodingUtil.setVietnameseParameter(ps, 6, VietnameseEncodingUtil.prepareVietnameseText(user.getDiaChi()));
             VietnameseEncodingUtil.setVietnameseParameter(ps, 7, user.getVaiTro().name());
-            ps.setBoolean(8, user.isTrangThai());
-            ps.setTimestamp(9, Timestamp.valueOf(user.getNgayTao()));
+            ps.setBoolean(8, user.getTrangThai()); 
+            ps.setTimestamp(9, new Timestamp(user.getNgayTao().getTime())); 
             
             int result = ps.executeUpdate();
             
@@ -176,7 +178,7 @@ public class NguoiDungDAO {
             VietnameseEncodingUtil.setVietnameseParameter(ps, 2, user.getEmail());
             VietnameseEncodingUtil.setVietnameseParameter(ps, 3, user.getSoDienThoai());
             VietnameseEncodingUtil.setVietnameseParameter(ps, 4, VietnameseEncodingUtil.prepareVietnameseText(user.getDiaChi()));
-            ps.setTimestamp(5, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setTimestamp(5, new Timestamp(System.currentTimeMillis())); 
             ps.setInt(6, user.getMaND());
             
             return ps.executeUpdate() > 0;
@@ -201,16 +203,16 @@ public class NguoiDungDAO {
         user.setSoDienThoai(VietnameseEncodingUtil.getVietnameseString(rs, "SoDienThoai"));
         user.setDiaChi(VietnameseEncodingUtil.getVietnameseString(rs, "DiaChi"));
         user.setVaiTro(NguoiDung.VaiTro.valueOf(VietnameseEncodingUtil.getVietnameseString(rs, "VaiTro")));
-        user.setTrangThai(rs.getBoolean("TrangThai"));
+        user.setTrangThai(rs.getBoolean("TrangThai")); 
         
         Timestamp ngayTao = rs.getTimestamp("NgayTao");
         if (ngayTao != null) {
-            user.setNgayTao(ngayTao.toLocalDateTime());
+            user.setNgayTao(new Date(ngayTao.getTime())); 
         }
         
         Timestamp ngayCapNhat = rs.getTimestamp("NgayCapNhat");
         if (ngayCapNhat != null) {
-            user.setNgayCapNhat(ngayCapNhat.toLocalDateTime());
+            user.setNgayCapNhat(new Date(ngayCapNhat.getTime())); 
         }
         
         return user;
@@ -339,8 +341,8 @@ public class NguoiDungDAO {
         try (Connection conn = DBConnect.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setBoolean(1, status);
-            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setBoolean(1, status); 
+            ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
             ps.setInt(3, userId);
             
             return ps.executeUpdate() > 0;
@@ -361,7 +363,7 @@ public class NguoiDungDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             VietnameseEncodingUtil.setVietnameseParameter(ps, 1, PasswordUtil.hashPassword(newPassword));
-            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
             ps.setInt(3, userId);
             
             return ps.executeUpdate() > 0;
@@ -390,7 +392,7 @@ public class NguoiDungDAO {
             System.out.println("🔑 New hashed password: " + hashedPassword);
             
             ps.setString(1, hashedPassword);
-            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
             ps.setInt(3, userId);
             
             int result = ps.executeUpdate();
@@ -422,7 +424,7 @@ public class NguoiDungDAO {
             System.out.println("🔑 New hashed password: " + hashedPassword);
             
             ps.setString(1, hashedPassword);
-            ps.setTimestamp(2, Timestamp.valueOf(LocalDateTime.now()));
+            ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
             VietnameseEncodingUtil.setVietnameseParameter(ps, 3, email);
             
             int result = ps.executeUpdate();

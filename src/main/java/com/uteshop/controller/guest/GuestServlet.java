@@ -103,7 +103,7 @@ public class GuestServlet extends HttpServlet {
 
     private void loadHomeData(HttpServletRequest request) {
         try {
-            List<SanPham> top10 = sanPhamDAO.getTop10SanPhamBanChay();
+            List<SanPham> top10 = sanPhamDAO.findTopNProducts(10);
             request.setAttribute("top10", top10);
             System.out.println("GuestServlet_DEPRECATED - Loaded " + top10.size() + " products for home page");
         } catch (Exception e) {

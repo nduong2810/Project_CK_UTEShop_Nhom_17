@@ -1,6 +1,12 @@
 package com.uteshop.controller.guest;
 
+import com.uteshop.dao.DanhGiaSanPhamDAO;
+import com.uteshop.dao.DonHangDAO;
+import com.uteshop.dao.NguoiDungDAO;
 import com.uteshop.dao.SanPhamDAO;
+import com.uteshop.entity.DanhGiaSanPham;
+import com.uteshop.entity.DonHang;
+import com.uteshop.entity.NguoiDung;
 import com.uteshop.entity.SanPham;
 
 import jakarta.servlet.RequestDispatcher;
@@ -10,63 +16,20 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Date;
+import java.util.List;
 
 @WebServlet("/guest/product")
 public class ProductController extends HttpServlet {
     private final SanPhamDAO sanPhamDAO = new SanPhamDAO();
-    
-    // Mapping từ product ID đến trang chi tiết cụ thể
-    private static final Map<Integer, String> PRODUCT_DETAIL_PAGES = new HashMap<>();
-    
-    static {
-        // Các sản phẩm có sẵn
-        PRODUCT_DETAIL_PAGES.put(1, "iphone15-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(2, "samsung-s24-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(3, "oppo-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(4, "xiaomi-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(5, "macbook-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(6, "dell-xps13-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(7, "gaming-pc-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(8, "ipad-pro-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(9, "apple-watch-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(10, "airpods-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(11, "sony-headphones-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(12, "sac-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(13, "aothun-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(14, "jeans-nam-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(15, "polo-nam-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(16, "sneaker-nam-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(17, "dam-congso-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(18, "blazer-nu-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(19, "tui-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(20, "noi-com-dien-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(21, "xe-dap-giant-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(22, "xe-day-be-detail.jsp");
-        
-        // Các sản phẩm mới tạo
-        PRODUCT_DETAIL_PAGES.put(23, "ban-lam-viec-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(24, "ghe-gaming-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(25, "may-pha-cafe-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(26, "tu-lanh-samsung-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(27, "may-giat-lg-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(28, "dieu-hoa-panasonic-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(29, "tv-sony-oled-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(30, "lo-vi-song-sharp-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(31, "may-hut-bui-dyson-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(32, "bep-tu-nhat-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(33, "may-loc-nuoc-ro-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(34, "robot-hut-bui-xiaomi-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(35, "may-say-toc-dyson-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(36, "may-ep-trai-cay-detail.jsp");
-        PRODUCT_DETAIL_PAGES.put(37, "may-xay-sinh-to-detail.jsp");
-    }
+    private final DanhGiaSanPhamDAO danhGiaSanPhamDAO = new DanhGiaSanPhamDAO();
+    private final NguoiDungDAO nguoiDungDAO = new NguoiDungDAO();
+    private final DonHangDAO donHangDAO = new DonHangDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String pathInfo = "/WEB-INF/views/guest/product-detail.jsp"; // Fallback mặc định
+        String pathInfo = "/WEB-INF/views/guest/product-detail.jsp";
         
         try {
             String idParam = request.getParameter("id");
@@ -81,15 +44,26 @@ public class ProductController extends HttpServlet {
             if (product != null) {
                 request.setAttribute("product", product);
                 
-                // Kiểm tra xem có trang chi tiết cụ thể cho sản phẩm này không
-                String specificPage = PRODUCT_DETAIL_PAGES.get(productId);
-                if (specificPage != null) {
-                    pathInfo = "/WEB-INF/views/guest/" + specificPage;
-                    System.out.println("Routing product ID " + productId + " to: " + specificPage);
+                // Fetch reviews for the product
+                List<DanhGiaSanPham> reviews = danhGiaSanPhamDAO.getReviewsByProduct(productId, 0, 10); // Fetch first 10 reviews
+                request.setAttribute("reviews", reviews);
+
+                // Check if the logged-in user has a completed order for this product
+                NguoiDung loggedInUser = (NguoiDung) request.getSession().getAttribute("user");
+                if (loggedInUser != null) {
+                    System.out.println("ProductController: Logged-in user found: " + loggedInUser.getMaND());
+                    System.out.println("ProductController: Checking for completed order for productId: " + productId + " by userId: " + loggedInUser.getMaND());
+                    DonHang userOrderForProduct = donHangDAO.findCompletedOrderByUserAndProduct(loggedInUser.getMaND(), productId);
+                    if (userOrderForProduct != null) {
+                        request.setAttribute("userOrderForProduct", userOrderForProduct);
+                        System.out.println("ProductController: Found completed order with ID: " + userOrderForProduct.getMaDH());
+                    } else {
+                        System.out.println("ProductController: No completed order found for productId: " + productId + " by userId: " + loggedInUser.getMaND());
+                    }
                 } else {
-                    // Sử dụng trang chung nếu không có trang cụ thể
-                    System.out.println("No specific page found for product ID " + productId + ", using default page.");
+                    System.out.println("ProductController: No user logged in.");
                 }
+
             } else {
                 request.setAttribute("errorMessage", "Sản phẩm không tồn tại.");
                 pathInfo = "/WEB-INF/views/guest/home.jsp";
@@ -105,5 +79,74 @@ public class ProductController extends HttpServlet {
 
         RequestDispatcher dispatcher = request.getRequestDispatcher(pathInfo);
         dispatcher.forward(request, response);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String action = request.getParameter("action");
+        if ("addReview".equals(action)) {
+            handleAddReview(request, response);
+        } else {
+            // Handle other POST requests or return an error
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid action for POST request.");
+        }
+    }
+
+    private void handleAddReview(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String productIdParam = request.getParameter("productId");
+        String ratingParam = request.getParameter("rating");
+        String comment = request.getParameter("comment");
+        String orderIdParam = request.getParameter("orderId");
+        
+        NguoiDung user = (NguoiDung) request.getSession().getAttribute("user");
+
+        if (productIdParam == null || productIdParam.isEmpty() ||
+            ratingParam == null || ratingParam.isEmpty() ||
+            comment == null || comment.isEmpty() ||
+            user == null ||
+            orderIdParam == null || orderIdParam.isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing review parameters, order ID, or user not logged in.");
+            return;
+        }
+
+        try {
+            Integer productId = Integer.parseInt(productIdParam);
+            Integer rating = Integer.parseInt(ratingParam);
+            Integer orderId = Integer.parseInt(orderIdParam);
+
+            SanPham product = sanPhamDAO.findById(productId);
+            DonHang order = donHangDAO.findById(orderId);
+
+            if (product != null && user != null && order != null) {
+                DanhGiaSanPham review = new DanhGiaSanPham();
+                review.setDiemDanhGia(rating);
+                review.setNoiDung(comment);
+                review.setNgayDanhGia(new Date());
+                review.setTrangThai(true);
+                review.setSanPham(product);
+                review.setNguoiDung(user);
+                review.setDonHang(order);
+
+                boolean success = danhGiaSanPhamDAO.addReview(review);
+
+                if (success) {
+                    response.sendRedirect(request.getContextPath() + "/guest/product?id=" + productId);
+                } else {
+                    request.setAttribute("errorMessage", "Failed to add review.");
+                    doGet(request, response);
+                }
+            } else {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "Product, User, or Order not found.");
+            }
+
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid number format for product ID, rating, or order ID.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("errorMessage", "An unexpected error occurred while adding the review.");
+            response.sendRedirect(request.getContextPath() + "/guest/product?id=" + request.getParameter("productId") + "&error=true");
+        }
     }
 }

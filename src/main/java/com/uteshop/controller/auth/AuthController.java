@@ -10,6 +10,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @WebServlet(urlPatterns = {"/auth/login", "/auth/register", "/auth/logout"})
 public class AuthController extends HttpServlet {
@@ -106,7 +107,7 @@ public class AuthController extends HttpServlet {
             }
 
             // Check if account is active
-            if (!user.isTrangThai()) {
+            if (!user.getTrangThai()) {
                 request.setAttribute("error", "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ admin");
                 showLoginPage(request, response);
                 return;
@@ -271,7 +272,7 @@ public class AuthController extends HttpServlet {
             }
             
             newUser.setTrangThai(true);
-            newUser.setNgayTao(LocalDateTime.now());
+            newUser.setNgayTao(new java.util.Date());
 
             // Save user
             boolean success = nguoiDungDAO.save(newUser);

@@ -1,15 +1,18 @@
 package com.uteshop.entity;
 
 import jakarta.persistence.*;
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Entity
 @Table(name = "ChiTietDonHang")
-public class ChiTietDonHang {
+public class ChiTietDonHang implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MaCTDH")
-    private int maCTDH;
+    private Integer maCTDH; // Changed to Integer for consistency
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MaDH", nullable = false)
@@ -31,17 +34,9 @@ public class ChiTietDonHang {
     // Constructors
     public ChiTietDonHang() {}
 
-    public ChiTietDonHang(DonHang donHang, SanPham sanPham, int soLuong, BigDecimal donGia) {
-        this.donHang = donHang;
-        this.sanPham = sanPham;
-        this.soLuong = soLuong;
-        this.donGia = donGia;
-        this.thanhTien = donGia.multiply(BigDecimal.valueOf(soLuong));
-    }
-
     // Getters and Setters
-    public int getMaCTDH() { return maCTDH; }
-    public void setMaCTDH(int maCTDH) { this.maCTDH = maCTDH; }
+    public Integer getMaCTDH() { return maCTDH; }
+    public void setMaCTDH(Integer maCTDH) { this.maCTDH = maCTDH; }
 
     public DonHang getDonHang() { return donHang; }
     public void setDonHang(DonHang donHang) { this.donHang = donHang; }
@@ -50,31 +45,11 @@ public class ChiTietDonHang {
     public void setSanPham(SanPham sanPham) { this.sanPham = sanPham; }
 
     public int getSoLuong() { return soLuong; }
-    public void setSoLuong(int soLuong) { 
-        this.soLuong = soLuong;
-        if (this.donGia != null) {
-            this.thanhTien = this.donGia.multiply(BigDecimal.valueOf(soLuong));
-        }
-    }
+    public void setSoLuong(int soLuong) { this.soLuong = soLuong; }
 
     public BigDecimal getDonGia() { return donGia; }
-    public void setDonGia(BigDecimal donGia) { 
-        this.donGia = donGia;
-        if (this.soLuong > 0) {
-            this.thanhTien = donGia.multiply(BigDecimal.valueOf(this.soLuong));
-        }
-    }
+    public void setDonGia(BigDecimal donGia) { this.donGia = donGia; }
 
     public BigDecimal getThanhTien() { return thanhTien; }
     public void setThanhTien(BigDecimal thanhTien) { this.thanhTien = thanhTien; }
-
-    @Override
-    public String toString() {
-        return "ChiTietDonHang{" +
-                "maCTDH=" + maCTDH +
-                ", soLuong=" + soLuong +
-                ", donGia=" + donGia +
-                ", thanhTien=" + thanhTien +
-                '}';
-    }
 }

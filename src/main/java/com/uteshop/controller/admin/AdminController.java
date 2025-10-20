@@ -176,13 +176,13 @@ public class AdminController extends HttpServlet {
             SanPham sanPham = new SanPham();
             sanPham.setTenSP(tenSP.trim());
             sanPham.setMoTa(moTa != null ? moTa.trim() : "");
-            sanPham.setDonGia(donGia.doubleValue()); // Convert BigDecimal to Double
+            sanPham.setDonGia(donGia);
             sanPham.setSoLuongTon(soLuongTon);
             sanPham.setSoLuongBan(0);
             sanPham.setHinhAnh(hinhAnh != null && !hinhAnh.trim().isEmpty() ? 
                               hinhAnh.trim() : "default-product.jpg");
             sanPham.setNgayTao(new java.util.Date()); // Convert LocalDateTime to Date
-            sanPham.setTrangThai(1); // Convert boolean to Integer
+            sanPham.setTrangThai(true); // Convert boolean to Integer
             
             // Set relationships
             DanhMuc danhMuc = danhMucDAO.findById(maDM);
@@ -287,7 +287,7 @@ public class AdminController extends HttpServlet {
                 sanPham.setMoTa(moTa.trim());
             }
             if (donGiaStr != null && !donGiaStr.trim().isEmpty()) {
-                sanPham.setDonGia(new BigDecimal(donGiaStr).doubleValue()); // Convert BigDecimal to Double
+                sanPham.setDonGia(new BigDecimal(donGiaStr));
             }
             if (soLuongTonStr != null && !soLuongTonStr.trim().isEmpty()) {
                 sanPham.setSoLuongTon(Integer.parseInt(soLuongTonStr));

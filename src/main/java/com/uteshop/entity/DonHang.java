@@ -1,24 +1,28 @@
 package com.uteshop.entity;
 
 import jakarta.persistence.*;
+import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @Entity
 @Table(name = "DonHang")
-public class DonHang {
+public class DonHang implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MaDH")
-    private int maDH;
+    private Integer maDH;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MaND", nullable = false)
     private NguoiDung nguoiDung;
     
     @Column(name = "NgayDat", nullable = false)
-    private LocalDateTime ngayDat;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date ngayDat;
     
     @Column(name = "TongTien", nullable = false, precision = 18, scale = 2)
     private BigDecimal tongTien;
@@ -56,88 +60,51 @@ public class DonHang {
     private String lyDoHuy;
     
     @Column(name = "ngayXacNhan")
-    private LocalDateTime ngayXacNhan;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date ngayXacNhan;
     
     @Column(name = "ngayGiaoHang")
-    private LocalDateTime ngayGiaoHang;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date ngayGiaoHang;
     
     @Column(name = "ngayNhanHang")
-    private LocalDateTime ngayNhanHang;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date ngayNhanHang;
     
     @Column(name = "ngayHuy")
-    private LocalDateTime ngayHuy;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date ngayHuy;
     
     @Column(name = "ngayCapNhat")
-    private LocalDateTime ngayCapNhat;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date ngayCapNhat;
 
-    // One-to-many relationship with order details
     @OneToMany(mappedBy = "donHang", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<ChiTietDonHang> chiTietDonHangs;
 
-    // Enum for order status - Cập nhật đầy đủ các trạng thái
     public enum TrangThaiDonHang {
-        DON_HANG_MOI("Đơn hàng mới"),
-        DA_XAC_NHAN("Đã xác nhận"), 
-        DANG_GIAO("Đang giao"), 
-        DA_GIAO("Đã giao"), 
-        DA_HUY("Đã hủy"),
-        TRA_HANG("Trả hàng"),
-        HOAN_TIEN("Hoàn tiền");
-        
-        private final String description;
-        
-        TrangThaiDonHang(String description) {
-            this.description = description;
-        }
-        
-        public String getDescription() {
-            return description;
-        }
+        DON_HANG_MOI, DA_XAC_NHAN, DANG_GIAO, DA_GIAO, DA_HUY, TRA_HANG, HOAN_TIEN
     }
     
-    // Enum for payment method
     public enum PhuongThucThanhToan {
-        COD("Thanh toán khi nhận hàng"),
-        VNPAY("VNPay"),
-        MOMO("MoMo");
-        
-        private final String description;
-        
-        PhuongThucThanhToan(String description) {
-            this.description = description;
-        }
-        
-        public String getDescription() {
-            return description;
-        }
+        COD, VNPAY, MOMO
     }
 
-    // Constructors
     public DonHang() {
-        this.ngayDat = LocalDateTime.now();
-        this.ngayCapNhat = LocalDateTime.now();
+        this.ngayDat = new Date();
+        this.ngayCapNhat = new Date();
         this.trangThai = TrangThaiDonHang.DON_HANG_MOI;
-        this.tienGiam = BigDecimal.ZERO;
-        this.phiVanChuyen = BigDecimal.ZERO;
-    }
-
-    public DonHang(NguoiDung nguoiDung, BigDecimal tongTien, String diaChiGiaoHang) {
-        this();
-        this.nguoiDung = nguoiDung;
-        this.tongTien = tongTien;
-        this.tongThanhToan = tongTien;
-        this.diaChiGiaoHang = diaChiGiaoHang;
     }
 
     // Getters and Setters
-    public int getMaDH() { return maDH; }
-    public void setMaDH(int maDH) { this.maDH = maDH; }
+    public Integer getMaDH() { return maDH; }
+    public void setMaDH(Integer maDH) { this.maDH = maDH; }
 
     public NguoiDung getNguoiDung() { return nguoiDung; }
     public void setNguoiDung(NguoiDung nguoiDung) { this.nguoiDung = nguoiDung; }
 
-    public LocalDateTime getNgayDat() { return ngayDat; }
-    public void setNgayDat(LocalDateTime ngayDat) { this.ngayDat = ngayDat; }
+    public Date getNgayDat() { return ngayDat; }
+    public void setNgayDat(Date ngayDat) { this.ngayDat = ngayDat; }
 
     public BigDecimal getTongTien() { return tongTien; }
     public void setTongTien(BigDecimal tongTien) { this.tongTien = tongTien; }
@@ -152,37 +119,7 @@ public class DonHang {
     public void setTongThanhToan(BigDecimal tongThanhToan) { this.tongThanhToan = tongThanhToan; }
 
     public TrangThaiDonHang getTrangThai() { return trangThai; }
-    public void setTrangThai(TrangThaiDonHang trangThai) { 
-        this.trangThai = trangThai;
-        this.ngayCapNhat = LocalDateTime.now();
-        
-        // Set specific dates based on status - Xử lý đầy đủ tất cả trạng thái
-        switch (trangThai) {
-            case DON_HANG_MOI:
-                // Không cần xử lý gì thêm
-                break;
-            case DA_XAC_NHAN:
-                if (this.ngayXacNhan == null) this.ngayXacNhan = LocalDateTime.now();
-                break;
-            case DANG_GIAO:
-                if (this.ngayGiaoHang == null) this.ngayGiaoHang = LocalDateTime.now();
-                break;
-            case DA_GIAO:
-                if (this.ngayNhanHang == null) this.ngayNhanHang = LocalDateTime.now();
-                break;
-            case DA_HUY:
-                if (this.ngayHuy == null) this.ngayHuy = LocalDateTime.now();
-                break;
-            case TRA_HANG:
-                if (this.ngayHuy == null) this.ngayHuy = LocalDateTime.now();
-                break;
-            case HOAN_TIEN:
-                if (this.ngayHuy == null) this.ngayHuy = LocalDateTime.now();
-                break;
-            default:
-                break;
-        }
-    }
+    public void setTrangThai(TrangThaiDonHang trangThai) { this.trangThai = trangThai; }
     
     public PhuongThucThanhToan getPhuongThucThanhToan() { return phuongThucThanhToan; }
     public void setPhuongThucThanhToan(PhuongThucThanhToan phuongThucThanhToan) { this.phuongThucThanhToan = phuongThucThanhToan; }
@@ -202,55 +139,26 @@ public class DonHang {
     public String getLyDoHuy() { return lyDoHuy; }
     public void setLyDoHuy(String lyDoHuy) { this.lyDoHuy = lyDoHuy; }
     
-    public LocalDateTime getNgayXacNhan() { return ngayXacNhan; }
-    public void setNgayXacNhan(LocalDateTime ngayXacNhan) { this.ngayXacNhan = ngayXacNhan; }
+    public Date getNgayXacNhan() { return ngayXacNhan; }
+    public void setNgayXacNhan(Date ngayXacNhan) { this.ngayXacNhan = ngayXacNhan; }
 
-    public LocalDateTime getNgayGiaoHang() { return ngayGiaoHang; }
-    public void setNgayGiaoHang(LocalDateTime ngayGiaoHang) { this.ngayGiaoHang = ngayGiaoHang; }
+    public Date getNgayGiaoHang() { return ngayGiaoHang; }
+    public void setNgayGiaoHang(Date ngayGiaoHang) { this.ngayGiaoHang = ngayGiaoHang; }
     
-    public LocalDateTime getNgayNhanHang() { return ngayNhanHang; }
-    public void setNgayNhanHang(LocalDateTime ngayNhanHang) { this.ngayNhanHang = ngayNhanHang; }
+    public Date getNgayNhanHang() { return ngayNhanHang; }
+    public void setNgayNhanHang(Date ngayNhanHang) { this.ngayNhanHang = ngayNhanHang; }
     
-    public LocalDateTime getNgayHuy() { return ngayHuy; }
-    public void setNgayHuy(LocalDateTime ngayHuy) { this.ngayHuy = ngayHuy; }
+    public Date getNgayHuy() { return ngayHuy; }
+    public void setNgayHuy(Date ngayHuy) { this.ngayHuy = ngayHuy; }
 
-    public LocalDateTime getNgayCapNhat() { return ngayCapNhat; }
-    public void setNgayCapNhat(LocalDateTime ngayCapNhat) { this.ngayCapNhat = ngayCapNhat; }
+    public Date getNgayCapNhat() { return ngayCapNhat; }
+    public void setNgayCapNhat(Date ngayCapNhat) { this.ngayCapNhat = ngayCapNhat; }
 
     public List<ChiTietDonHang> getChiTietDonHangs() { return chiTietDonHangs; }
     public void setChiTietDonHangs(List<ChiTietDonHang> chiTietDonHangs) { this.chiTietDonHangs = chiTietDonHangs; }
-    
-    // Utility methods
-    public boolean canCancel() {
-        return trangThai == TrangThaiDonHang.DON_HANG_MOI || trangThai == TrangThaiDonHang.DA_XAC_NHAN;
-    }
-    
-    public boolean canReturn() {
-        return trangThai == TrangThaiDonHang.DA_GIAO;
-    }
-    
-    public void calculateTotalPayment() {
-        if (this.tongTien != null) {
-            BigDecimal phiVC = this.phiVanChuyen != null ? this.phiVanChuyen : BigDecimal.ZERO;
-            BigDecimal giam = this.tienGiam != null ? this.tienGiam : BigDecimal.ZERO;
-            this.tongThanhToan = this.tongTien.add(phiVC).subtract(giam);
-        }
-    }
 
     @PreUpdate
     public void preUpdate() {
-        this.ngayCapNhat = LocalDateTime.now();
-    }
-
-    @Override
-    public String toString() {
-        return "DonHang{" +
-                "maDH=" + maDH +
-                ", nguoiDung=" + (nguoiDung != null ? nguoiDung.getHoTen() : "null") +
-                ", ngayDat=" + ngayDat +
-                ", tongTien=" + tongTien +
-                ", trangThai=" + trangThai +
-                ", phuongThucThanhToan=" + phuongThucThanhToan +
-                '}';
+        this.ngayCapNhat = new Date();
     }
 }

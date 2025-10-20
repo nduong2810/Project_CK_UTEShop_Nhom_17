@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Filter để kiểm tra authentication và authorization
@@ -49,9 +50,23 @@ public class AuthFilter implements Filter {
         String requestURI = httpRequest.getRequestURI();
         String contextPath = httpRequest.getContextPath();
         String path = requestURI.substring(contextPath.length());
-        
+        String queryString = httpRequest.getQueryString();
+
         // Debug logging
         System.out.println("AuthFilter: Processing request - " + path);
+        System.out.println("AuthFilter: Full Request URL - " + httpRequest.getRequestURL() + (queryString != null ? "?" + queryString : ""));
+        System.out.println("AuthFilter: Query String - " + queryString);
+
+        // ADDED: Log all request parameters
+        Map<String, String[]> parameterMap = httpRequest.getParameterMap();
+        if (parameterMap != null && !parameterMap.isEmpty()) {
+            System.out.println("AuthFilter: Request Parameters:");
+            for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
+                System.out.println("  - " + entry.getKey() + ": " + Arrays.toString(entry.getValue()));
+            }
+        } else {
+            System.out.println("AuthFilter: No Request Parameters found.");
+        }
         
         // Cho phép truy cập các URL công khai (bao gồm tất cả /guest/*)
         if (isPublicUrl(path)) {

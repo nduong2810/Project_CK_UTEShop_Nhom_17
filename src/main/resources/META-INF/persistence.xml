@@ -25,30 +25,35 @@
         <class>com.uteshop.entity.SanPhamYeuThich</class>
         
         <properties>
-            <!-- Database connection properties -->
+            <!-- Database connection properties (used by HikariCP) -->
             <property name="jakarta.persistence.jdbc.driver" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
             <property name="jakarta.persistence.jdbc.url" value="jdbc:sqlserver://localhost:1433;databaseName=UTESHOP;encrypt=false;trustServerCertificate=true;sendStringParametersAsUnicode=true;characterEncoding=UTF-8;useUnicode=true"/>
             <property name="jakarta.persistence.jdbc.user" value="sa"/>
             <property name="jakarta.persistence.jdbc.password" value="1"/>
             
             <!-- Hibernate properties -->
-            <property name="hibernate.dialect" value="org.hibernate.dialect.SQLServerDialect"/>
+            <!-- Removed hibernate.dialect as it's auto-detected -->
             <property name="hibernate.hbm2ddl.auto" value="validate"/>
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
             <property name="hibernate.use_sql_comments" value="true"/>
             
-            <!-- UTF-8 Character encoding settings (corrected) -->
+            <!-- UTF-8 Character encoding settings -->
             <property name="hibernate.connection.characterEncoding" value="UTF-8"/>
             <property name="hibernate.connection.useUnicode" value="true"/>
             <property name="hibernate.connection.charSet" value="UTF-8"/>
             
-            <!-- SQL Server specific settings -->
-            <property name="hibernate.temp.use_jdbc_metadata_defaults" value="false"/>
+            <!-- Removed hibernate.temp.use_jdbc_metadata_defaults as it's deprecated -->
             
-            <!-- Connection pool settings -->
-            <property name="hibernate.connection.pool_size" value="10"/>
-            <property name="hibernate.connection.autocommit" value="false"/>
+            <!-- HikariCP Connection Pool Settings -->
+            <property name="hibernate.connection.provider_class" value="org.hibernate.hikaricp.internal.HikariCPConnectionProvider"/>
+            <property name="hibernate.hikari.minimumIdle" value="5"/>
+            <property name="hibernate.hikari.maximumPoolSize" value="20"/>
+            <property name="hibernate.hikari.idleTimeout" value="30000"/> <!-- 30 seconds -->
+            <property name="hibernate.hikari.connectionTimeout" value="30000"/> <!-- 30 seconds -->
+            <property name="hibernate.hikari.maxLifetime" value="120000"/> <!-- 2 minutes -->
+            
+            <!-- Removed hibernate.connection.pool_size and hibernate.connection.autocommit as HikariCP manages these -->
             
             <!-- Performance settings -->
             <property name="hibernate.cache.use_second_level_cache" value="false"/>

@@ -1,7 +1,7 @@
 package com.uteshop.entity;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity
 @Table(name = "DanhGiaSanPham")
@@ -9,7 +9,7 @@ public class DanhGiaSanPham {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "maDG")
-    private int maDG;
+    private Integer maDG;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "maND", nullable = false)
@@ -20,45 +20,35 @@ public class DanhGiaSanPham {
     private SanPham sanPham;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "maDH", nullable = false)
+    @JoinColumn(name = "maDH", nullable = true)
     private DonHang donHang;
     
     @Column(name = "diemDanhGia", nullable = false)
-    private int diemDanhGia; // 1-5 sao
+    private int diemDanhGia;
     
     @Column(name = "noiDung", columnDefinition = "NTEXT")
     private String noiDung;
     
     @Column(name = "hinhAnh", length = 500)
-    private String hinhAnh; // Đường dẫn ảnh đánh giá
+    private String hinhAnh;
     
     @Column(name = "video", length = 500)
-    private String video; // Đường dẫn video đánh giá
+    private String video;
     
-    @Column(name = "ngayDanhGia")
-    private LocalDateTime ngayDanhGia;
+    @Column(name = "ngayDanhGia", columnDefinition = "datetime") // Explicitly define column type
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date ngayDanhGia;
     
     @Column(name = "trangThai")
-    private boolean trangThai = true; // true: hiển thị, false: ẩn
+    private Boolean trangThai = true;
     
-    // Constructors
     public DanhGiaSanPham() {
-        this.ngayDanhGia = LocalDateTime.now();
-    }
-    
-    public DanhGiaSanPham(NguoiDung nguoiDung, SanPham sanPham, DonHang donHang, int diemDanhGia, String noiDung) {
-        this.nguoiDung = nguoiDung;
-        this.sanPham = sanPham;
-        this.donHang = donHang;
-        this.diemDanhGia = diemDanhGia;
-        this.noiDung = noiDung;
-        this.ngayDanhGia = LocalDateTime.now();
-        this.trangThai = true;
+        this.ngayDanhGia = new Date();
     }
     
     // Getters and Setters
-    public int getMaDG() { return maDG; }
-    public void setMaDG(int maDG) { this.maDG = maDG; }
+    public Integer getMaDG() { return maDG; }
+    public void setMaDG(Integer maDG) { this.maDG = maDG; }
     
     public NguoiDung getNguoiDung() { return nguoiDung; }
     public void setNguoiDung(NguoiDung nguoiDung) { this.nguoiDung = nguoiDung; }
@@ -81,9 +71,9 @@ public class DanhGiaSanPham {
     public String getVideo() { return video; }
     public void setVideo(String video) { this.video = video; }
     
-    public LocalDateTime getNgayDanhGia() { return ngayDanhGia; }
-    public void setNgayDanhGia(LocalDateTime ngayDanhGia) { this.ngayDanhGia = ngayDanhGia; }
+    public Date getNgayDanhGia() { return ngayDanhGia; }
+    public void setNgayDanhGia(Date ngayDanhGia) { this.ngayDanhGia = ngayDanhGia; }
     
-    public boolean isTrangThai() { return trangThai; }
-    public void setTrangThai(boolean trangThai) { this.trangThai = trangThai; }
+    public Boolean isTrangThai() { return trangThai; }
+    public void setTrangThai(Boolean trangThai) { this.trangThai = trangThai; }
 }

@@ -21,7 +21,7 @@ public class SanPham implements Serializable {
     @Column(name = "MoTa", columnDefinition = "NTEXT")
     private String moTa;
 
-    @Column(name = "DonGia", nullable = false, precision = 18, scale = 2)
+    @Column(name = "DonGia", nullable = false)
     private BigDecimal donGia;
 
     @Column(name = "SoLuongTon", nullable = false)
@@ -34,7 +34,7 @@ public class SanPham implements Serializable {
     private String hinhAnh;
 
     @Column(name = "TrangThai")
-    private Boolean trangThai = true;
+    private Boolean trangThai;
 
     @Column(name = "NgayTao")
     @Temporal(TemporalType.TIMESTAMP)
@@ -50,20 +50,18 @@ public class SanPham implements Serializable {
     @Column(name = "LuotYeuThich")
     private Integer luotYeuThich = 0;
 
-    @Column(name = "DiemDanhGiaTrungBinh", precision = 3, scale = 2)
-    private BigDecimal diemDanhGiaTrungBinh = BigDecimal.ZERO;
+    @Column(name = "DiemDanhGiaTrungBinh")
+    private BigDecimal diemDanhGiaTrungBinh; // Changed to BigDecimal
 
     @Column(name = "SoLuongDanhGia")
     private Integer soLuongDanhGia = 0;
 
-    // Foreign key columns
     @Column(name = "MaDM")
     private Integer maDM;
     
     @Column(name = "MaCH", nullable = false)
     private Integer maCH;
     
-    // Relationships
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MaDM", insertable = false, updatable = false)
     private DanhMuc danhMuc;
@@ -72,7 +70,7 @@ public class SanPham implements Serializable {
     @JoinColumn(name = "MaCH", insertable = false, updatable = false)
     private CuaHang cuaHang;
 
-    // Default constructor
+    // Corrected Default constructor
     public SanPham() {
         this.ngayTao = new Date();
         this.trangThai = true;
@@ -81,18 +79,7 @@ public class SanPham implements Serializable {
         this.luotXem = 0;
         this.luotYeuThich = 0;
         this.soLuongDanhGia = 0;
-        this.diemDanhGiaTrungBinh = BigDecimal.ZERO;
-    }
-
-    // Constructor with parameters
-    public SanPham(String tenSP, BigDecimal donGia, Integer soLuongTon, String hinhAnh, String moTa, Integer maCH) {
-        this();
-        this.tenSP = tenSP;
-        this.donGia = donGia;
-        this.soLuongTon = soLuongTon;
-        this.hinhAnh = hinhAnh;
-        this.moTa = moTa;
-        this.maCH = maCH;
+        this.diemDanhGiaTrungBinh = BigDecimal.ZERO; // Changed to BigDecimal.ZERO
     }
 
     // Getters and Setters
@@ -198,9 +185,6 @@ public class SanPham implements Serializable {
 
     public void setDanhMuc(DanhMuc danhMuc) {
         this.danhMuc = danhMuc;
-        if (danhMuc != null) {
-            this.maDM = danhMuc.getMaDM();
-        }
     }
 
     public CuaHang getCuaHang() {
@@ -209,9 +193,6 @@ public class SanPham implements Serializable {
 
     public void setCuaHang(CuaHang cuaHang) {
         this.cuaHang = cuaHang;
-        if (cuaHang != null) {
-            this.maCH = cuaHang.getMaCH();
-        }
     }
 
     public Integer getLuotXem() {
@@ -230,11 +211,11 @@ public class SanPham implements Serializable {
         this.luotYeuThich = luotYeuThich;
     }
 
-    public BigDecimal getDiemDanhGiaTrungBinh() {
+    public BigDecimal getDiemDanhGiaTrungBinh() { // Changed return type to BigDecimal
         return diemDanhGiaTrungBinh;
     }
 
-    public void setDiemDanhGiaTrungBinh(BigDecimal diemDanhGiaTrungBinh) {
+    public void setDiemDanhGiaTrungBinh(BigDecimal diemDanhGiaTrungBinh) { // Changed parameter type to BigDecimal
         this.diemDanhGiaTrungBinh = diemDanhGiaTrungBinh;
     }
 
@@ -246,35 +227,8 @@ public class SanPham implements Serializable {
         this.soLuongDanhGia = soLuongDanhGia;
     }
 
-    // Additional helper methods for compatibility
-    
-    // Compatibility methods for DAO that might use double/int
-    public void setDonGia(double donGia) {
-        this.donGia = BigDecimal.valueOf(donGia);
-    }
-    
-    public void setTrangThai(int trangThai) {
-        this.trangThai = trangThai == 1;
-    }
-    
-    public void setDiemDanhGiaTrungBinh(double diemDanhGia) {
-        this.diemDanhGiaTrungBinh = BigDecimal.valueOf(diemDanhGia);
-    }
-
     @PreUpdate
     public void preUpdate() {
         this.ngayCapNhat = new Date();
-    }
-
-    @Override
-    public String toString() {
-        return "SanPham{" +
-                "maSP=" + maSP +
-                ", tenSP='" + tenSP + '\'' +
-                ", donGia=" + donGia +
-                ", soLuongTon=" + soLuongTon +
-                ", trangThai=" + trangThai +
-                ", maCH=" + maCH +
-                '}';
     }
 }

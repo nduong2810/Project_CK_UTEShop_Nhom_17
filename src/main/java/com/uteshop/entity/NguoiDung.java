@@ -1,70 +1,64 @@
 package com.uteshop.entity;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.io.Serializable;
+import java.util.Date;
 
 @Entity
 @Table(name = "NguoiDung")
-public class NguoiDung {
+public class NguoiDung implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MaND")
-    private int maND;
+    private Integer maND;
     
-    @Column(name = "TenDangNhap", unique = true, nullable = false, length = 50, columnDefinition = "NVARCHAR(50) NOT NULL DEFAULT ''")
-    private String tenDangNhap = "";
+    @Column(name = "TenDangNhap", unique = true, nullable = false, length = 50)
+    private String tenDangNhap;
     
-    @Column(name = "MatKhau", nullable = false, length = 255, columnDefinition = "NVARCHAR(255)")
+    @Column(name = "MatKhau", nullable = false, length = 255)
     private String matKhau;
     
-    @Column(name = "Email", unique = true, nullable = false, length = 100, columnDefinition = "NVARCHAR(100)")
+    @Column(name = "Email", unique = true, nullable = false, length = 100)
     private String email;
     
-    @Column(name = "HoTen", nullable = false, length = 100, columnDefinition = "NVARCHAR(100)")
+    @Column(name = "HoTen", nullable = false, length = 100)
     private String hoTen;
     
-    @Column(name = "SoDienThoai", length = 15, columnDefinition = "NVARCHAR(15)")
+    @Column(name = "SoDienThoai", length = 15)
     private String soDienThoai;
     
-    @Column(name = "DiaChi", length = 255, columnDefinition = "NVARCHAR(255)")
+    @Column(name = "DiaChi", length = 255)
     private String diaChi;
     
     @Enumerated(EnumType.STRING)
-    @Column(name = "VaiTro", nullable = false, length = 20, columnDefinition = "NVARCHAR(20)")
+    @Column(name = "VaiTro", nullable = false, length = 20)
     private VaiTro vaiTro;
     
-    @Column(name = "TrangThai", nullable = false, columnDefinition = "bit NOT NULL DEFAULT 1")
-    private boolean trangThai = true;
+    @Column(name = "TrangThai")
+    private Boolean trangThai; // Changed to Boolean
     
     @Column(name = "NgayTao", nullable = false)
-    private LocalDateTime ngayTao;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date ngayTao; 
     
     @Column(name = "NgayCapNhat")
-    private LocalDateTime ngayCapNhat;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date ngayCapNhat; 
 
-    // Enum for roles
     public enum VaiTro {
         ADMIN, USER, VENDOR, SHIPPER
     }
 
-    // Constructors
     public NguoiDung() {
-        this.ngayTao = LocalDateTime.now();
-        this.trangThai = true;
-    }
-
-    public NguoiDung(String tenDangNhap, String matKhau, String email, String hoTen, VaiTro vaiTro) {
-        this();
-        this.tenDangNhap = tenDangNhap;
-        this.matKhau = matKhau;
-        this.email = email;
-        this.hoTen = hoTen;
-        this.vaiTro = vaiTro;
+        this.ngayTao = new Date();
+        this.trangThai = true; // Changed to Boolean
     }
 
     // Getters and Setters
-    public int getMaND() { return maND; }
-    public void setMaND(int maND) { this.maND = maND; }
+    public Integer getMaND() { return maND; }
+    public void setMaND(Integer maND) { this.maND = maND; }
 
     public String getTenDangNhap() { return tenDangNhap; }
     public void setTenDangNhap(String tenDangNhap) { this.tenDangNhap = tenDangNhap; }
@@ -87,29 +81,17 @@ public class NguoiDung {
     public VaiTro getVaiTro() { return vaiTro; }
     public void setVaiTro(VaiTro vaiTro) { this.vaiTro = vaiTro; }
 
-    public boolean isTrangThai() { return trangThai; }
-    public void setTrangThai(boolean trangThai) { this.trangThai = trangThai; }
+    public Boolean getTrangThai() { return trangThai; } // Changed to Boolean
+    public void setTrangThai(Boolean trangThai) { this.trangThai = trangThai; } // Changed to Boolean
 
-    public LocalDateTime getNgayTao() { return ngayTao; }
-    public void setNgayTao(LocalDateTime ngayTao) { this.ngayTao = ngayTao; }
+    public Date getNgayTao() { return ngayTao; }
+    public void setNgayTao(Date ngayTao) { this.ngayTao = ngayTao; }
 
-    public LocalDateTime getNgayCapNhat() { return ngayCapNhat; }
-    public void setNgayCapNhat(LocalDateTime ngayCapNhat) { this.ngayCapNhat = ngayCapNhat; }
+    public Date getNgayCapNhat() { return ngayCapNhat; }
+    public void setNgayCapNhat(Date ngayCapNhat) { this.ngayCapNhat = ngayCapNhat; }
 
     @PreUpdate
     public void preUpdate() {
-        this.ngayCapNhat = LocalDateTime.now();
-    }
-
-    @Override
-    public String toString() {
-        return "NguoiDung{" +
-                "maND=" + maND +
-                ", tenDangNhap='" + tenDangNhap + '\'' +
-                ", email='" + email + '\'' +
-                ", hoTen='" + hoTen + '\'' +
-                ", vaiTro=" + vaiTro +
-                ", trangThai=" + trangThai +
-                '}';
+        this.ngayCapNhat = new Date();
     }
 }
