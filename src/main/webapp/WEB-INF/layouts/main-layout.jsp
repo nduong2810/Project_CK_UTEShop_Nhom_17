@@ -2,12 +2,13 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
+
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UTESHOP - Nền tảng mua sắm sinh viên HCMUTE</title>
+    <title><sitemesh:write property='title' /> - UTESHOP</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -15,6 +16,7 @@
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main-styles.css">
+    <sitemesh:write property='head'/>
 </head>
 <body>
     <!-- Include Header for non-auth pages -->
@@ -23,7 +25,10 @@
         <jsp:include page="/WEB-INF/views/common/header.jsp" />
     </c:if>
     
-    <!-- Main content - SiteMesh 3 will automatically replace body content -->
+    <main class="main-content">
+        <!-- Main content will be injected here by SiteMesh -->
+        <sitemesh:write property='body'/>
+    </main>
     
     <!-- Include Footer for non-auth pages -->
     <c:if test="${!fn:startsWith(pageContext.request.requestURI, authPath)}">

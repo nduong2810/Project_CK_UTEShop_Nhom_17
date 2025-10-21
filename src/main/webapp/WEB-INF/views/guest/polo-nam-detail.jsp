@@ -2,8 +2,12 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
-<title>Áo Polo Nam Premium - UTESHOP</title>
+<head>
+    <title>Áo Polo Nam Premium - UTESHOP</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/product-detail.css">
+</head>
 
+<body>
 <div class="container my-5">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
@@ -76,20 +80,22 @@
 
             <hr>
 
-            <div class="d-flex align-items-center mb-4">
-                <label for="quantity" class="form-label me-3 mb-0">Số lượng:</label>
-                <div class="input-group" style="width: 130px;">
-                    <button class="btn btn-outline-secondary" type="button" onclick="changeQuantity(-1)">-</button>
-                    <input type="text" id="quantity" class="form-control text-center" value="1" min="1" max="10">
-                    <button class="btn btn-outline-secondary" type="button" onclick="changeQuantity(1)">+</button>
+            <!-- Quantity Section -->
+            <div class="quantity-section mb-4">
+                <span class="quantity-label">Số lượng:</span>
+                <div class="quantity-controls">
+                    <button class="quantity-btn" id="decreaseQuantityBtn">-</button>
+                    <input type="number" class="quantity-input" id="quantity" value="1" min="1" max="10">
+                    <button class="quantity-btn" id="increaseQuantityBtn">+</button>
                 </div>
+                <span class="quantity-label" style="margin-left: 1rem;">10 sản phẩm có sẵn</span>
             </div>
 
             <div class="d-grid gap-2 d-sm-flex">
-                <button class="btn btn-primary btn-lg flex-grow-1" onclick="addToCart()">
+                <button class="btn btn-primary btn-lg flex-grow-1" id="addToCartBtn">
                     <i class="fa fa-cart-plus"></i> Thêm vào giỏ hàng
                 </button>
-                <button class="btn btn-warning btn-lg flex-grow-1" onclick="buyNow()">
+                <button class="btn btn-warning btn-lg flex-grow-1" id="buyNowBtn">
                     <i class="fa fa-bolt"></i> Mua ngay
                 </button>
             </div>
@@ -98,41 +104,86 @@
 </div>
 
 <script>
-let selectedSize = 'M';
-let selectedColor = 'Navy Blue';
+document.addEventListener('DOMContentLoaded', function() {
+    let selectedSize = 'M';
+    let selectedColor = 'Navy Blue';
 
-function selectSize(element) {
-    document.querySelectorAll('.size-option').forEach(option => option.classList.remove('active'));
-    element.classList.add('active');
-    selectedSize = element.dataset.size;
-    document.getElementById('selectedSize').textContent = selectedSize;
-}
+    window.selectSize = function(element) {
+        document.querySelectorAll('.size-option').forEach(option => option.classList.remove('active'));
+        element.classList.add('active');
+        selectedSize = element.dataset.size;
+        document.getElementById('selectedSize').textContent = selectedSize;
+    }
 
-function selectColor(element) {
-    document.querySelectorAll('.color-option').forEach(option => {
-        option.classList.remove('active');
-        option.style.borderColor = '#ddd';
+    window.selectColor = function(element) {
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.classList.remove('active');
+            option.style.borderColor = '#ddd';
+        });
+        element.classList.add('active');
+        element.style.borderColor = '#007bff';
+        selectedColor = element.dataset.color;
+        document.getElementById('selectedColor').textContent = selectedColor;
+    }
+
+    document.getElementById('addToCartBtn').addEventListener('click', function() {
+        const qty = document.getElementById('quantity').value;
+        alert(`Đã thêm ${qty} áo polo size ${selectedSize} màu ${selectedColor} vào giỏ hàng!`);
     });
-    element.classList.add('active');
-    element.style.borderColor = '#007bff';
-    selectedColor = element.dataset.color;
-    document.getElementById('selectedColor').textContent = selectedColor;
-}
 
-function changeQuantity(delta) {
-    const input = document.getElementById('quantity');
-    let value = parseInt(input.value) + delta;
-    if (value >= 1 && value <= 10) input.value = value;
-}
+    document.getElementById('buyNowBtn').addEventListener('click', function() {
+        const qty = document.getElementById('quantity').value;
+        const total = (450000 * qty).toLocaleString('vi-VN');
+        alert(`Mua ngay ${qty} áo polo size ${selectedSize} màu ${selectedColor}\nTổng tiền: ${total}₫`);
+    });
 
-function addToCart() {
-    const qty = document.getElementById('quantity').value;
-    alert(`Đã thêm ${qty} áo polo size ${selectedSize} màu ${selectedColor} vào giỏ hàng!`);
-}
+    // NEW QUANTITY CONTROLS SCRIPT
+    const quantityInput = document.getElementById('quantity');
+    const decreaseBtn = document.getElementById('decreaseQuantityBtn');
+    const increaseBtn = document.getElementById('increaseQuantityBtn');
 
-function buyNow() {
-    const qty = document.getElementById('quantity').value;
-    const total = (450000 * qty).toLocaleString('vi-VN');
-    alert(`Mua ngay ${qty} áo polo size ${selectedSize} màu ${selectedColor}\nTổng tiền: ${total}₫`);
-}
+    if (quantityInput && decreaseBtn && increaseBtn) {
+        function updateQuantityControls() {
+            const currentValue = parseInt(quantityInput.value);
+            const min = parseInt(quantityInput.min);
+            const max = parseInt(quantityInput.max);
+
+            decreaseBtn.disabled = currentValue <= min;
+            increaseBtn.disabled = currentValue >= max;
+        }
+
+        decreaseBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue > parseInt(quantityInput.min)) {
+                quantityInput.value = currentValue - 1;
+                updateQuantityControls();
+            }
+        });
+
+        increaseBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue < parseInt(quantityInput.max)) {
+                quantityInput.value = currentValue + 1;
+                updateQuantityControls();
+            }
+        });
+
+        quantityInput.addEventListener('input', function() {
+            let currentValue = parseInt(quantityInput.value);
+            const min = parseInt(quantityInput.min);
+            const max = parseInt(quantityInput.max);
+
+            if (isNaN(currentValue) || currentValue < min) {
+                quantityInput.value = min;
+            } else if (currentValue > max) {
+                quantityInput.value = max;
+            }
+            updateQuantityControls();
+        });
+
+        // Initial state update
+        updateQuantityControls();
+    }
+});
 </script>
+</body>

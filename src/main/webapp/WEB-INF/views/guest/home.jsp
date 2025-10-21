@@ -1,7 +1,7 @@
 <%@ page contentType="text/html; charset=UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
-<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -9,8 +9,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trang chủ - UTESHOP</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
         /* Modern Multi-Slide Hero Carousel */
@@ -344,27 +342,28 @@
             border-radius: 12px;
             overflow: hidden;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Slightly stronger initial shadow */
-            border: 1px solid #e0e0e0; /* Subtle border */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
             height: 100%;
             display: flex;
             flex-direction: column;
+            min-height: 450px;
         }
 
         .product-card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2); /* Stronger hover shadow */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
         }
 
         .product-image-container {
-            height: 280px; /* Increased height */
+            height: 280px;
             position: relative;
             overflow: hidden;
             background: #f8f9fa;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 25px; /* Increased padding */
+            padding: 25px;
         }
 
         .product-image {
@@ -380,9 +379,9 @@
 
         .badge-hot {
             position: absolute;
-            top: 12px;
-            left: 12px;
-            background: #ff3f6c;
+            top: 15px;
+            left: 15px;
+            background: linear-gradient(45deg, #ff3f6c, #ff6b81);
             color: white;
             padding: 6px 12px;
             border-radius: 20px;
@@ -391,20 +390,56 @@
             z-index: 2;
         }
 
+        .btn-favorite {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background-color: rgba(255, 255, 255, 0.8);
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 3;
+            backdrop-filter: blur(5px);
+        }
+
+        .btn-favorite:hover {
+            background-color: white;
+            transform: scale(1.1);
+            color: #ff3f6c;
+        }
+
+        .btn-favorite.active {
+            background-color: #ff3f6c;
+            color: white;
+        }
+
+        .btn-favorite.active .fa-heart {
+            font-weight: 900; /* Solid heart */
+        }
+
         .product-card .card-body {
-            padding: 25px; /* Increased padding */
+            padding: 25px;
             display: flex;
             flex-direction: column;
             flex-grow: 1;
         }
 
         .product-card .card-title {
-            font-size: 1.1rem; /* Slightly larger title */
+            font-size: 1.1rem;
             font-weight: 600;
             line-height: 1.4;
-            margin-bottom: 15px; /* Increased margin */
+            margin-bottom: 15px;
             color: #333;
-            min-height: 50px; /* Adjusted min-height for potentially longer titles */
+            min-height: 50px;
+            flex-grow: 1;
         }
 
         .product-card .card-title a {
@@ -422,36 +457,38 @@
             font-weight: 700;
             color: #2874f0;
             margin-bottom: 10px;
-            white-space: nowrap; /* Prevent price from wrapping */
+            white-space: nowrap;
         }
 
         .product-card .sold-count {
             color: #878787;
-            font-size: 0.9rem; /* Slightly larger sold count */
-            white-space: nowrap; /* Prevent sold count from wrapping */
-            flex-shrink: 0; /* Prevent sold count from shrinking */
+            font-size: 0.9rem;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
-        /* Adjust flex behavior for the price and sold-count container */
-        .product-card .card-body .d-flex {
-            flex-wrap: nowrap; /* Ensure price and sold-count stay on one line if possible */
+        .price-line {
+            flex-wrap: wrap;
+            gap: 5px;
         }
 
         .btn-add-to-cart {
-            background: #ff3f6c;
+            background: linear-gradient(45deg, #2874f0, #1a5fce);
             color: white;
             border: none;
-            padding: 14px 20px; /* Slightly larger button */
+            padding: 14px 20px;
             border-radius: 8px;
             font-weight: 600;
             width: 100%;
             transition: all 0.3s ease;
             margin-top: auto;
+            box-shadow: 0 4px 15px rgba(40, 116, 240, 0.3);
         }
 
         .btn-add-to-cart:hover {
-            background: #e63854;
-            transform: translateY(-2px);
+            background: linear-gradient(45deg, #1a5fce, #2874f0);
+            box-shadow: 0 6px 20px rgba(40, 116, 240, 0.4);
+            transform: translateY(-3px);
         }
 
         /* Alert Styles */
@@ -500,12 +537,12 @@
 </head>
 <body>
 
-<jsp:include page="/WEB-INF/views/common/header.jsp" />
+
 
 <main>
     <!-- Hero Carousel with Multiple Slides -->
     <section class="hero-carousel">
-        <!-- Slide 1 - Blue Purple -->
+        <!-- Slides -->
         <div class="hero-slide hero-slide-1 active">
             <div class="hero-content">
                 <h1>Mua sắm thông minh cùng UTESHOP</h1>
@@ -515,8 +552,6 @@
                 </a>
             </div>
         </div>
-        
-        <!-- Slide 2 - Green -->
         <div class="hero-slide hero-slide-2">
             <div class="hero-content">
                 <h1>Ưu đãi hấp dẫn mỗi ngày</h1>
@@ -526,8 +561,6 @@
                 </a>
             </div>
         </div>
-        
-        <!-- Slide 3 - Pink Orange -->
         <div class="hero-slide hero-slide-3">
             <div class="hero-content">
                 <h1>Giao hàng siêu tốc 2 giờ</h1>
@@ -537,8 +570,6 @@
                 </a>
             </div>
         </div>
-        
-        <!-- Slide 4 - Cyan Blue -->
         <div class="hero-slide hero-slide-4">
             <div class="hero-content">
                 <h1>Sản phẩm chính hãng 100%</h1>
@@ -548,8 +579,6 @@
                 </a>
             </div>
         </div>
-        
-        <!-- Slide 5 - Pink Yellow -->
         <div class="hero-slide hero-slide-5">
             <div class="hero-content">
                 <h1>Đổi trả trong 7 ngày</h1>
@@ -560,22 +589,14 @@
             </div>
         </div>
         
-        <!-- Navigation Arrows -->
+        <!-- Navigation -->
         <div class="carousel-arrow carousel-arrow-left" onclick="prevSlide()">
             <i class="fas fa-chevron-left"></i>
         </div>
         <div class="carousel-arrow carousel-arrow-right" onclick="nextSlide()">
             <i class="fas fa-chevron-right"></i>
         </div>
-        
-        <!-- Navigation Dots -->
-        <div class="carousel-dots">
-            <div class="carousel-dot" onclick="goToSlide(0)"></div>
-            <div class="carousel-dot" onclick="goToSlide(1)"></div>
-            <div class="carousel-dot" onclick="goToSlide(2)"></div>
-            <div class="carousel-dot" onclick="goToSlide(3)"></div>
-            <div class="carousel-dot" onclick="goToSlide(4)"></div>
-        </div>
+        <div class="carousel-dots"></div>
     </section>
 
     <div class="container">
@@ -652,6 +673,9 @@
                                                  class="product-image"
                                                  onerror="this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png';">
                                         </a>
+                                        <button class="btn-favorite" onclick="toggleFavorite(event, this, ${sp.maSP})">
+                                            <i class="far fa-heart"></i>
+                                        </button>
                                     </div>
                                     
                                     <div class="card-body">
@@ -659,7 +683,7 @@
                                             <a href="${pageContext.request.contextPath}/guest/product?id=${sp.maSP}">${sp.tenSP}</a>
                                         </h6>
                                         
-                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-3 price-line">
                                             <div class="price">
                                                 <fmt:formatNumber value="${sp.donGia}" type="number" groupingUsed="true"/>₫
                                             </div>
@@ -725,9 +749,8 @@
     </div>
 </main>
 
-<jsp:include page="/WEB-INF/views/common/footer.jsp" />
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Fade in animation
@@ -746,101 +769,63 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Hero Carousel JavaScript
 let currentSlide = 0;
-const totalSlides = 5;
+const slides = document.querySelectorAll('.hero-slide');
+const dotsContainer = document.querySelector('.carousel-dots');
+const totalSlides = slides.length;
 let slideInterval;
 
-// Initialize carousel when page loads
+function createDots() {
+    for (let i = 0; i < totalSlides; i++) {
+        const dot = document.createElement('div');
+        dot.classList.add('carousel-dot');
+        dot.addEventListener('click', () => goToSlide(i));
+        dotsContainer.appendChild(dot);
+    }
+}
+
+function updateSlide() {
+    slides.forEach((slide, index) => {
+        slide.classList.toggle('active', index === currentSlide);
+    });
+    const dots = document.querySelectorAll('.carousel-dot');
+    dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === currentSlide);
+    });
+}
+
+function nextSlide() {
+    currentSlide = (currentSlide + 1) % totalSlides;
+    updateSlide();
+}
+
+function prevSlide() {
+    currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+    updateSlide();
+}
+
+function goToSlide(slideIndex) {
+    currentSlide = slideIndex;
+    updateSlide();
+    startAutoSlide(); // Restart interval on manual navigation
+}
+
+function startAutoSlide() {
+    clearInterval(slideInterval);
+    slideInterval = setInterval(nextSlide, 5000);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DEBUG JS: 🎠 Initializing Hero Carousel...');
-    startAutoSlide();
-    
-    // Pause auto-slide when hovering over carousel
-    const carousel = document.querySelector('.hero-carousel');
-    if (carousel) {
-        carousel.addEventListener('mouseenter', stopAutoSlide);
+    if (totalSlides > 0) {
+        createDots();
+        updateSlide();
+        startAutoSlide();
+        
+        const carousel = document.querySelector('.hero-carousel');
+        carousel.addEventListener('mouseenter', () => clearInterval(slideInterval));
         carousel.addEventListener('mouseleave', startAutoSlide);
     }
 });
 
-/**
- * Start automatic slide transition
- */
-function startAutoSlide() {
-    console.log('DEBUG JS: ▶️ Starting auto-slide');
-    stopAutoSlide(); // Clear any existing interval
-    slideInterval = setInterval(() => {
-        nextSlide();
-    }, 4000);
-}
-
-/**
- * Stop automatic slide transition
- */
-function stopAutoSlide() {
-    if (slideInterval) {
-        console.log('DEBUG JS: ⏹️ Stopping auto-slide');
-        clearInterval(slideInterval);
-        slideInterval = null;
-    }
-}
-
-/**
- * Go to next slide
- */
-function nextSlide() {
-    currentSlide = (currentSlide + 1) % totalSlides;
-    updateSlide();
-    console.log('DEBUG JS: ➡️ Next slide: ' + currentSlide);
-}
-
-/**
- * Go to previous slide
- */
-function prevSlide() {
-    currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
-    updateSlide();
-    console.log('DEBUG JS: ⬅️ Previous slide: ' + currentSlide);
-}
-
-/**
- * Go to specific slide
- * @param {number} slideIndex - Index of slide to go to (0-based)
- */
-function goToSlide(slideIndex) {
-    if (slideIndex >= 0 && slideIndex < totalSlides) {
-        currentSlide = slideIndex;
-        updateSlide();
-        console.log('DEBUG JS: 🎯 Go to slide: ' + currentSlide);
-        
-        // Restart auto-slide timer
-        startAutoSlide();
-    }
-}
-
-/**
- * Update active slide and dots
- */
-function updateSlide() {
-    // Remove active class from all slides
-    const slides = document.querySelectorAll('.hero-slide');
-    slides.forEach((slide, index) => {
-        if (index === currentSlide) {
-            slide.classList.add('active');
-        } else {
-            slide.classList.remove('active');
-        }
-    });
-    
-    // Update navigation dots
-    const dots = document.querySelectorAll('.carousel-dot');
-    dots.forEach((dot, index) => {
-        if (index === currentSlide) {
-            dot.classList.add('active');
-        } else {
-            dot.classList.remove('active');
-        }
-    });
-}
 
 /**
  * Add smooth scroll to product section when clicking hero buttons
@@ -864,12 +849,26 @@ document.addEventListener('DOMContentLoaded', function() {
 // Utility functions for product interactions
 function addToCart(productId) {
     console.log('DEBUG JS: 🛒 Adding to cart: ' + productId);
-    
-    // TODO: Implement add to cart functionality
-    // This is a placeholder - you can implement actual cart logic here
-    
-    // Show temporary notification
     showNotification('Sản phẩm đã được thêm vào giỏ hàng!', 'success');
+}
+
+function toggleFavorite(event, button, productId) {
+    event.stopPropagation();
+    event.preventDefault();
+
+    console.log('DEBUG JS: ❤️ Toggling favorite for product: ' + productId);
+    button.classList.toggle('active');
+    
+    const icon = button.querySelector('i');
+    if (button.classList.contains('active')) {
+        icon.classList.remove('far');
+        icon.classList.add('fas');
+        showNotification('Đã thêm vào danh sách yêu thích!', 'success');
+    } else {
+        icon.classList.remove('fas');
+        icon.classList.add('far');
+        showNotification('Đã xóa khỏi danh sách yêu thích.', 'info');
+    }
 }
 
 function applyFilters() {
@@ -879,86 +878,37 @@ function applyFilters() {
     const price = document.getElementById('priceFilter').value;
     const sort = document.getElementById('sortFilter').value;
     
-    // Build query string
     const params = new URLSearchParams(window.location.search);
-    if (category) params.set('category', category);
-    else params.delete('category');
-    if (price) params.set('price', price);
-    else params.delete('price');
-    if (sort) params.set('sort', sort);
-    else params.delete('sort');
-    
-    // Always reset to page 1 when applying new filters
-    params.delete('page'); // Remove page param to default to page 1
+    if (category) params.set('category', category); else params.delete('category');
+    if (price) params.set('price', price); else params.delete('price');
+    if (sort) params.set('sort', sort); else params.delete('sort');
+    params.delete('page');
 
-    // Redirect with filters
     const queryString = params.toString();
-    const url = queryString ? 
-        window.location.pathname + '?' + queryString : 
-        window.location.pathname;
-    
-    window.location.href = url;
+    window.location.href = window.location.pathname + (queryString ? '?' + queryString : '');
 }
 
-// =====================================================================================================================
-// START: Notification Logic (Moved from Pagination section)
-// =====================================================================================================================
-function showNotification(message, type = 'info') {
-    // Create notification element
-    const notification = document.createElement('div');
+function showNotification(message, type) {
+    if (type === void 0) { type = 'info'; }
+    var notification = document.createElement('div');
     notification.className = 'alert alert-' + (type === 'success' ? 'success' : 'info') + ' position-fixed';
-    notification.style.cssText = `
-        top: 20px; 
-        right: 20px; 
-        z-index: 9999; 
-        min-width: 300px;
-        animation: slideInRight 0.3s ease-out;
-    `;
-    notification.innerHTML = 
-        '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'info-circle') + ' me-2"></i>' +
-        message +
-        '<button type="button" class="btn-close ms-2" onclick="this.parentElement.remove()"></button>';
-    
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; animation: slideInRight 0.3s ease-out;';
+    notification.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'info-circle') + ' me-2"></i>' + message + '<button type="button" class="btn-close ms-2" onclick="this.parentElement.remove()"></button>';
     document.body.appendChild(notification);
-    
-    // Auto remove after 3 seconds
-    setTimeout(() => {
+    setTimeout(function () {
         if (notification.parentElement) {
             notification.style.animation = 'slideOutRight 0.3s ease-in';
-            setTimeout(() => notification.remove(), 300);
+            setTimeout(function () { return notification.remove(); }, 300);
         }
     }, 3000);
 }
 
-// Add CSS for notification animations
 const notificationStyles = document.createElement('style');
 notificationStyles.textContent = `
-    @keyframes slideInRight {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    
-    @keyframes slideOutRight {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-    }
+    @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes slideOutRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(100%); opacity: 0; } }
 `;
 document.head.appendChild(notificationStyles);
-// =====================================================================================================================
-// END: Notification Logic
-// =====================================================================================================================
 
 console.log('DEBUG JS: 🎉 UTESHOP Home page JavaScript loaded successfully!');
 </script>

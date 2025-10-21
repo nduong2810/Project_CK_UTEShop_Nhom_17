@@ -2,19 +2,11 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
-<!DOCTYPE html>
-<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quần Jeans Nam Cao Cấp - UTESHOP</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/product-detail.css">
 </head>
 <body>
-
-<jsp:include page="/WEB-INF/views/common/header.jsp" />
 
 <main class="container my-4">
     <nav aria-label="breadcrumb">
@@ -138,19 +130,20 @@
                     <div class="quantity-section">
                         <span class="quantity-label">Số lượng:</span>
                         <div class="quantity-controls">
-                            <button class="quantity-btn" onclick="decreaseQuantity()">-</button>
+                            <button class="quantity-btn" id="decreaseQuantityBtn">-</button>
                             <input type="number" class="quantity-input" id="quantity" value="1" min="1" max="20">
-                            <button class="quantity-btn" onclick="increaseQuantity()">+</button>
+                            <button class="quantity-btn" id="increaseQuantityBtn">+</button>
                         </div>
+                        <span class="quantity-label" style="margin-left: 1rem;">20 sản phẩm có sẵn</span>
                     </div>
 
                     <!-- Action Buttons -->
                     <div class="action-buttons">
-                        <button class="btn-add-cart" onclick="addToCart()">
+                        <button class="btn-add-cart" id="addToCartBtn">
                             <i class="fas fa-shopping-cart me-2"></i>
                             Thêm vào giỏ hàng
                         </button>
-                        <button class="btn-buy-now" onclick="buyNow()">
+                        <button class="btn-buy-now" id="buyNowBtn">
                             <i class="fas fa-bolt me-2"></i>
                             Mua ngay
                         </button>
@@ -231,12 +224,88 @@
     </div>
 </main>
 
-<jsp:include page="/WEB-INF/views/common/footer.jsp" />
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // ...existing code...
+document.addEventListener('DOMContentLoaded', function() {
+    // Variant selection
+    document.querySelectorAll('.variant-option').forEach(option => {
+        option.addEventListener('click', function() {
+            const section = this.closest('.variant-section');
+            if (section) {
+                section.querySelectorAll('.variant-option').forEach(opt => opt.classList.remove('active'));
+                this.classList.add('active');
+                
+                const selectedVariantDisplay = section.querySelector('.selected-variant strong');
+                if (selectedVariantDisplay) {
+                    selectedVariantDisplay.textContent = this.textContent;
+                }
+            }
+        });
+    });
+
+    // Add to cart function
+    document.getElementById('addToCartBtn').addEventListener('click', function() {
+        const quantity = document.getElementById('quantity').value;
+        const size = document.querySelector('.variant-section:nth-of-type(1) .variant-option.active').textContent;
+        const color = document.querySelector('.variant-section:nth-of-type(2) .variant-option.active').textContent;
+        alert(`Đã thêm ${quantity} Quần Jeans Nam size ${size} màu ${color} vào giỏ hàng!`);
+    });
+
+    // Buy now function
+    document.getElementById('buyNowBtn').addEventListener('click', function() {
+        const quantity = document.getElementById('quantity').value;
+        const size = document.querySelector('.variant-section:nth-of-type(1) .variant-option.active').textContent;
+        const color = document.querySelector('.variant-section:nth-of-type(2) .variant-option.active').textContent;
+        alert(`Mua ngay ${quantity} Quần Jeans Nam size ${size} màu ${color}!`);
+    });
+
+    // NEW QUANTITY CONTROLS SCRIPT
+    const quantityInput = document.getElementById('quantity');
+    const decreaseBtn = document.getElementById('decreaseQuantityBtn');
+    const increaseBtn = document.getElementById('increaseQuantityBtn');
+
+    if (quantityInput && decreaseBtn && increaseBtn) {
+        function updateQuantityControls() {
+            const currentValue = parseInt(quantityInput.value);
+            const min = parseInt(quantityInput.min);
+            const max = parseInt(quantityInput.max);
+
+            decreaseBtn.disabled = currentValue <= min;
+            increaseBtn.disabled = currentValue >= max;
+        }
+
+        decreaseBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue > parseInt(quantityInput.min)) {
+                quantityInput.value = currentValue - 1;
+                updateQuantityControls();
+            }
+        });
+
+        increaseBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue < parseInt(quantityInput.max)) {
+                quantityInput.value = currentValue + 1;
+                updateQuantityControls();
+            }
+        });
+
+        quantityInput.addEventListener('input', function() {
+            let currentValue = parseInt(quantityInput.value);
+            const min = parseInt(quantityInput.min);
+            const max = parseInt(quantityInput.max);
+
+            if (isNaN(currentValue) || currentValue < min) {
+                quantityInput.value = min;
+            } else if (currentValue > max) {
+                quantityInput.value = max;
+            }
+            updateQuantityControls();
+        });
+
+        // Initial state update
+        updateQuantityControls();
+    }
+});
 </script>
 
 </body>
-</html>

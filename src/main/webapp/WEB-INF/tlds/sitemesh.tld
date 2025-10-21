@@ -1,19 +1,17 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<taglib xmlns="http://java.sun.com/xml/ns/javaee"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
-        http://java.sun.com/xml/ns/javaee/web-jsptaglibrary_2_1.xsd"
-        version="2.1">
-
-    <description>SiteMesh 3 JSP Tag Library</description>
+<?xml version="1.0" encoding="UTF-8" ?>
+<taglib xmlns="http://java.sun.com/xml/ns/j2ee"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-jsptaglibrary_2_0.xsd"
+    version="2.0">
+    
+    <description>SiteMesh 3 Tags</description>
     <tlib-version>3.0</tlib-version>
     <short-name>sitemesh</short-name>
     <uri>http://www.sitemesh.org/sitemesh</uri>
 
     <tag>
-        <description>Writes content from decorated page</description>
         <name>write</name>
-        <tag-class>org.sitemesh.tagprocessor.WriteTag</tag-class>
+        <tag-class>org.sitemesh.content.tagrules.html.ExportTagToWriterRule$Tag</tag-class>
         <body-content>empty</body-content>
         <attribute>
             <name>property</name>
@@ -22,6 +20,11 @@
         </attribute>
         <attribute>
             <name>default</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>write-entire-property</name>
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
         </attribute>

@@ -29,8 +29,7 @@
 		<filter-name>CharacterEncodingFilter</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
-	<!-- Temporarily disable SiteMesh filter to test application -->
-	<!--
+
 	<filter>
 		<filter-name>sitemesh</filter-name>
 		<filter-class>org.sitemesh.config.ConfigurableSiteMeshFilter</filter-class>
@@ -40,7 +39,6 @@
 		<filter-name>sitemesh</filter-name>
 		<url-pattern>/*</url-pattern>
 	</filter-mapping>
-	-->
 
 	<!-- JSP Configuration -->
 	<jsp-config>

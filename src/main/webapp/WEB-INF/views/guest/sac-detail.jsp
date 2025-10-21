@@ -2,8 +2,12 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
-<title>Sạc Dự Phòng 20000mAh - UTESHOP</title>
+<head>
+    <title>Sạc Dự Phòng 20000mAh - UTESHOP</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/product-detail.css">
+</head>
 
+<body>
 <div class="container my-5">
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb">
@@ -163,14 +167,15 @@
 
             <hr>
 
-            <!-- Quantity and Action Buttons -->
-            <div class="d-flex align-items-center mb-4">
-                <label for="quantity" class="form-label me-3 mb-0">Số lượng:</label>
-                <div class="input-group" style="width: 130px;">
-                    <button class="btn btn-outline-secondary" type="button" id="button-minus">-</button>
-                    <input type="text" id="quantity" class="form-control text-center" value="1" min="1" max="10">
-                    <button class="btn btn-outline-secondary" type="button" id="button-plus">+</button>
+            <!-- Quantity Section -->
+            <div class="quantity-section mb-4">
+                <span class="quantity-label">Số lượng:</span>
+                <div class="quantity-controls">
+                    <button class="quantity-btn" id="decreaseQuantityBtn">-</button>
+                    <input type="number" class="quantity-input" id="quantity" value="1" min="1" max="10">
+                    <button class="quantity-btn" id="increaseQuantityBtn">+</button>
                 </div>
+                <span class="quantity-label" style="margin-left: 1rem;">10 sản phẩm có sẵn</span>
             </div>
 
             <div class="d-grid gap-2 d-sm-flex">
@@ -415,110 +420,142 @@
 </style>
 
 <script>
-let currentPrice = 599000;
-let selectedColor = 'Đen';
-let selectedCapacity = '20000mAh';
+document.addEventListener('DOMContentLoaded', function() {
+    let currentPrice = 599000;
+    let selectedColor = 'Đen';
+    let selectedCapacity = '20000mAh';
 
-function updatePrice() {
-    document.getElementById('currentPrice').textContent = currentPrice.toLocaleString('vi-VN') + '₫';
-}
-
-function changeMainImage(src) {
-    document.getElementById('mainProductImage').src = src;
-}
-
-function selectColor(element) {
-    document.querySelectorAll('.color-option').forEach(option => {
-        option.classList.remove('active');
-        option.style.borderColor = '#ddd';
-    });
-    
-    element.classList.add('active');
-    element.style.borderColor = '#007bff';
-    
-    selectedColor = element.dataset.color;
-    document.getElementById('selectedColor').textContent = selectedColor;
-}
-
-function selectCapacity(element) {
-    document.querySelectorAll('.capacity-option').forEach(option => {
-        option.classList.remove('active');
-    });
-    
-    element.classList.add('active');
-    
-    selectedCapacity = element.dataset.capacity;
-    currentPrice = parseInt(element.dataset.price);
-    
-    document.getElementById('selectedCapacity').textContent = selectedCapacity;
-    updatePrice();
-}
-
-// Quantity controls
-document.getElementById('button-minus').addEventListener('click', function() {
-    const quantityInput = document.getElementById('quantity');
-    let currentValue = parseInt(quantityInput.value);
-    if (currentValue > 1) {
-        quantityInput.value = currentValue - 1;
+    window.updatePrice = function() {
+        document.getElementById('currentPrice').textContent = currentPrice.toLocaleString('vi-VN') + '₫';
     }
-});
 
-document.getElementById('button-plus').addEventListener('click', function() {
-    const quantityInput = document.getElementById('quantity');
-    let currentValue = parseInt(quantityInput.value);
-    if (currentValue < 10) {
-        quantityInput.value = currentValue + 1;
+    window.changeMainImage = function(src) {
+        document.getElementById('mainProductImage').src = src;
     }
-});
 
-// Add to cart functionality
-document.getElementById('addToCartBtn').addEventListener('click', function() {
-    const quantity = document.getElementById('quantity').value;
-    const button = this;
-    const originalText = button.innerHTML;
-    
-    button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang thêm...';
-    button.disabled = true;
-    
-    setTimeout(() => {
-        button.innerHTML = '<i class="fa fa-check"></i> Đã thêm!';
-        button.classList.replace('btn-primary', 'btn-success');
+    window.selectColor = function(element) {
+        document.querySelectorAll('.color-option').forEach(option => {
+            option.classList.remove('active');
+            option.style.borderColor = '#ddd';
+        });
+        
+        element.classList.add('active');
+        element.style.borderColor = '#007bff';
+        
+        selectedColor = element.dataset.color;
+        document.getElementById('selectedColor').textContent = selectedColor;
+    }
+
+    window.selectCapacity = function(element) {
+        document.querySelectorAll('.capacity-option').forEach(option => {
+            option.classList.remove('active');
+        });
+        
+        element.classList.add('active');
+        
+        selectedCapacity = element.dataset.capacity;
+        currentPrice = parseInt(element.dataset.price);
+        
+        document.getElementById('selectedCapacity').textContent = selectedCapacity;
+        updatePrice();
+    }
+
+    document.getElementById('addToCartBtn').addEventListener('click', function() {
+        const quantity = document.getElementById('quantity').value;
+        const button = this;
+        const originalText = button.innerHTML;
+        
+        button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Đang thêm...';
+        button.disabled = true;
         
         setTimeout(() => {
-            button.innerHTML = originalText;
-            button.classList.replace('btn-success', 'btn-primary');
-            button.disabled = false;
-        }, 2000);
-    }, 1000);
-    
-    showNotification(`Đã thêm ${quantity} sạc dự phòng ${selectedCapacity} màu ${selectedColor} vào giỏ hàng!`);
-});
+            button.innerHTML = '<i class="fa fa-check"></i> Đã thêm!';
+            button.classList.replace('btn-primary', 'btn-success');
+            
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.classList.replace('btn-success', 'btn-primary');
+                button.disabled = false;
+            }, 2000);
+        }, 1000);
+        
+        showNotification(`Đã thêm ${quantity} sạc dự phòng ${selectedCapacity} màu ${selectedColor} vào giỏ hàng!`);
+    });
 
-// Buy now functionality
-document.getElementById('buyNowBtn').addEventListener('click', function() {
-    const quantity = document.getElementById('quantity').value;
-    const total = (currentPrice * quantity).toLocaleString('vi-VN');
-    alert(`Mua ngay ${quantity} sạc dự phòng ${selectedCapacity} màu ${selectedColor}\nTổng tiền: ${total}₫`);
-});
+    document.getElementById('buyNowBtn').addEventListener('click', function() {
+        const quantity = document.getElementById('quantity').value;
+        const total = (currentPrice * quantity).toLocaleString('vi-VN');
+        alert(`Mua ngay ${quantity} sạc dự phòng ${selectedCapacity} màu ${selectedColor}\nTổng tiền: ${total}₫`);
+    });
 
-function showNotification(message) {
-    const notification = document.createElement('div');
-    notification.className = 'alert alert-success position-fixed top-0 end-0 m-3';
-    notification.style.zIndex = '9999';
-    notification.style.minWidth = '300px';
-    notification.innerHTML = 
-        '<div class="d-flex align-items-center">' +
-            '<i class="fa fa-check-circle me-2"></i>' +
-            '<span>' + message + '</span>' +
-            '<button type="button" class="btn-close ms-auto" onclick="this.parentElement.parentElement.remove()"></button>' +
-        '</div>';
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification.parentElement) {
-            notification.remove();
+    window.showNotification = function(message) {
+        const notification = document.createElement('div');
+        notification.className = 'alert alert-success position-fixed top-0 end-0 m-3';
+        notification.style.zIndex = '9999';
+        notification.style.minWidth = '300px';
+        notification.innerHTML = 
+            '<div class="d-flex align-items-center">' +
+                '<i class="fa fa-check-circle me-2"></i>' +
+                '<span>' + message + '</span>' +
+                '<button type="button" class="btn-close ms-auto" onclick="this.parentElement.parentElement.remove()"></button>' +
+            '</div>';
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 4000);
+    }
+
+    // NEW QUANTITY CONTROLS SCRIPT
+    const quantityInput = document.getElementById('quantity');
+    const decreaseBtn = document.getElementById('decreaseQuantityBtn');
+    const increaseBtn = document.getElementById('increaseQuantityBtn');
+
+    if (quantityInput && decreaseBtn && increaseBtn) {
+        function updateQuantityControls() {
+            const currentValue = parseInt(quantityInput.value);
+            const min = parseInt(quantityInput.min);
+            const max = parseInt(quantityInput.max);
+
+            decreaseBtn.disabled = currentValue <= min;
+            increaseBtn.disabled = currentValue >= max;
         }
-    }, 4000);
-}
+
+        decreaseBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue > parseInt(quantityInput.min)) {
+                quantityInput.value = currentValue - 1;
+                updateQuantityControls();
+            }
+        });
+
+        increaseBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue < parseInt(quantityInput.max)) {
+                quantityInput.value = currentValue + 1;
+                updateQuantityControls();
+            }
+        });
+
+        quantityInput.addEventListener('input', function() {
+            let currentValue = parseInt(quantityInput.value);
+            const min = parseInt(quantityInput.min);
+            const max = parseInt(quantityInput.max);
+
+            if (isNaN(currentValue) || currentValue < min) {
+                quantityInput.value = min;
+            } else if (currentValue > max) {
+                quantityInput.value = max;
+            }
+            updateQuantityControls();
+        });
+
+        // Initial state update
+        updateQuantityControls();
+    }
+});
 </script>
+</body>

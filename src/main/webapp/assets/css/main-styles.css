@@ -21,6 +21,17 @@
     --z-low: 1000;
 }
 
+/* ===== STICKY FOOTER & MAIN LAYOUT ===== */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main-content {
+    flex-grow: 1;
+}
+
 /* ===== GLOBAL UTILITIES ===== */
 .btn-reset {
     background: none;

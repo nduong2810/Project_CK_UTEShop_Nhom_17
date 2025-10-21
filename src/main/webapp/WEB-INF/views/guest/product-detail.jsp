@@ -2,14 +2,8 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
-<!DOCTYPE html>
-<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${product.tenSP} - UTESHOP</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/product-detail.css">
     <style>
         .rating-stars .fa-star { color: #ffc107; }
@@ -47,8 +41,6 @@
     </style>
 </head>
 <body>
-
-<jsp:include page="/WEB-INF/views/common/header.jsp" />
 
 <main class="container my-4">
     <nav aria-label="breadcrumb">
@@ -97,11 +89,11 @@
                     <div class="quantity-section">
                         <span class="quantity-label">Số lượng:</span>
                         <div class="quantity-controls">
-                            <button class="quantity-btn" onclick="decreaseQuantity()">-</button>
+                            <button class="quantity-btn" id="decreaseQuantityBtn">-</button>
                             <input type="number" class="quantity-input" id="quantity" value="1" min="1" max="${product.soLuongTon}">
-                            <button class="quantity-btn" onclick="increaseQuantity()">+</button>
+                            <button class="quantity-btn" id="increaseQuantityBtn">+</button>
                         </div>
-                         <span class="quantity-label" style="margin-left: 20px;">${product.soLuongTon} sản phẩm có sẵn</span>
+                         <span class="quantity-label">${product.soLuongTon} sản phẩm có sẵn</span>
                     </div>
 
                     <!-- Action Buttons -->
@@ -295,26 +287,53 @@
     </div>
 </main>
 
-<jsp:include page="/WEB-INF/views/common/footer.jsp" />
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function increaseQuantity() {
-        const input = document.getElementById('quantity');
-        const max = parseInt(input.max);
-        const currentValue = parseInt(input.value);
-        if (currentValue < max) {
-            input.value = currentValue + 1;
-        }
-    }
+    document.addEventListener('DOMContentLoaded', function() {
+        const quantityInput = document.getElementById('quantity');
+        const decreaseBtn = document.getElementById('decreaseQuantityBtn');
+        const increaseBtn = document.getElementById('increaseQuantityBtn');
 
-    function decreaseQuantity() {
-        const input = document.getElementById('quantity');
-        const currentValue = parseInt(input.value);
-        if (currentValue > 1) {
-            input.value = currentValue - 1;
+        function updateQuantityControls() {
+            const currentValue = parseInt(quantityInput.value);
+            const min = parseInt(quantityInput.min);
+            const max = parseInt(quantityInput.max);
+
+            decreaseBtn.disabled = currentValue <= min;
+            increaseBtn.disabled = currentValue >= max;
         }
-    }
+
+        decreaseBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue > parseInt(quantityInput.min)) {
+                quantityInput.value = currentValue - 1;
+                updateQuantityControls();
+            }
+        });
+
+        increaseBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue < parseInt(quantityInput.max)) {
+                quantityInput.value = currentValue + 1;
+                updateQuantityControls();
+            }
+        });
+
+        quantityInput.addEventListener('input', function() {
+            let currentValue = parseInt(quantityInput.value);
+            const min = parseInt(quantityInput.min);
+            const max = parseInt(quantityInput.max);
+
+            if (isNaN(currentValue) || currentValue < min) {
+                quantityInput.value = min;
+            } else if (currentValue > max) {
+                quantityInput.value = max;
+            }
+            updateQuantityControls();
+        });
+
+        // Initial state update
+        updateQuantityControls();
+    });
 
     function addToCart() {
         const quantity = document.getElementById('quantity').value;
@@ -344,4 +363,3 @@
 </script>
 
 </body>
-</html>

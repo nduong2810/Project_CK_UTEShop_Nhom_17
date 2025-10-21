@@ -2,8 +2,12 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
-<title>Xe Đẩy Em Bé Combi - UTESHOP</title>
+<head>
+    <title>Xe Đẩy Em Bé Combi - UTESHOP</title>
+    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/product-detail.css">
+</head>
 
+<body>
 <div class="container my-5">
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
@@ -58,20 +62,22 @@
 
             <hr>
 
-            <div class="d-flex align-items-center mb-4">
-                <label for="quantity" class="form-label me-3 mb-0">Số lượng:</label>
-                <div class="input-group" style="width: 130px;">
-                    <button class="btn btn-outline-secondary" type="button" onclick="changeQuantity(-1)">-</button>
-                    <input type="text" id="quantity" class="form-control text-center" value="1" min="1" max="3">
-                    <button class="btn btn-outline-secondary" type="button" onclick="changeQuantity(1)">+</button>
+            <!-- Quantity Section -->
+            <div class="quantity-section mb-4">
+                <span class="quantity-label">Số lượng:</span>
+                <div class="quantity-controls">
+                    <button class="quantity-btn" id="decreaseQuantityBtn">-</button>
+                    <input type="number" class="quantity-input" id="quantity" value="1" min="1" max="3">
+                    <button class="quantity-btn" id="increaseQuantityBtn">+</button>
                 </div>
+                <span class="quantity-label" style="margin-left: 1rem;">3 sản phẩm có sẵn</span>
             </div>
 
             <div class="d-grid gap-2 d-sm-flex">
-                <button class="btn btn-primary btn-lg flex-grow-1" onclick="addToCart()">
+                <button class="btn btn-primary btn-lg flex-grow-1" id="addToCartBtn">
                     <i class="fa fa-cart-plus"></i> Thêm vào giỏ hàng
                 </button>
-                <button class="btn btn-warning btn-lg flex-grow-1" onclick="buyNow()">
+                <button class="btn btn-warning btn-lg flex-grow-1" id="buyNowBtn">
                     <i class="fa fa-bolt"></i> Mua ngay
                 </button>
             </div>
@@ -80,20 +86,65 @@
 </div>
 
 <script>
-function changeQuantity(delta) {
-    const input = document.getElementById('quantity');
-    let value = parseInt(input.value) + delta;
-    if (value >= 1 && value <= 3) input.value = value;
-}
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('addToCartBtn').addEventListener('click', function() {
+        const qty = document.getElementById('quantity').value;
+        alert(`Đã thêm ${qty} xe đẩy em bé Combi vào giỏ hàng!`);
+    });
 
-function addToCart() {
-    const qty = document.getElementById('quantity').value;
-    alert(`Đã thêm ${qty} xe đẩy em bé Combi vào giỏ hàng!`);
-}
+    document.getElementById('buyNowBtn').addEventListener('click', function() {
+        const qty = document.getElementById('quantity').value;
+        const total = (5890000 * qty).toLocaleString('vi-VN');
+        alert(`Mua ngay ${qty} xe đẩy em bé Combi\nTổng tiền: ${total}₫`);
+    });
 
-function buyNow() {
-    const qty = document.getElementById('quantity').value;
-    const total = (5890000 * qty).toLocaleString('vi-VN');
-    alert(`Mua ngay ${qty} xe đẩy em bé Combi\nTổng tiền: ${total}₫`);
-}
+    // NEW QUANTITY CONTROLS SCRIPT
+    const quantityInput = document.getElementById('quantity');
+    const decreaseBtn = document.getElementById('decreaseQuantityBtn');
+    const increaseBtn = document.getElementById('increaseQuantityBtn');
+
+    if (quantityInput && decreaseBtn && increaseBtn) {
+        function updateQuantityControls() {
+            const currentValue = parseInt(quantityInput.value);
+            const min = parseInt(quantityInput.min);
+            const max = parseInt(quantityInput.max);
+
+            decreaseBtn.disabled = currentValue <= min;
+            increaseBtn.disabled = currentValue >= max;
+        }
+
+        decreaseBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue > parseInt(quantityInput.min)) {
+                quantityInput.value = currentValue - 1;
+                updateQuantityControls();
+            }
+        });
+
+        increaseBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue < parseInt(quantityInput.max)) {
+                quantityInput.value = currentValue + 1;
+                updateQuantityControls();
+            }
+        });
+
+        quantityInput.addEventListener('input', function() {
+            let currentValue = parseInt(quantityInput.value);
+            const min = parseInt(quantityInput.min);
+            const max = parseInt(quantityInput.max);
+
+            if (isNaN(currentValue) || currentValue < min) {
+                quantityInput.value = min;
+            } else if (currentValue > max) {
+                quantityInput.value = max;
+            }
+            updateQuantityControls();
+        });
+
+        // Initial state update
+        updateQuantityControls();
+    }
+});
 </script>
+</body>

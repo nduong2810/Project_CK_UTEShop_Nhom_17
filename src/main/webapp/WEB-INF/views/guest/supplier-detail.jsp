@@ -3,15 +3,8 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 
-<!DOCTYPE html>
-<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chi tiết nhà cung cấp - UTESHOP</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/main-styles.css">
     <style>
         :root {
             --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -80,9 +73,6 @@
     </style>
 </head>
 <body>
-    <!-- Include Header -->
-    <jsp:include page="/WEB-INF/views/common/header.jsp" />
-
     <c:choose>
         <c:when test="${not empty supplier}">
             <!-- Supplier Header -->
@@ -220,10 +210,4 @@
             </main>
         </c:otherwise>
     </c:choose>
-
-    <!-- Include Footer -->
-    <jsp:include page="/WEB-INF/views/common/footer.jsp" />
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
-</html>

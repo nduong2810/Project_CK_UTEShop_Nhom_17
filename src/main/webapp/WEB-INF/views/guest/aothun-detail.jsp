@@ -2,19 +2,11 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
-<!DOCTYPE html>
-<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Áo Thun Nam Cao Cấp - UTESHOP</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/assets/css/product-detail.css">
 </head>
 <body>
-
-<jsp:include page="/WEB-INF/views/common/header.jsp" />
 
 <main class="container my-4">
     <nav aria-label="breadcrumb">
@@ -138,19 +130,20 @@
                     <div class="quantity-section">
                         <span class="quantity-label">Số lượng:</span>
                         <div class="quantity-controls">
-                            <button class="quantity-btn" onclick="decreaseQuantity()">-</button>
+                            <button class="quantity-btn" id="decreaseQuantityBtn">-</button>
                             <input type="number" class="quantity-input" id="quantity" value="1" min="1" max="50">
-                            <button class="quantity-btn" onclick="increaseQuantity()">+</button>
+                            <button class="quantity-btn" id="increaseQuantityBtn">+</button>
                         </div>
+                        <span class="quantity-label" style="margin-left: 1rem;">50 sản phẩm có sẵn</span>
                     </div>
 
                     <!-- Action Buttons -->
                     <div class="action-buttons">
-                        <button class="btn-add-cart" onclick="addToCart()">
+                        <button class="btn-add-cart" id="addToCartBtn">
                             <i class="fas fa-shopping-cart me-2"></i>
                             Thêm vào giỏ hàng
                         </button>
-                        <button class="btn-buy-now" onclick="buyNow()">
+                        <button class="btn-buy-now" id="buyNowBtn">
                             <i class="fas fa-bolt me-2"></i>
                             Mua ngay
                         </button>
@@ -231,44 +224,8 @@
     </div>
 </main>
 
-<jsp:include page="/WEB-INF/views/common/footer.jsp" />
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    function changeMainImage(src) {
-        document.getElementById('mainProductImage').src = src;
-    }
-
-    function increaseQuantity() {
-        const input = document.getElementById('quantity');
-        const currentValue = parseInt(input.value);
-        if (currentValue < 50) {
-            input.value = currentValue + 1;
-        }
-    }
-
-    function decreaseQuantity() {
-        const input = document.getElementById('quantity');
-        const currentValue = parseInt(input.value);
-        if (currentValue > 1) {
-            input.value = currentValue - 1;
-        }
-    }
-
-    function addToCart() {
-        const quantity = document.getElementById('quantity').value;
-        const size = document.querySelector('.variant-option.active[data-variant]').dataset.variant;
-        
-        alert(`Đã thêm ${quantity} áo thun size ${size} vào giỏ hàng!`);
-    }
-
-    function buyNow() {
-        const quantity = document.getElementById('quantity').value;
-        const size = document.querySelector('.variant-option.active[data-variant]').dataset.variant;
-        
-        alert(`Mua ngay ${quantity} áo thun size ${size}!`);
-    }
-
+document.addEventListener('DOMContentLoaded', function() {
     // Variant selection
     document.querySelectorAll('.variant-option[data-variant]').forEach(option => {
         option.addEventListener('click', function() {
@@ -280,7 +237,73 @@
             section.querySelector('.selected-variant strong').textContent = selectedVariant;
         });
     });
+
+    // Add to Cart
+    document.getElementById('addToCartBtn').addEventListener('click', function() {
+        const quantity = document.getElementById('quantity').value;
+        const size = document.querySelector('.variant-option.active[data-variant]').dataset.variant;
+        alert(`Đã thêm ${quantity} áo thun size ${size} vào giỏ hàng!`);
+    });
+
+    // Buy Now
+    document.getElementById('buyNowBtn').addEventListener('click', function() {
+        const quantity = document.getElementById('quantity').value;
+        const size = document.querySelector('.variant-option.active[data-variant]').dataset.variant;
+        alert(`Mua ngay ${quantity} áo thun size ${size}!`);
+    });
+
+    // NEW QUANTITY CONTROLS SCRIPT
+    const quantityInput = document.getElementById('quantity');
+    const decreaseBtn = document.getElementById('decreaseQuantityBtn');
+    const increaseBtn = document.getElementById('increaseQuantityBtn');
+
+    if (quantityInput && decreaseBtn && increaseBtn) {
+        function updateQuantityControls() {
+            const currentValue = parseInt(quantityInput.value);
+            const min = parseInt(quantityInput.min);
+            const max = parseInt(quantityInput.max);
+
+            decreaseBtn.disabled = currentValue <= min;
+            increaseBtn.disabled = currentValue >= max;
+        }
+
+        decreaseBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue > parseInt(quantityInput.min)) {
+                quantityInput.value = currentValue - 1;
+                updateQuantityControls();
+            }
+        });
+
+        increaseBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue < parseInt(quantityInput.max)) {
+                quantityInput.value = currentValue + 1;
+                updateQuantityControls();
+            }
+        });
+
+        quantityInput.addEventListener('input', function() {
+            let currentValue = parseInt(quantityInput.value);
+            const min = parseInt(quantityInput.min);
+            const max = parseInt(quantityInput.max);
+
+            if (isNaN(currentValue) || currentValue < min) {
+                quantityInput.value = min;
+            } else if (currentValue > max) {
+                quantityInput.value = max;
+            }
+            updateQuantityControls();
+        });
+
+        // Initial state update
+        updateQuantityControls();
+    }
+});
+
+function changeMainImage(src) {
+    document.getElementById('mainProductImage').src = src;
+}
 </script>
 
 </body>
-</html>

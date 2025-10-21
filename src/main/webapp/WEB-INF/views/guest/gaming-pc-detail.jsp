@@ -135,19 +135,20 @@
                     <div class="quantity-section">
                         <span class="quantity-label">Số lượng:</span>
                         <div class="quantity-controls">
-                            <button class="quantity-btn" onclick="decreaseQuantity()">-</button>
+                            <button class="quantity-btn" id="decreaseQuantityBtn">-</button>
                             <input type="number" class="quantity-input" id="quantity" value="1" min="1" max="2">
-                            <button class="quantity-btn" onclick="increaseQuantity()">+</button>
+                            <button class="quantity-btn" id="increaseQuantityBtn">+</button>
                         </div>
+                        <span class="quantity-label" style="margin-left: 1rem;">2 sản phẩm có sẵn</span>
                     </div>
 
                     <!-- Action Buttons -->
                     <div class="action-buttons">
-                        <button class="btn-add-cart" onclick="addToCart()">
+                        <button class="btn-add-cart" id="addToCartBtn">
                             <i class="fas fa-shopping-cart me-2"></i>
                             Thêm vào giỏ hàng
                         </button>
-                        <button class="btn-buy-now" onclick="buyNow()">
+                        <button class="btn-buy-now" id="buyNowBtn">
                             <i class="fas fa-bolt me-2"></i>
                             Mua ngay
                         </button>
@@ -235,54 +236,81 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
     // Variant selection
     document.querySelectorAll('.variant-option').forEach(option => {
         option.addEventListener('click', function() {
-            // Remove active class from siblings
-            this.parentNode.querySelectorAll('.variant-option').forEach(sibling => {
-                sibling.classList.remove('active');
-            });
-            // Add active class to clicked option
-            this.classList.add('active');
-            
-            // Update selected variant display
-            const selectedVariant = this.parentNode.parentNode.querySelector('.selected-variant strong');
-            if (selectedVariant) {
-                selectedVariant.textContent = this.textContent;
+            const section = this.closest('.variant-section');
+            if (section) {
+                section.querySelectorAll('.variant-option').forEach(opt => opt.classList.remove('active'));
+                this.classList.add('active');
+                
+                const selectedVariantDisplay = section.querySelector('.selected-variant strong');
+                if (selectedVariantDisplay) {
+                    selectedVariantDisplay.textContent = this.textContent;
+                }
             }
         });
     });
 
-    // Quantity controls
-    function increaseQuantity() {
-        const quantityInput = document.getElementById('quantity');
-        const currentValue = parseInt(quantityInput.value);
-        const maxValue = parseInt(quantityInput.getAttribute('max'));
-        
-        if (currentValue < maxValue) {
-            quantityInput.value = currentValue + 1;
-        }
-    }
-
-    function decreaseQuantity() {
-        const quantityInput = document.getElementById('quantity');
-        const currentValue = parseInt(quantityInput.value);
-        const minValue = parseInt(quantityInput.getAttribute('min'));
-        
-        if (currentValue > minValue) {
-            quantityInput.value = currentValue - 1;
-        }
-    }
-
     // Add to cart function
-    function addToCart() {
+    document.getElementById('addToCartBtn').addEventListener('click', function() {
         alert('Đã thêm sản phẩm vào giỏ hàng!');
-    }
+    });
 
     // Buy now function
-    function buyNow() {
+    document.getElementById('buyNowBtn').addEventListener('click', function() {
         alert('Chuyển đến trang thanh toán!');
+    });
+
+    // NEW QUANTITY CONTROLS SCRIPT
+    const quantityInput = document.getElementById('quantity');
+    const decreaseBtn = document.getElementById('decreaseQuantityBtn');
+    const increaseBtn = document.getElementById('increaseQuantityBtn');
+
+    if (quantityInput && decreaseBtn && increaseBtn) {
+        function updateQuantityControls() {
+            const currentValue = parseInt(quantityInput.value);
+            const min = parseInt(quantityInput.min);
+            const max = parseInt(quantityInput.max);
+
+            decreaseBtn.disabled = currentValue <= min;
+            increaseBtn.disabled = currentValue >= max;
+        }
+
+        decreaseBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue > parseInt(quantityInput.min)) {
+                quantityInput.value = currentValue - 1;
+                updateQuantityControls();
+            }
+        });
+
+        increaseBtn.addEventListener('click', function() {
+            let currentValue = parseInt(quantityInput.value);
+            if (currentValue < parseInt(quantityInput.max)) {
+                quantityInput.value = currentValue + 1;
+                updateQuantityControls();
+            }
+        });
+
+        quantityInput.addEventListener('input', function() {
+            let currentValue = parseInt(quantityInput.value);
+            const min = parseInt(quantityInput.min);
+            const max = parseInt(quantityInput.max);
+
+            if (isNaN(currentValue) || currentValue < min) {
+                quantityInput.value = min;
+            } else if (currentValue > max) {
+                quantityInput.value = max;
+            }
+            updateQuantityControls();
+        });
+
+        // Initial state update
+        updateQuantityControls();
     }
+});
 </script>
 
 </body>
