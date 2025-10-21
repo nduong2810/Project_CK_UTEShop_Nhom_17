@@ -103,8 +103,9 @@
                                 <a href="${pageContext.request.contextPath}/guest/product?id=${sp.maSP}">
                                     <img src="${pageContext.request.contextPath}/img/${sp.hinhAnh}"
                                          alt="${sp.tenSP}"
-                                         class="product-image"
-                                         onerror="this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png';">
+                                         class="product-image lazy-load"
+                                         onerror="this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png';"
+                                         onload="this.classList.add('loaded');">
                                 </a>
                                 <button class="btn-favorite" onclick="toggleFavorite(event, this, ${sp.maSP})">
                                     <i class="far fa-heart"></i>

@@ -692,8 +692,7 @@ body.dark-mode .card { border-color: #444; }
     object-fit: cover;
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-hover);
-    opacity: 0;
-    transition: opacity 0.3s ease;
+    /* Removed opacity and transition from here */
 }
 
 .hero-image.loaded {
@@ -891,14 +890,6 @@ body.dark-mode .card { border-color: #444; }
     width: 100%;
     height: 220px; /* Fixed height */
     object-fit: cover;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    opacity: 0;
-}
-
-.product-image.loaded {
-    opacity: 1;
-    animation: none; /* Remove shimmer when loaded */
-    background: none;
 }
 
 .product-badge {
@@ -1292,7 +1283,10 @@ body.dark-mode .card { border-color: #444; }
     background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
+    /* Removed opacity and transition from here */
 }
+
+/* Removed .product-image.loaded, .hero-image.loaded, .category-image.loaded */
 
 .product-image {
     aspect-ratio: 4/3; /* Better for product images */
@@ -1332,28 +1326,12 @@ body.dark-mode .card { border-color: #444; }
     object-fit: cover;
     border-radius: var(--border-radius-lg);
     box-shadow: var(--shadow-hover);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-.hero-image.loaded {
-    opacity: 1;
-    animation: none; /* Remove shimmer when loaded */
-    background: none;
 }
 
 .product-image {
     width: 100%;
     height: 220px; /* Fixed height */
     object-fit: cover;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    opacity: 0;
-}
-
-.product-image.loaded {
-    opacity: 1;
-    animation: none; /* Remove shimmer when loaded */
-    background: none;
 }
 
 /* Loading placeholder for images */
@@ -1411,7 +1389,9 @@ img {
 .product-image[src=""],
 .product-image:not([src]),
 .hero-image[src=""],
-.hero-image:not([src]) {
+.hero-image:not([src]),
+.category-image[src=""],
+.category-image:not([src]) {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     display: flex;
     align-items: center;
@@ -1423,7 +1403,9 @@ img {
 .product-image[src=""]:before,
 .product-image:not([src]):before,
 .hero-image[src=""]:before,
-.hero-image:not([src]):before {
+.hero-image:not([src]):before,
+.category-image[src=""]:before,
+.category-image:not([src]):before {
     content: "📷";
     font-size: 2rem;
 }
@@ -1475,7 +1457,8 @@ img {
 
 /* Critical images should load first */
 .hero-image,
-.product-image:nth-child(-n+6) {
+.product-image:nth-child(-n+6),
+.category-image {
     loading: eager;
 }
 

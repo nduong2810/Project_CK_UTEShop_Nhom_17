@@ -38,6 +38,15 @@
             opacity:1;
         }
         .review-form .rating:hover > input:checked ~ label:before { opacity: 0.4; }
+
+        /* CSS for main product image fade-in */
+        #mainProductImage {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        #mainProductImage.loaded {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -59,7 +68,8 @@
                         <img src="${pageContext.request.contextPath}/assets/img/${product.hinhAnh}"
                              id="mainProductImage"
                              alt="${product.tenSP}"
-                             onerror="this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png'">
+                             onload="this.classList.add('loaded')"
+                             onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png'; this.classList.add('loaded');">
                     </div>
                 </div>
             </div>

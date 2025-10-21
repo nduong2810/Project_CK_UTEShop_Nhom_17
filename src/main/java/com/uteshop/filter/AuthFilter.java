@@ -69,7 +69,7 @@ public class AuthFilter implements Filter {
         }
         
         // Cho phép truy cập các URL công khai (bao gồm tất cả /guest/*)
-        if (isPublicUrl(path)) {
+        if (isPublicUrl(path, contextPath)) { // Truyền contextPath vào đây
             System.out.println("AuthFilter: Public URL, allowing access - " + path);
             chain.doFilter(request, response);
             return;
@@ -107,10 +107,23 @@ public class AuthFilter implements Filter {
     /**
      * Kiểm tra xem URL có phải là public không
      */
-    private boolean isPublicUrl(String path) {
+    private boolean isPublicUrl(String path, String contextPath) { // Thêm contextPath vào chữ ký
+        // Chuẩn hóa path để đảm bảo nó thực sự là context-relative
+        String normalizedPath = path;
+        // Nếu path vẫn bắt đầu bằng contextPath (do URL bị lặp lại), hãy loại bỏ nó
+        if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/") && normalizedPath.startsWith(contextPath)) {
+            normalizedPath = normalizedPath.substring(contextPath.length());
+            System.out.println("AuthFilter: Normalized path (removed duplicated contextPath): " + normalizedPath); // ADDED LOG
+        }
+        // Đảm bảo normalizedPath luôn bắt đầu bằng "/"
+        if (!normalizedPath.startsWith("/")) {
+            normalizedPath = "/" + normalizedPath;
+            System.out.println("AuthFilter: Normalized path (added leading slash): " + normalizedPath); // ADDED LOG
+        }
+
         // Kiểm tra từng pattern trong PUBLIC_URLS
         for (String publicUrl : PUBLIC_URLS) {
-            if (path.startsWith(publicUrl)) {
+            if (normalizedPath.startsWith(publicUrl)) {
                 return true;
             }
         }

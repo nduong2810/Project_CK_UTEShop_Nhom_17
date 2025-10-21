@@ -370,7 +370,13 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            transition: transform 0.3s ease;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            opacity: 0; /* This is the problematic line */
+        }
+
+        /* New rule to make image visible */
+        .product-image.image-visible {
+            opacity: 1;
         }
 
         .product-card:hover .product-image {
@@ -564,7 +570,7 @@
         <div class="hero-slide hero-slide-3">
             <div class="hero-content">
                 <h1>Giao hàng siêu tốc 2 giờ</h1>
-                <p>Miễn phí vận chuyển cho đơn hàng từ 500.000đ</p>
+                <p>Miễn phí vận chuyển cho đơn hàng từ 500.000₫</p>
                 <a href="#products" class="btn-hero">
                     <i class="fas fa-shipping-fast me-2"></i>Đặt hàng ngay
                 </a>
@@ -668,10 +674,11 @@
                                 <div class="product-card">
                                     <div class="product-image-container">
                                         <a href="${pageContext.request.contextPath}/guest/product?id=${sp.maSP}">
-                                            <img src="${pageContext.request.contextPath}/img/${sp.hinhAnh}"
+                                            <img src="${pageContext.request.contextPath}/assets/img/${sp.hinhAnh}"
                                                  alt="${sp.tenSP}"
                                                  class="product-image"
-                                                 onerror="this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png';">
+                                                 onload="this.classList.add('image-visible')"
+                                                 onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png'; this.classList.add('image-visible');">
                                         </a>
                                         <button class="btn-favorite" onclick="toggleFavorite(event, this, ${sp.maSP})">
                                             <i class="far fa-heart"></i>
@@ -710,35 +717,18 @@
                     <!-- Pagination Controls -->
                     <nav aria-label="Product Pagination" class="mt-5">
                         <ul class="pagination justify-content-center">
-                            <c:url var="baseUrl" value="/guest/home" />
-                            
                             <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                                <a class="page-link" href="<c:url value='${baseUrl}'>
-                                    <c:param name='page' value='${currentPage - 1}'/>
-                                    <c:if test='${not empty param.category}'><c:param name='category' value='${param.category}'/></c:if>
-                                    <c:if test='${not empty param.price}'><c:param name='price' value='${param.price}'/></c:if>
-                                    <c:if test='${not empty param.sort}'><c:param name='sort' value='${param.sort}'/></c:if>
-                                </c:url>" tabindex="-1" aria-disabled="${currentPage == 1}">Trước</a>
+                                <a class="page-link" href="${pageContext.request.contextPath}/guest/home?page=${currentPage - 1}<c:if test='${not empty param.category}'>&category=${param.category}</c:if><c:if test='${not empty param.price}'>&price=${param.price}</c:if><c:if test='${not empty param.sort}'>&sort=${param.sort}</c:if>" tabindex="-1" aria-disabled="${currentPage == 1}">Trước</a>
                             </li>
 
                             <c:forEach begin="1" end="${totalPages}" var="i">
                                 <li class="page-item ${i == currentPage ? 'active' : ''}">
-                                    <a class="page-link" href="<c:url value='${baseUrl}'>
-                                        <c:param name='page' value='${i}'/>
-                                        <c:if test='${not empty param.category}'><c:param name='category' value='${param.category}'/></c:if>
-                                        <c:if test='${not empty param.price}'><c:param name='price' value='${param.price}'/></c:if>
-                                        <c:if test='${not empty param.sort}'><c:param name='sort' value='${param.sort}'/></c:if>
-                                    </c:url>">${i}</a>
+                                    <a class="page-link" href="${pageContext.request.contextPath}/guest/home?page=${i}<c:if test='${not empty param.category}'>&category=${param.category}</c:if><c:if test='${not empty param.price}'>&price=${param.price}</c:if><c:if test='${not empty param.sort}'>&sort=${param.sort}</c:if>">${i}</a>
                                 </li>
                             </c:forEach>
 
                             <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                                <a class="page-link" href="<c:url value='${baseUrl}'>
-                                    <c:param name='page' value='${currentPage + 1}'/>
-                                    <c:if test='${not empty param.category}'><c:param name='category' value='${param.category}'/></c:if>
-                                    <c:if test='${not empty param.price}'><c:param name='price' value='${param.price}'/></c:if>
-                                    <c:if test='${not empty param.sort}'><c:param name='sort' value='${param.sort}'/></c:if>
-                                </c:url>">Sau</a>
+                                <a class="page-link" href="${pageContext.request.contextPath}/guest/home?page=${currentPage + 1}<c:if test='${not empty param.category}'>&category=${param.category}</c:if><c:if test='${not empty param.price}'>&price=${param.price}</c:if><c:if test='${not empty param.sort}'>&sort=${param.sort}</c:if>">Sau</a>
                             </li>
                         </ul>
                     </nav>
