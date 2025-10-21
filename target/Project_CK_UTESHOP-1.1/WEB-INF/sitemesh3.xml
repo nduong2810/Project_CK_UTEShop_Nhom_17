@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemesh>
+    <!-- Exclude static resources and auth pages from decoration -->
+    <mapping path="/auth/*" exclude="true"/>
+    <mapping path="/assets/*" exclude="true"/>
+    <mapping path="/css/*" exclude="true"/>
+    <mapping path="/js/*" exclude="true"/>
+    <mapping path="/img/*" exclude="true"/>
+    
+    <!-- 
+        Apply decorator to all other pages.
+        Using a relative path to work around a path prefix issue.
+        The prefix seems to be /WEB-INF/decorators/.
+        By using a relative path, the final resolved path becomes:
+        /WEB-INF/decorators/../layouts/main-layout.jsp -> /WEB-INF/layouts/main-layout.jsp
+    -->
+    <mapping path="/*" decorator="../layouts/main-layout.jsp"/>
+</sitemesh>
