@@ -332,7 +332,7 @@ public class AuthController extends HttpServlet {
         switch (user.getVaiTro()) {
             case ADMIN:
                 // Admin -> trang quản lý sản phẩm
-                response.sendRedirect(contextPath + "/admin/products");
+                response.sendRedirect(contextPath + "/admin/home");
                 break;
             case VENDOR:
                 // Vendor -> TẠM THỜI về trang home (dashboard chưa có view)
