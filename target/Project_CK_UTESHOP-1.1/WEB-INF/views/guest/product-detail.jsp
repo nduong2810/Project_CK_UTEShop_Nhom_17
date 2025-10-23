@@ -108,25 +108,18 @@
 
                     <!-- Action Buttons -->
                     <div class="action-buttons">
-                        <c:choose>
-                            <c:when test="${not empty sessionScope.user}">
-                                <button class="btn-add-cart" onclick="addToCart()">
-                                    <i class="fas fa-shopping-cart me-2"></i>
-                                    Thêm vào giỏ hàng
-                                </button>
-                                <button class="btn-buy-now" onclick="buyNow()">
-                                    <i class="fas fa-bolt me-2"></i>
-                                    Mua ngay
-                                </button>
-                                <button class="btn btn-favorite" onclick="addToFavorites()">
-                                    <i class="fas fa-heart me-2"></i>
-                                    Yêu thích
-                                </button>
-                            </c:when>
-                            <c:otherwise>
-                                <a href="${pageContext.request.contextPath}/login" class="btn btn-primary">Đăng nhập để mua hàng</a>
-                            </c:otherwise>
-                        </c:choose>
+                        <button class="btn-add-cart" onclick="handleAddToCart(${empty sessionScope.account})">
+                            <i class="fas fa-shopping-cart me-2"></i>
+                            Thêm vào giỏ hàng
+                        </button>
+                        <button class="btn-buy-now" onclick="handleBuyNow(${empty sessionScope.account})">
+                            <i class="fas fa-bolt me-2"></i>
+                            Mua ngay
+                        </button>
+                        <button class="btn btn-favorite" onclick="handleAddToFavorites(${empty sessionScope.account})">
+                            <i class="fas fa-heart me-2"></i>
+                            Yêu thích
+                        </button>
                     </div>
                 </div>
             </div>
@@ -345,20 +338,48 @@
         updateQuantityControls();
     });
 
-    function addToCart() {
+    function showNotification(message, type) {
+        if (type === void 0) { type = 'info'; }
+        var notification = document.createElement('div');
+        notification.className = 'alert alert-' + (type === 'success' ? 'success' : 'info') + ' position-fixed';
+        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; animation: slideInRight 0.3s ease-out;';
+        notification.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'info-circle') + ' me-2"></i>' + message + '<button type="button" class="btn-close ms-2" onclick="this.parentElement.remove()"></button>';
+        document.body.appendChild(notification);
+        setTimeout(function () {
+            if (notification.parentElement) {
+                notification.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(function () { return notification.remove(); }, 300);
+            }
+        }, 3000);
+    }
+
+    function requireLogin() {
+        showNotification('Bạn phải đăng nhập để thực hiện chức năng này!', 'warning');
+    }
+
+    function handleAddToCart(isGuest) {
+        if (isGuest) {
+            requireLogin();
+            return;
+        }
         const quantity = document.getElementById('quantity').value;
-        // Logic to add to cart (requires login)
         alert(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
     }
 
-    function buyNow() {
+    function handleBuyNow(isGuest) {
+        if (isGuest) {
+            requireLogin();
+            return;
+        }
         const quantity = document.getElementById('quantity').value;
-        // Logic for immediate purchase (requires login)
         alert(`Mua ngay ${quantity} sản phẩm!`);
     }
 
-    function addToFavorites() {
-        // Logic to add to favorites (requires login)
+    function handleAddToFavorites(isGuest) {
+        if (isGuest) {
+            requireLogin();
+            return;
+        }
         alert('Đã thêm sản phẩm vào danh sách yêu thích!');
     }
 

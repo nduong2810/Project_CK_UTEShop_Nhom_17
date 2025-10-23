@@ -107,7 +107,7 @@
                                          onload="this.classList.add('loaded')"
                                          onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png'; this.classList.add('loaded');">
                                 </a>
-                                <button class="btn-favorite" onclick="toggleFavorite(event, this, ${sp.maSP})">
+                                <button class="btn-favorite" onclick="toggleFavorite(event, this, ${sp.maSP}, ${empty sessionScope.account})">
                                     <i class="far fa-heart"></i>
                                 </button>
                             </div>
@@ -127,7 +127,7 @@
                                     </small>
                                 </div>
                                 
-                                <button class="btn btn-add-to-cart" onclick="addToCart(${sp.maSP})">
+                                <button class="btn btn-add-to-cart" onclick="addToCart(${sp.maSP}, ${empty sessionScope.account})">
                                     <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ
                                 </button>
                             </div>
@@ -428,15 +428,28 @@
     const homeUrl = '<c:url value="/guest/home" />';
     const categoryUrl = '<c:url value="/guest/category" />';
 
+    // Function to require login
+    function requireLogin() {
+        showNotification('Bạn phải đăng nhập để thực hiện chức năng này!', 'warning', true);
+    }
+
     // Utility functions for product interactions
-    function addToCart(productId) {
+    function addToCart(productId, isGuest) {
+        if (isGuest) {
+            requireLogin();
+            return;
+        }
         console.log('DEBUG JS: 🛒 Adding to cart: ' + productId);
         showNotification('Sản phẩm đã được thêm vào giỏ hàng!', 'success');
     }
 
-    function toggleFavorite(event, button, productId) {
+    function toggleFavorite(event, button, productId, isGuest) {
         event.stopPropagation();
         event.preventDefault();
+        if (isGuest) {
+            requireLogin();
+            return;
+        }
         console.log('DEBUG JS: ❤️ Toggling favorite for product: ' + productId);
         button.classList.toggle('active');
         const icon = button.querySelector('i');
@@ -451,25 +464,94 @@
         }
     }
 
-    function showNotification(message, type) {
-        if (type === void 0) { type = 'info'; }
+    function showNotification(message, type, persistent) {
+        var notificationType = type || 'info';
+        var isPersistent = persistent || false;
+        var notificationId = 'login-required-notification';
+
+        if (isPersistent && document.getElementById(notificationId)) {
+            var existingNotification = document.getElementById(notificationId);
+            existingNotification.classList.remove('shake');
+            void existingNotification.offsetWidth; // Trigger reflow
+            existingNotification.classList.add('shake');
+            
+            // Update message, type, and icon for existing persistent notification
+            existingNotification.querySelector('span').textContent = message;
+            existingNotification.className = 'alert alert-' + notificationType + ' position-fixed d-flex align-items-center';
+            var iconMap = {
+                success: 'fa-check-circle',
+                info: 'fa-info-circle',
+                warning: 'fa-exclamation-triangle',
+                danger: 'fa-exclamation-circle'
+            };
+            var iconClass = iconMap[notificationType] || 'fa-info-circle';
+            existingNotification.querySelector('i').className = 'fas ' + iconClass + ' me-2';
+            return;
+        }
+
+        var iconMap = {
+            success: 'fa-check-circle',
+            info: 'fa-info-circle',
+            warning: 'fa-exclamation-triangle',
+            danger: 'fa-exclamation-circle'
+        };
+        var iconClass = iconMap[notificationType] || 'fa-info-circle';
+
         var notification = document.createElement('div');
-        notification.className = 'alert alert-' + (type === 'success' ? 'success' : 'info') + ' position-fixed';
-        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; animation: slideInRight 0.3s ease-out;';
-        notification.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'info-circle') + ' me-2"></i>' + message + '<button type="button" class="btn-close ms-2" onclick="this.parentElement.remove()"></button>';
+        notification.className = 'alert alert-' + notificationType + ' position-fixed d-flex align-items-center';
+        notification.style.top = '20px';
+        notification.style.right = '20px';
+        notification.style.zIndex = '9999';
+        notification.style.minWidth = '300px';
+        notification.style.animation = 'slideInRight 0.3s ease-out';
+        
+        if (isPersistent) {
+            notification.id = notificationId;
+        }
+
+        var icon = document.createElement('i');
+        icon.className = 'fas ' + iconClass + ' me-2';
+
+        var messageSpan = document.createElement('span');
+        messageSpan.textContent = message;
+        messageSpan.style.color = 'inherit'; // Ensure message color is inherited
+
+        var closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'btn-close ms-auto';
+        closeButton.setAttribute('onclick', 'this.parentElement.remove()');
+
+        notification.appendChild(icon);
+        notification.appendChild(messageSpan);
+        notification.appendChild(closeButton);
+        
         document.body.appendChild(notification);
-        setTimeout(function () {
-            if (notification.parentElement) {
-                notification.style.animation = 'slideOutRight 0.3s ease-in';
-                setTimeout(function () { return notification.remove(); }, 300);
-            }
-        }, 3000);
+
+        if (!isPersistent) {
+            setTimeout(function() {
+                if (notification.parentElement) {
+                    notification.style.animation = 'slideOutRight 0.3s ease-in forwards';
+                    notification.addEventListener('animationend', function() { 
+                        if(notification.parentElement) { 
+                            notification.remove(); 
+                        }
+                    });
+                }
+            }, 6000); // 6 seconds
+        }
     }
 
     const notificationStyles = document.createElement('style');
     notificationStyles.textContent = `
         @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } } 
+        @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+        @keyframes shake { 
+            10%, 90% { transform: translateX(-1px); } 
+            20%, 80% { transform: translateX(2px); } 
+            30%, 50%, 70% { transform: translateX(-4px); } 
+            40%, 60% { transform: translateX(4px); } 
+        }
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
     `;
     document.head.appendChild(notificationStyles);
 
@@ -518,3 +600,4 @@
 </script>
 
 </body>
+</html>

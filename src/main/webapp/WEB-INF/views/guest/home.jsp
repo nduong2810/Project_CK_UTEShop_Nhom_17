@@ -347,7 +347,7 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            min-height: 450px;
+            min-height: 550px;
         }
 
         .product-card:hover {
@@ -356,7 +356,7 @@
         }
 
         .product-image-container {
-            height: 280px;
+            height: 360px;
             position: relative;
             overflow: hidden;
             background: #f8f9fa;
@@ -478,22 +478,47 @@
             gap: 5px;
         }
 
+        .product-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: auto;
+        }
+
+        .btn-add-to-cart, .btn-buy-now {
+            flex: 1;
+            padding: 12px 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .btn-add-to-cart {
             background: linear-gradient(45deg, #2874f0, #1a5fce);
             color: white;
             border: none;
-            padding: 14px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            width: 100%;
-            transition: all 0.3s ease;
-            margin-top: auto;
             box-shadow: 0 4px 15px rgba(40, 116, 240, 0.3);
         }
 
         .btn-add-to-cart:hover {
             background: linear-gradient(45deg, #1a5fce, #2874f0);
             box-shadow: 0 6px 20px rgba(40, 116, 240, 0.4);
+            transform: translateY(-3px);
+        }
+
+        .btn-buy-now {
+            background: linear-gradient(45deg, #ff9f00, #ff5f00);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(255, 159, 0, 0.3);
+        }
+
+        .btn-buy-now:hover {
+            background: linear-gradient(45deg, #ff5f00, #ff9f00);
+            box-shadow: 0 6px 20px rgba(255, 159, 0, 0.4);
             transform: translateY(-3px);
         }
 
@@ -511,6 +536,11 @@
         .alert-secondary {
             background: #f7fafc;
             color: #4a5568;
+        }
+
+        .alert-warning {
+            background-color: #fffbeb;
+            color: #b45309;
         }
 
         /* Fade Animation */
@@ -539,11 +569,20 @@
                 padding: 20px;
             }
         }
+
+        /* Notification Animations */
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+        @keyframes shake { 
+            10%, 90% { transform: translateX(-1px); } 
+            20%, 80% { transform: translateX(2px); } 
+            30%, 50%, 70% { transform: translateX(-4px); } 
+            40%, 60% { transform: translateX(4px); } 
+        }
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
     </style>
 </head>
 <body>
-
-
 
 <main>
     <!-- Hero Carousel with Multiple Slides -->
@@ -605,13 +644,13 @@
         <div class="carousel-dots"></div>
     </section>
 
-    <div class="container">
+    <div class="container-fluid">
         <!-- Filter Section -->
         <section class="filter-section">
             <div class="row align-items-end">
                 <div class="col-md-3 mb-3 mb-md-0">
                     <label><i class="fas fa-th me-2"></i>Danh mục sản phẩm</label>
-                    <select class="form-select" id="categoryFilter">
+                    <select class="form-select" id="categoryFilter" onchange="applyFilters()">
                         <option value="">Tất cả danh mục</option>
                         <c:forEach var="cat" items="${categories}">
                             <option value="${cat.maDM}" ${param.category == cat.maDM ? 'selected' : ''}>${cat.tenDM}</option>
@@ -620,18 +659,19 @@
                 </div>
                 <div class="col-md-3 mb-3 mb-md-0">
                     <label><i class="fas fa-dollar-sign me-2"></i>Mức giá</label>
-                    <select class="form-select" id="priceFilter">
+                    <select class="form-select" id="priceFilter" onchange="applyFilters()">
                         <option value="">Tất cả</option>
                         <option value="0-100000" ${param.price == '0-100000' ? 'selected' : ''}>Dưới 100,000₫</option>
                         <option value="100000-500000" ${param.price == '100000-500000' ? 'selected' : ''}>100,000₫ - 500,000₫</option>
                         <option value="500000-1000000" ${param.price == '500000-1000000' ? 'selected' : ''}>500,000₫ - 1,000,000₫</option>
-                        <option value="1000000-5000000" ${param.price == '1000000-5000000' ? 'selected' : ''}>Trên 1,000,000₫</option>
+                        <option value="1000000-" ${param.price == '1000000-' ? 'selected' : ''}>Trên 1,000,000₫</option>
                     </select>
                 </div>
                 <div class="col-md-3 mb-3 mb-md-0">
                     <label><i class="fas fa-sort me-2"></i>Sắp xếp theo</label>
-                    <select class="form-select" id="sortFilter">
-                        <option value="bestseller" ${param.sort == 'bestseller' ? 'selected' : ''}>Bán chạy nhất</option>
+                    <select class="form-select" id="sortFilter" onchange="applyFilters()">
+                        <option value="bestseller" ${empty param.sort || param.sort == 'bestseller' ? 'selected' : ''}>Bán chạy nhất</option>
+                        <option value="all" ${param.sort == 'all' ? 'selected' : ''}>Tất cả sản phẩm</option>
                         <option value="price-asc" ${param.sort == 'price-asc' ? 'selected' : ''}>Giá: Thấp đến Cao</option>
                         <option value="price-desc" ${param.sort == 'price-desc' ? 'selected' : ''}>Giá: Cao đến Thấp</option>
                         <option value="newest" ${param.sort == 'newest' ? 'selected' : ''}>Mới nhất</option>
@@ -680,7 +720,10 @@
                                                  onload="this.classList.add('image-visible')"
                                                  onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png'; this.classList.add('image-visible');">
                                         </a>
-                                        <button class="btn-favorite" onclick="toggleFavorite(event, this, ${sp.maSP})">
+                                        <c:if test="${hotProductIds.contains(sp.maSP)}">
+                                            <div class="badge-hot">HOT</div>
+                                        </c:if>
+                                        <button class="btn-favorite" onclick="toggleFavorite(event, this, ${sp.maSP}, ${empty sessionScope.account})">
                                             <i class="far fa-heart"></i>
                                         </button>
                                     </div>
@@ -700,9 +743,14 @@
                                             </small>
                                         </div>
                                         
-                                        <button class="btn btn-add-to-cart" onclick="addToCart(${sp.maSP})">
-                                            <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ
-                                        </button>
+                                        <div class="product-buttons">
+                                            <button class="btn btn-add-to-cart" onclick="addToCart(${sp.maSP}, ${empty sessionScope.account})">
+                                                <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ
+                                            </button>
+                                            <button class="btn btn-buy-now" onclick="buyNow(${sp.maSP}, ${empty sessionScope.account})">
+                                                <i class="fas fa-bolt me-2"></i>Mua Ngay
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -714,21 +762,28 @@
                         Debug: Current Page: ${currentPage}, Total Pages: ${totalPages}, Total Products: ${totalProducts}, Products on this page: ${fn:length(products)}
                     </p>
 
+                    <%-- Build the query string for filter parameters to be used in pagination links --%>
+                    <c:url var="basePaginationUrl" value="/guest/home" />
+                    <c:set var="filterParams" value="" />
+                    <c:if test="${not empty param.category}"><c:set var="filterParams" value="${filterParams}&category=${param.category}" /></c:if>
+                    <c:if test="${not empty param.price}"><c:set var="filterParams" value="${filterParams}&price=${param.price}" /></c:if>
+                    <c:if test="${not empty param.sort}"><c:set var="filterParams" value="${filterParams}&sort=${param.sort}" /></c:if>
+
                     <!-- Pagination Controls -->
                     <nav aria-label="Product Pagination" class="mt-5">
                         <ul class="pagination justify-content-center">
                             <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                                <a class="page-link" href="${pageContext.request.contextPath}/guest/home?page=${currentPage - 1}<c:if test='${not empty param.category}'>&category=${param.category}</c:if><c:if test='${not empty param.price}'>&price=${param.price}</c:if><c:if test='${not empty param.sort}'>&sort=${param.sort}</c:if>" tabindex="-1" aria-disabled="${currentPage == 1}">Trước</a>
+                                <a class="page-link" href="${basePaginationUrl}?page=${currentPage - 1}${filterParams}" tabindex="-1" aria-disabled="${currentPage == 1}">Trước</a>
                             </li>
 
                             <c:forEach begin="1" end="${totalPages}" var="i">
                                 <li class="page-item ${i == currentPage ? 'active' : ''}">
-                                    <a class="page-link" href="${pageContext.request.contextPath}/guest/home?page=${i}<c:if test='${not empty param.category}'>&category=${param.category}</c:if><c:if test='${not empty param.price}'>&price=${param.price}</c:if><c:if test='${not empty param.sort}'>&sort=${param.sort}</c:if>">${i}</a>
+                                    <a class="page-link" href="${basePaginationUrl}?page=${i}${filterParams}">${i}</a>
                                 </li>
                             </c:forEach>
 
                             <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                                <a class="page-link" href="${pageContext.request.contextPath}/guest/home?page=${currentPage + 1}<c:if test='${not empty param.category}'>&category=${param.category}</c:if><c:if test='${not empty param.price}'>&price=${param.price}</c:if><c:if test='${not empty param.sort}'>&sort=${param.sort}</c:if>">Sau</a>
+                                <a class="page-link" href="${basePaginationUrl}?page=${currentPage + 1}${filterParams}">Sau</a>
                             </li>
                         </ul>
                     </nav>
@@ -739,9 +794,8 @@
     </div>
 </main>
 
-
-
 <script>
+//<![CDATA[
 document.addEventListener('DOMContentLoaded', function() {
     // Fade in animation
     const observer = new IntersectionObserver((entries) => {
@@ -836,15 +890,39 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Function to require login
+function requireLogin() {
+    showNotification('Bạn phải đăng nhập để thực hiện chức năng này!', 'warning');
+}
+
 // Utility functions for product interactions
-function addToCart(productId) {
+function addToCart(productId, isGuest) {
+    if (isGuest) {
+        requireLogin();
+        return;
+    }
     console.log('DEBUG JS: 🛒 Adding to cart: ' + productId);
     showNotification('Sản phẩm đã được thêm vào giỏ hàng!', 'success');
 }
 
-function toggleFavorite(event, button, productId) {
+function buyNow(productId, isGuest) {
+    if (isGuest) {
+        requireLogin();
+        return;
+    }
+    console.log('DEBUG JS: ⚡ Buying now: ' + productId);
+    showNotification('Chuyển đến trang thanh toán...', 'info');
+    // window.location.href = '${pageContext.request.contextPath}/checkout?productId=' + productId;
+}
+
+function toggleFavorite(event, button, productId, isGuest) {
     event.stopPropagation();
     event.preventDefault();
+
+    if (isGuest) {
+        requireLogin();
+        return;
+    }
 
     console.log('DEBUG JS: ❤️ Toggling favorite for product: ' + productId);
     button.classList.toggle('active');
@@ -879,28 +957,58 @@ function applyFilters() {
 }
 
 function showNotification(message, type) {
-    if (type === void 0) { type = 'info'; }
+    var notificationType = type || 'info';
+
+    console.log('DEBUG: showNotification called with message:', message, 'type:', notificationType);
+
+    var iconMap = {
+        success: 'fa-check-circle',
+        info: 'fa-info-circle',
+        warning: 'fa-exclamation-triangle',
+        danger: 'fa-exclamation-circle'
+    };
+    var iconClass = iconMap[notificationType] || 'fa-info-circle';
+
     var notification = document.createElement('div');
-    notification.className = 'alert alert-' + (type === 'success' ? 'success' : 'info') + ' position-fixed';
-    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; animation: slideInRight 0.3s ease-out;';
-    notification.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'info-circle') + ' me-2"></i>' + message + '<button type="button" class="btn-close ms-2" onclick="this.parentElement.remove()"></button>';
+    notification.className = 'alert alert-' + notificationType + ' position-fixed d-flex align-items-center';
+    notification.style.top = '20px';
+    notification.style.right = '20px';
+    notification.style.zIndex = '9999';
+    notification.style.minWidth = '300px';
+    notification.style.animation = 'slideInRight 0.3s ease-out';
+    
+    var icon = document.createElement('i');
+    icon.className = 'fas ' + iconClass + ' me-2';
+
+    var messageSpan = document.createElement('span');
+    messageSpan.textContent = message;
+    messageSpan.style.color = 'inherit';
+
+    var closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'btn-close ms-auto';
+    closeButton.setAttribute('onclick', 'this.parentElement.remove()');
+
+    notification.appendChild(icon);
+    notification.appendChild(messageSpan);
+    notification.appendChild(closeButton);
+    
     document.body.appendChild(notification);
-    setTimeout(function () {
+
+    setTimeout(function() {
         if (notification.parentElement) {
-            notification.style.animation = 'slideOutRight 0.3s ease-in';
-            setTimeout(function () { return notification.remove(); }, 300);
+            notification.style.animation = 'slideOutRight 0.3s ease-in forwards';
+            notification.addEventListener('animationend', function() { 
+                if(notification.parentElement) { 
+                    notification.remove(); 
+                }
+            });
         }
-    }, 3000);
+    }, 5000); // Changed to 5000 milliseconds (5 seconds)
 }
 
-const notificationStyles = document.createElement('style');
-notificationStyles.textContent = `
-    @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    @keyframes slideOutRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(100%); opacity: 0; } }
-`;
-document.head.appendChild(notificationStyles);
-
 console.log('DEBUG JS: 🎉 UTESHOP Home page JavaScript loaded successfully!');
+//]]>
 </script>
 </body>
 </html>

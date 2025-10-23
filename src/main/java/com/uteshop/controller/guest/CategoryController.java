@@ -13,43 +13,82 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @WebServlet("/guest/category")
 public class CategoryController extends HttpServlet {
     private final SanPhamDAO sanPhamDAO = new SanPhamDAO();
     private final DanhMucDAO danhMucDAO = new DanhMucDAO();
+    private static final int PAGINATION_PAGE_SIZE = 10; // Products per page
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String pathInfo = "/WEB-INF/views/guest/category-products.jsp";
         try {
-            String idParam = request.getParameter("id");
-            if (idParam == null || idParam.isEmpty()) {
-                response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Category ID is missing.");
-                return;
+            // Get filter parameters from request
+            String categoryParam = request.getParameter("category");
+            if (categoryParam == null) {
+                categoryParam = request.getParameter("id"); // Fallback for old links
+            }
+            String sortParam = request.getParameter("sort");
+            String priceParam = request.getParameter("price");
+
+            Integer categoryId = null;
+            if (categoryParam != null && !categoryParam.isEmpty() && !categoryParam.equals("all")) {
+                try {
+                    categoryId = Integer.parseInt(categoryParam);
+                } catch (NumberFormatException e) {
+                    // Ignore invalid category parameter, treat as "all"
+                }
             }
 
-            Integer categoryId = Integer.parseInt(idParam);
-            
-            // Lấy thông tin danh mục và danh sách sản phẩm
-            DanhMuc category = danhMucDAO.findById(categoryId);
-            List<SanPham> products = sanPhamDAO.findByCategoryId(categoryId);
-            
-            // Lấy tất cả danh mục để hiển thị trong dropdown lọc
-            List<DanhMuc> allCategories = danhMucDAO.findAll();
+            // Count total products for pagination
+            long totalProducts = sanPhamDAO.countProducts(sortParam, priceParam, categoryId);
+            int totalPages = (int) Math.ceil((double) totalProducts / PAGINATION_PAGE_SIZE);
+            if (totalPages == 0) totalPages = 1;
 
-            if (category != null) {
-                request.setAttribute("category", category);
-                request.setAttribute("products", products);
-                request.setAttribute("allCategories", allCategories);
-            } else {
-                request.setAttribute("errorMessage", "Danh mục không tồn tại.");
+            // Get pagination parameters
+            String pageParam = request.getParameter("page");
+            int currentPage = 1;
+            if (pageParam != null && !pageParam.isEmpty()) {
+                try {
+                    currentPage = Integer.parseInt(pageParam);
+                } catch (NumberFormatException e) {
+                    currentPage = 1;
+                }
             }
 
-        } catch (NumberFormatException e) {
-            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid Category ID format.");
-            return;
+            // Validate current page
+            if (currentPage < 1) currentPage = 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            // Calculate offset
+            int currentOffset = (currentPage - 1) * PAGINATION_PAGE_SIZE;
+
+            // Fetch products using the findAll method
+            List<SanPham> products = sanPhamDAO.findAll(currentOffset, PAGINATION_PAGE_SIZE, sortParam, priceParam, categoryId);
+
+            // Get category info and all categories for the filter dropdown
+            List<DanhMuc> allCategories = danhMucDAO.getAllCategories();
+            request.setAttribute("allCategories", allCategories); // For the filter dropdown
+
+            if (categoryId != null) {
+                DanhMuc category = danhMucDAO.findById(categoryId);
+                if (category != null) {
+                    request.setAttribute("category", category);
+                }
+                // Get top 3 best-selling products for this category
+                List<SanPham> top3Products = sanPhamDAO.findTopNProductsByCategoryId(3, categoryId);
+                List<Integer> top3ProductIds = top3Products.stream().map(SanPham::getMaSP).collect(Collectors.toList());
+                request.setAttribute("top3ProductIds", top3ProductIds);
+            }
+
+            request.setAttribute("products", products);
+            request.setAttribute("currentPage", currentPage);
+            request.setAttribute("totalPages", totalPages);
+            request.setAttribute("totalProducts", totalProducts);
+
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("errorMessage", "Lỗi không xác định khi tải trang danh mục.");
