@@ -27,9 +27,9 @@ public class CartController extends HttpServlet {
             throws ServletException, IOException {
         
         HttpSession session = request.getSession();
-        NguoiDung currentUser = (NguoiDung) session.getAttribute("currentUser");
+        NguoiDung user = (NguoiDung) session.getAttribute("user");
         
-        if (currentUser == null) {
+        if (user == null) {
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return;
         }
@@ -39,20 +39,20 @@ public class CartController extends HttpServlet {
         try {
             if (action == null || action.equals("view")) {
                 // Hiển thị giỏ hàng
-                viewCart(request, response, currentUser);
+                viewCart(request, response, user);
             } else if (action.equals("delete")) {
                 // Xóa sản phẩm khỏi giỏ hàng
-                deleteFromCart(request, response, currentUser);
+                deleteFromCart(request, response, user);
             } else if (action.equals("clear")) {
                 // Xóa toàn bộ giỏ hàng
-                clearCart(request, response, currentUser);
+                clearCart(request, response, user);
             } else {
-                viewCart(request, response, currentUser);
+                viewCart(request, response, user);
             }
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Đã xảy ra lỗi: " + e.getMessage());
-            viewCart(request, response, currentUser);
+            viewCart(request, response, user);
         }
     }
     
@@ -61,9 +61,9 @@ public class CartController extends HttpServlet {
             throws ServletException, IOException {
         
         HttpSession session = request.getSession();
-        NguoiDung currentUser = (NguoiDung) session.getAttribute("currentUser");
+        NguoiDung user = (NguoiDung) session.getAttribute("user");
         
-        if (currentUser == null) {
+        if (user == null) {
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return;
         }
@@ -73,17 +73,17 @@ public class CartController extends HttpServlet {
         try {
             if (action.equals("add")) {
                 // Thêm sản phẩm vào giỏ hàng
-                addToCart(request, response, currentUser);
+                addToCart(request, response, user);
             } else if (action.equals("update")) {
                 // Cập nhật số lượng sản phẩm
-                updateCartItem(request, response, currentUser);
+                updateCartItem(request, response, user);
             } else {
-                viewCart(request, response, currentUser);
+                viewCart(request, response, user);
             }
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Đã xảy ra lỗi: " + e.getMessage());
-            viewCart(request, response, currentUser);
+            viewCart(request, response, user);
         }
     }
     

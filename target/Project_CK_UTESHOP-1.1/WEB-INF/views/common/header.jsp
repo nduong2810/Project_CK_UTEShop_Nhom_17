@@ -267,11 +267,6 @@
                                 <i class="fas fa-building me-2"></i>Danh sách nhà cung cấp
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item" href="${pageContext.request.contextPath}/guest/supplier/featured">
-                                <i class="fas fa-star me-2"></i>Nhà cung cấp nổi bật
-                            </a>
-                        </li>
                     </ul>
                 </li>
                 

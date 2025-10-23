@@ -26,9 +26,9 @@ public class AddressController extends HttpServlet {
             throws ServletException, IOException {
         
         HttpSession session = request.getSession();
-        NguoiDung currentUser = (NguoiDung) session.getAttribute("currentUser");
+        NguoiDung user = (NguoiDung) session.getAttribute("user");
         
-        if (currentUser == null) {
+        if (user == null) {
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return;
         }
@@ -38,26 +38,26 @@ public class AddressController extends HttpServlet {
         try {
             if (action == null || action.equals("list")) {
                 // Hiển thị danh sách địa chỉ
-                listAddresses(request, response, currentUser);
+                listAddresses(request, response, user);
             } else if (action.equals("add")) {
                 // Hiển thị form thêm địa chỉ
                 showAddForm(request, response);
             } else if (action.equals("edit")) {
                 // Hiển thị form sửa địa chỉ
-                showEditForm(request, response, currentUser);
+                showEditForm(request, response, user);
             } else if (action.equals("delete")) {
                 // Xóa địa chỉ
-                deleteAddress(request, response, currentUser);
+                deleteAddress(request, response, user);
             } else if (action.equals("setDefault")) {
                 // Đặt làm địa chỉ mặc định
-                setDefaultAddress(request, response, currentUser);
+                setDefaultAddress(request, response, user);
             } else {
-                listAddresses(request, response, currentUser);
+                listAddresses(request, response, user);
             }
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Đã xảy ra lỗi: " + e.getMessage());
-            listAddresses(request, response, currentUser);
+            listAddresses(request, response, user);
         }
     }
     
@@ -66,9 +66,9 @@ public class AddressController extends HttpServlet {
             throws ServletException, IOException {
         
         HttpSession session = request.getSession();
-        NguoiDung currentUser = (NguoiDung) session.getAttribute("currentUser");
+        NguoiDung user = (NguoiDung) session.getAttribute("user");
         
-        if (currentUser == null) {
+        if (user == null) {
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return;
         }
@@ -78,14 +78,14 @@ public class AddressController extends HttpServlet {
         try {
             if (action.equals("save")) {
                 // Lưu địa chỉ (thêm mới hoặc cập nhật)
-                saveAddress(request, response, currentUser);
+                saveAddress(request, response, user);
             } else {
-                listAddresses(request, response, currentUser);
+                listAddresses(request, response, user);
             }
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Đã xảy ra lỗi: " + e.getMessage());
-            listAddresses(request, response, currentUser);
+            listAddresses(request, response, user);
         }
     }
     

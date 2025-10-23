@@ -24,9 +24,9 @@ public class FavoriteController extends HttpServlet {
             throws ServletException, IOException {
         
         HttpSession session = request.getSession();
-        NguoiDung currentUser = (NguoiDung) session.getAttribute("currentUser");
+        NguoiDung user = (NguoiDung) session.getAttribute("user");
         
-        if (currentUser == null) {
+        if (user == null) {
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return;
         }
@@ -36,17 +36,17 @@ public class FavoriteController extends HttpServlet {
         try {
             if (action == null || action.equals("list")) {
                 // Hiển thị danh sách sản phẩm yêu thích
-                viewFavorites(request, response, currentUser);
+                viewFavorites(request, response, user);
             } else if (action.equals("remove")) {
                 // Xóa sản phẩm khỏi danh sách yêu thích
-                removeFromFavorites(request, response, currentUser);
+                removeFromFavorites(request, response, user);
             } else {
-                viewFavorites(request, response, currentUser);
+                viewFavorites(request, response, user);
             }
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Đã xảy ra lỗi: " + e.getMessage());
-            viewFavorites(request, response, currentUser);
+            viewFavorites(request, response, user);
         }
     }
     
@@ -55,9 +55,9 @@ public class FavoriteController extends HttpServlet {
             throws ServletException, IOException {
         
         HttpSession session = request.getSession();
-        NguoiDung currentUser = (NguoiDung) session.getAttribute("currentUser");
+        NguoiDung user = (NguoiDung) session.getAttribute("user");
         
-        if (currentUser == null) {
+        if (user == null) {
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return;
         }
@@ -67,17 +67,17 @@ public class FavoriteController extends HttpServlet {
         try {
             if (action.equals("add")) {
                 // Thêm sản phẩm vào danh sách yêu thích
-                addToFavorites(request, response, currentUser);
+                addToFavorites(request, response, user);
             } else if (action.equals("toggle")) {
                 // Toggle trạng thái yêu thích
-                toggleFavorite(request, response, currentUser);
+                toggleFavorite(request, response, user);
             } else {
-                viewFavorites(request, response, currentUser);
+                viewFavorites(request, response, user);
             }
         } catch (Exception e) {
             e.printStackTrace();
             request.setAttribute("error", "Đã xảy ra lỗi: " + e.getMessage());
-            viewFavorites(request, response, currentUser);
+            viewFavorites(request, response, user);
         }
     }
     

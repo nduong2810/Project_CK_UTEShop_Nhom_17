@@ -4,7 +4,7 @@
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 
 <head>
-    <title>${pageTitle} - UTESHOP</title>
+    <title>Danh sách nhà cung cấp - UTESHOP</title>
     <style>
         :root {
             --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -41,6 +41,23 @@
             padding: 2rem;
             text-align: center;
             position: relative;
+        }
+
+        .store-rank {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.2);
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1rem;
+            border: 2px solid white;
         }
         
         .store-icon {
@@ -85,8 +102,8 @@
         
         .badge-featured {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 15px;
+            right: 15px;
             background: var(--gradient-hot);
             color: white;
             padding: 5px 15px;
@@ -114,17 +131,10 @@
     <div class="page-header">
         <div class="container">
             <h1>
-                <i class="fas fa-store me-2"></i>${pageTitle}
+                <i class="fas fa-store me-2"></i>Danh sách nhà cung cấp
             </h1>
             <p class="lead mb-0">
-                <c:choose>
-                    <c:when test="${isFeatured}">
-                        Khám phá các nhà cung cấp có sản phẩm bán chạy nhất
-                    </c:when>
-                    <c:otherwise>
-                        Tất cả các cửa hàng đáng tin cậy trên UTESHOP
-                    </c:otherwise>
-                </c:choose>
+                Các nhà cung cấp uy tín, được sắp xếp theo mức độ phổ biến.
             </p>
         </div>
     </div>
@@ -140,10 +150,13 @@
                 </div>
             </c:when>
             <c:when test="${empty suppliers}">
-                <div class="alert alert-warning text-center py-5">
-                    <i class="fas fa-store-slash fa-3x mb-3"></i>
-                    <h4>Chưa có nhà cung cấp</h4>
-                    <p>Hiện tại chưa có nhà cung cấp nào trong hệ thống.</p>
+                <div class="text-center py-5">
+                    <img src="https://res.cloudinary.com/dflh3p423/image/upload/v1716904322/uteshop/img/no-supplier_vbnxov.png" alt="Không có nhà cung cấp" class="img-fluid mb-4" style="max-width: 250px;">
+                    <h4 class="text-muted">Ôi, chưa có nhà cung cấp nào!</h4>
+                    <p class="text-muted">Có vẻ như chúng tôi đang cập nhật danh sách. Vui lòng quay lại sau nhé!</p>
+                    <a href="${pageContext.request.contextPath}/guest/home" class="btn btn-primary mt-3">
+                        <i class="fas fa-home me-2"></i>Về Trang Chủ
+                    </a>
                 </div>
             </c:when>
             <c:otherwise>
@@ -153,11 +166,14 @@
                         <div class="col-lg-4 col-md-6 mb-4 fade-in-up" style="animation-delay: ${status.index * 0.1}s;">
                             <div class="store-card">
                                 <div class="store-header">
-                                    <c:if test="${isFeatured && status.index < 3}">
+                                    <span class="store-rank">${status.count}</span>
+                                    
+                                    <c:if test="${status.index < 3}">
                                         <span class="badge-featured">
                                             <i class="fas fa-star"></i> NỔI BẬT
                                         </span>
                                     </c:if>
+                                    
                                     <div class="store-icon">
                                         <i class="fas fa-store"></i>
                                     </div>

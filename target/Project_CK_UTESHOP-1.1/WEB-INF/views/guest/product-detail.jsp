@@ -39,13 +39,91 @@
         }
         .review-form .rating:hover > input:checked ~ label:before { opacity: 0.4; }
 
-        /* CSS for main product image fade-in */
         #mainProductImage {
             opacity: 0;
             transition: opacity 0.3s ease;
         }
         #mainProductImage.loaded {
             opacity: 1;
+        }
+
+        /* Styles for Related Products */
+        .related-products-section h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .product-image-container {
+            position: relative;
+            overflow: hidden;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-image {
+            width: 100%;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+        }
+
+        .product-card:hover .product-image {
+            transform: scale(1.05);
+        }
+
+        .product-card .card-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .product-card .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            line-height: 1.4;
+            margin-bottom: 15px;
+            color: #333;
+            flex-grow: 1;
+        }
+
+        .product-card .card-title a {
+            color: inherit;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .product-card .card-title a:hover {
+            color: #2874f0;
+        }
+
+        .product-card .price {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #2874f0;
         }
     </style>
 </head>
@@ -79,7 +157,6 @@
                 <div class="product-info-section">
                     <h1 class="product-title">${product.tenSP}</h1>
                     
-                    <!-- Rating Section -->
                     <div class="rating-section">
                         <div class="rating-stars">
                             <c:forEach begin="1" end="5" varStatus="loop">
@@ -90,12 +167,10 @@
                         <span class="sold-count">Đã bán: ${product.soLuongBan}</span>
                     </div>
 
-                    <!-- Price Section -->
                     <div class="price-section">
                         <h2 class="current-price"><fmt:formatNumber value="${product.donGia}" type="currency" currencySymbol="₫" maxFractionDigits="0" /></h2>
                     </div>
 
-                    <!-- Quantity Section -->
                     <div class="quantity-section">
                         <span class="quantity-label">Số lượng:</span>
                         <div class="quantity-controls">
@@ -106,17 +181,16 @@
                          <span class="quantity-label">${product.soLuongTon} sản phẩm có sẵn</span>
                     </div>
 
-                    <!-- Action Buttons -->
                     <div class="action-buttons">
-                        <button class="btn-add-cart" onclick="handleAddToCart(${empty sessionScope.account})">
+                        <button class="btn-add-cart" onclick="handleAddToCart(${empty sessionScope.user})">
                             <i class="fas fa-shopping-cart me-2"></i>
                             Thêm vào giỏ hàng
                         </button>
-                        <button class="btn-buy-now" onclick="handleBuyNow(${empty sessionScope.account})">
+                        <button class="btn-buy-now" onclick="handleBuyNow(${empty sessionScope.user})">
                             <i class="fas fa-bolt me-2"></i>
                             Mua ngay
                         </button>
-                        <button class="btn btn-favorite" onclick="handleAddToFavorites(${empty sessionScope.account})">
+                        <button class="btn btn-favorite" onclick="handleAddToFavorites(${empty sessionScope.user})">
                             <i class="fas fa-heart me-2"></i>
                             Yêu thích
                         </button>
@@ -125,7 +199,6 @@
             </div>
         </div>
 
-        <!-- Product Details Tabs -->
         <div class="container mt-5">
             <ul class="nav nav-tabs" id="productTabs" role="tablist">
                 <li class="nav-item" role="presentation">
@@ -235,8 +308,7 @@
                                     <c:set var="rawOrderId" value="${sessionScope.orderId}"/>
                                 </c:if>
 
-                                <%-- Validate rawOrderId and set orderIdForReview to a valid number or empty string --%>
-                                <c:set var="orderIdForReview" value=""/> <%-- Default to empty --%>
+                                <c:set var="orderIdForReview" value=""/>
                                 <c:if test="${not empty rawOrderId}">
                                     <c:catch var="numberFormatException">
                                         <fmt:parseNumber var="parsedOrderId" value="${rawOrderId}" integerOnly="true"/>
@@ -288,6 +360,46 @@
             </div>
         </div>
     </div>
+
+    <!-- Related Products Section -->
+    <c:if test="${not empty product.cuaHang}">
+        <div class="related-products-section mt-5">
+            <h2 class="mb-4">Sản phẩm khác từ ${product.cuaHang.tenCH}</h2>
+            <c:choose>
+                <c:when test="${not empty productsOfStore}">
+                    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4">
+                        <c:forEach var="p" items="${productsOfStore}">
+                            <div class="col">
+                                <div class="product-card">
+                                    <div class="product-image-container" style="height: 250px;">
+                                        <a href="${pageContext.request.contextPath}/guest/product?id=${p.maSP}">
+                                            <img src="${pageContext.request.contextPath}/assets/img/${p.hinhAnh}"
+                                                 alt="${p.tenSP}"
+                                                 class="product-image"
+                                                 onerror="this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png';">
+                                        </a>
+                                    </div>
+                                    <div class="card-body">
+                                        <h6 class="card-title" style="min-height: 40px;">
+                                            <a href="${pageContext.request.contextPath}/guest/product?id=${p.maSP}">${p.tenSP}</a>
+                                        </h6>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="price">
+                                                <fmt:formatNumber value="${p.donGia}" type="number" groupingUsed="true"/>₫
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </c:forEach>
+                    </div>
+                </c:when>
+                <c:otherwise>
+                    <p class="text-center text-muted mt-4">Cửa hàng này chưa có sản phẩm nào khác.</p>
+                </c:otherwise>
+            </c:choose>
+        </div>
+    </c:if>
 </main>
 
 <script>
@@ -334,7 +446,6 @@
             updateQuantityControls();
         });
 
-        // Initial state update
         updateQuantityControls();
     });
 
@@ -387,9 +498,9 @@
         const orderIdInput = form.querySelector('input[name="orderId"]');
         if (!orderIdInput || !orderIdInput.value || parseInt(orderIdInput.value) <= 0) {
             alert('Lỗi: Mã đơn hàng (Order ID) không hợp lệ. Vui lòng tải lại trang hoặc truy cập từ lịch sử đơn hàng.');
-            return false; // Ngăn chặn gửi form
+            return false;
         }
-        return true; // Cho phép gửi form
+        return true;
     }
 </script>
 

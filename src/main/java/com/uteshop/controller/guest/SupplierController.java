@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-@WebServlet(urlPatterns = {"/guest/suppliers", "/guest/supplier/featured", "/guest/supplier/detail"})
+@WebServlet(urlPatterns = {"/guest/suppliers", "/guest/supplier/detail"})
 public class SupplierController extends HttpServlet {
     private final CuaHangDAO cuaHangDAO = new CuaHangDAO();
     private final SanPhamDAO sanPhamDAO = new SanPhamDAO();
@@ -27,14 +27,8 @@ public class SupplierController extends HttpServlet {
         try {
             switch (path) {
                 case "/guest/suppliers":
-                    // Hiển thị tất cả nhà cung cấp
+                    // Hiển thị tất cả nhà cung cấp (đã sắp xếp theo doanh số)
                     handleAllSuppliers(request);
-                    view = "/WEB-INF/views/guest/suppliers.jsp";
-                    break;
-                    
-                case "/guest/supplier/featured":
-                    // Hiển thị nhà cung cấp nổi bật
-                    handleFeaturedSuppliers(request);
                     view = "/WEB-INF/views/guest/suppliers.jsp";
                     break;
                     
@@ -59,15 +53,11 @@ public class SupplierController extends HttpServlet {
     
     private void handleAllSuppliers(HttpServletRequest request) {
         try {
-            // Lấy tất cả cửa hàng hoạt động
+            // Lấy tất cả cửa hàng, đã được sắp xếp theo tổng số lượng bán
             List<CuaHang> suppliers = cuaHangDAO.findAll();
             
-            // Lấy thông tin thống kê
-            long totalSuppliers = cuaHangDAO.countStores();
-            
             request.setAttribute("suppliers", suppliers);
-            request.setAttribute("totalSuppliers", totalSuppliers);
-            request.setAttribute("pageTitle", "Tất cả nhà cung cấp");
+            request.setAttribute("pageTitle", "Danh sách nhà cung cấp");
             
             System.out.println("SupplierController: Loaded " + suppliers.size() + " suppliers");
             
@@ -76,25 +66,6 @@ public class SupplierController extends HttpServlet {
             e.printStackTrace();
             request.setAttribute("suppliers", new ArrayList<>());
             request.setAttribute("errorMessage", "Không thể tải danh sách nhà cung cấp");
-        }
-    }
-    
-    private void handleFeaturedSuppliers(HttpServletRequest request) {
-        try {
-            // Lấy top 12 cửa hàng nổi bật
-            List<CuaHang> featuredSuppliers = cuaHangDAO.getFeaturedStores(12);
-            
-            request.setAttribute("suppliers", featuredSuppliers);
-            request.setAttribute("pageTitle", "Nhà cung cấp nổi bật");
-            request.setAttribute("isFeatured", true);
-            
-            System.out.println("SupplierController: Loaded " + featuredSuppliers.size() + " featured suppliers");
-            
-        } catch (Exception e) {
-            System.err.println("Error in handleFeaturedSuppliers: " + e.getMessage());
-            e.printStackTrace();
-            request.setAttribute("suppliers", new ArrayList<>());
-            request.setAttribute("errorMessage", "Không thể tải nhà cung cấp nổi bật");
         }
     }
     

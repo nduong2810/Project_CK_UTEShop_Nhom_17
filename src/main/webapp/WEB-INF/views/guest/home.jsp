@@ -636,7 +636,7 @@
         <div class="carousel-dots"></div>
     </section>
 
-    <div class="container-fluid">
+    <div class="container-xl">
         <!-- Filter Section -->
         <section class="filter-section">
             <div class="row align-items-end">
@@ -700,7 +700,7 @@
                     </div>
                 </c:when>
                 <c:otherwise>
-                    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4" id="productsContainer">
+                    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="productsContainer">
                         <c:forEach var="sp" items="${products}" varStatus="status">
                             <div class="col">
                                 <div class="product-card">
@@ -714,7 +714,7 @@
                                         <c:if test="${hotProductIds.contains(sp.maSP)}">
                                             <div class="badge-hot">HOT</div>
                                         </c:if>
-                                        <button class="btn-favorite" onclick="toggleFavorite(event, this, ${sp.maSP}, ${empty sessionScope.account})">
+                                        <button class="btn-favorite" onclick="toggleFavorite(event, this, ${sp.maSP}, ${empty sessionScope.user})">
                                             <i class="far fa-heart"></i>
                                         </button>
                                     </div>
@@ -735,10 +735,10 @@
                                         </div>
                                         
                                         <div class="product-buttons">
-                                            <button class="btn btn-add-to-cart" onclick="addToCart(${sp.maSP}, ${empty sessionScope.account})">
-                                                <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ
+                                            <button class="btn btn-add-to-cart" onclick="addToCart(${sp.maSP}, ${empty sessionScope.user})">
+                                                <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ hàng
                                             </button>
-                                            <button class="btn btn-buy-now" onclick="buyNow(${sp.maSP}, ${empty sessionScope.account})">
+                                            <button class="btn btn-buy-now" onclick="buyNow(${sp.maSP}, ${empty sessionScope.user})">
                                                 <i class="fas fa-bolt me-2"></i>Mua Ngay
                                             </button>
                                         </div>
@@ -753,28 +753,39 @@
                         Debug: Current Page: ${currentPage}, Total Pages: ${totalPages}, Total Products: ${totalProducts}, Products on this page: ${fn:length(products)}
                     </p>
 
-                    <%-- Build the query string for filter parameters to be used in pagination links --%>
-                    <c:url var="basePaginationUrl" value="/guest/home" />
-                    <c:set var="filterParams" value="" />
-                    <c:if test="${not empty param.category}"><c:set var="filterParams" value="${filterParams}&category=${param.category}" /></c:if>
-                    <c:if test="${not empty param.price}"><c:set var="filterParams" value="${filterParams}&price=${param.price}" /></c:if>
-                    <c:if test="${not empty param.sort}"><c:set var="filterParams" value="${filterParams}&sort=${param.sort}" /></c:if>
-
                     <!-- Pagination Controls -->
                     <nav aria-label="Product Pagination" class="mt-5">
                         <ul class="pagination justify-content-center">
                             <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                                <a class="page-link" href="${basePaginationUrl}?page=${currentPage - 1}${filterParams}" tabindex="-1" aria-disabled="${currentPage == 1}">Trước</a>
+                                <c:url var="prevUrl" value="/guest/home">
+                                    <c:param name="page" value="${currentPage - 1}"/>
+                                    <c:if test="${not empty param.category}"><c:param name="category" value="${param.category}"/></c:if>
+                                    <c:if test="${not empty param.price}"><c:param name="price" value="${param.price}"/></c:if>
+                                    <c:if test="${not empty param.sort}"><c:param name="sort" value="${param.sort}"/></c:if>
+                                </c:url>
+                                <a class="page-link" href="${prevUrl}" tabindex="-1" aria-disabled="${currentPage == 1}">Trước</a>
                             </li>
 
                             <c:forEach begin="1" end="${totalPages}" var="i">
                                 <li class="page-item ${i == currentPage ? 'active' : ''}">
-                                    <a class="page-link" href="${basePaginationUrl}?page=${i}${filterParams}">${i}</a>
+                                    <c:url var="pageUrl" value="/guest/home">
+                                        <c:param name="page" value="${i}"/>
+                                        <c:if test="${not empty param.category}"><c:param name="category" value="${param.category}"/></c:if>
+                                        <c:if test="${not empty param.price}"><c:param name="price" value="${param.price}"/></c:if>
+                                        <c:if test="${not empty param.sort}"><c:param name="sort" value="${param.sort}"/></c:if>
+                                    </c:url>
+                                    <a class="page-link" href="${pageUrl}">${i}</a>
                                 </li>
                             </c:forEach>
 
                             <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                                <a class="page-link" href="${basePaginationUrl}?page=${currentPage + 1}${filterParams}">Sau</a>
+                                <c:url var="nextUrl" value="/guest/home">
+                                    <c:param name="page" value="${currentPage + 1}"/>
+                                    <c:if test="${not empty param.category}"><c:param name="category" value="${param.category}"/></c:if>
+                                    <c:if test="${not empty param.price}"><c:param name="price" value="${param.price}"/></c:if>
+                                    <c:if test="${not empty param.sort}"><c:param name="sort" value="${param.sort}"/></c:if>
+                                </c:url>
+                                <a class="page-link" href="${nextUrl}">Sau</a>
                             </li>
                         </ul>
                     </nav>

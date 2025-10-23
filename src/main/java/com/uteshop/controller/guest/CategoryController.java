@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class CategoryController extends HttpServlet {
     private final SanPhamDAO sanPhamDAO = new SanPhamDAO();
     private final DanhMucDAO danhMucDAO = new DanhMucDAO();
-    private static final int PAGINATION_PAGE_SIZE = 10; // Products per page
+    private static final int PAGINATION_PAGE_SIZE = 8; // Products per page
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

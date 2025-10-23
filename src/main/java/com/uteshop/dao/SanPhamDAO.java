@@ -357,6 +357,46 @@ public class SanPhamDAO {
 		return list;
 	}
 
+	public List<SanPham> findByStore(Integer storeId, int limit) {
+		List<SanPham> list = new ArrayList<>();
+		String sql = "SELECT TOP (?) * FROM SanPham WHERE MaCH = ? AND TrangThai = 1 ORDER BY SoLuongBan DESC";
+
+		try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+
+			ps.setInt(1, limit);
+			ps.setInt(2, storeId);
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					SanPham sp = new SanPham();
+					sp.setMaSP(rs.getInt("MaSP"));
+					sp.setTenSP(rs.getNString("TenSP"));
+					sp.setDonGia(rs.getBigDecimal("DonGia"));
+					sp.setSoLuongBan(rs.getInt("SoLuongBan"));
+					sp.setHinhAnh(rs.getNString("HinhAnh"));
+					sp.setMoTa(rs.getNString("MoTa"));
+					sp.setMaDM(rs.getInt("MaDM"));
+					sp.setMaCH(rs.getInt("MaCH"));
+					sp.setTrangThai(rs.getBoolean("TrangThai"));
+
+					if (sp.getMaDM() != null && sp.getMaDM() > 0) {
+						DanhMuc dm = danhMucDAO.findById(sp.getMaDM());
+						sp.setDanhMuc(dm);
+					}
+					if (sp.getMaCH() != null && sp.getMaCH() > 0) {
+						CuaHang ch = cuaHangDAO.findById(sp.getMaCH());
+						sp.setCuaHang(ch);
+					}
+					list.add(sp);
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return list;
+	}
+
 	public List<SanPham> getAllProducts() {
 		List<SanPham> list = new ArrayList<>();
 		String sql = "SELECT * FROM SanPham WHERE TrangThai = 1 ORDER BY SoLuongBan DESC";

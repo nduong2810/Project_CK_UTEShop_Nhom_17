@@ -284,7 +284,7 @@
 </head>
 <body>
 
-<div class="container-fluid my-5">
+<div class="container my-5">
     <!-- Breadcrumbs -->
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
@@ -357,7 +357,7 @@
 
     <c:choose>
         <c:when test="${not empty products}">
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
                 <c:forEach var="sp" items="${products}" varStatus="status">
                     <div class="col">
                         <div class="product-card">
@@ -371,7 +371,7 @@
                                 <c:if test="${top3ProductIds.contains(sp.maSP)}">
                                     <div class="badge-hot">HOT</div>
                                 </c:if>
-                                <button class="btn-favorite" onclick="toggleFavorite(event, this, ${sp.maSP}, ${empty sessionScope.account})">
+                                <button class="btn-favorite" onclick="toggleFavorite(event, this, ${sp.maSP}, ${empty sessionScope.user})">
                                     <i class="far fa-heart"></i>
                                 </button>
                             </div>
@@ -392,10 +392,10 @@
                                 </div>
                                 
                                 <div class="product-buttons">
-                                    <button class="btn btn-add-to-cart" onclick="addToCart(${sp.maSP}, ${empty sessionScope.account})">
-                                        <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ
+                                    <button class="btn btn-add-to-cart" onclick="addToCart(${sp.maSP}, ${empty sessionScope.user})">
+                                        <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ hàng
                                     </button>
-                                    <button class="btn btn-buy-now" onclick="buyNow(${sp.maSP}, ${empty sessionScope.account})">
+                                    <button class="btn btn-buy-now" onclick="buyNow(${sp.maSP}, ${empty sessionScope.user})">
                                         <i class="fas fa-bolt me-2"></i>Mua Ngay
                                     </button>
                                 </div>

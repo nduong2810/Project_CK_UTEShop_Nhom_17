@@ -107,7 +107,7 @@
                                          onload="this.classList.add('loaded')"
                                          onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png'; this.classList.add('loaded');">
                                 </a>
-                                <button class="btn-favorite" onclick="toggleFavorite(event, this, ${sp.maSP}, ${empty sessionScope.account})">
+                                <button class="btn-favorite" onclick="toggleFavorite(event, this, ${sp.maSP}, ${empty sessionScope.user})">
                                     <i class="far fa-heart"></i>
                                 </button>
                             </div>
@@ -127,7 +127,7 @@
                                     </small>
                                 </div>
                                 
-                                <button class="btn btn-add-to-cart" onclick="addToCart(${sp.maSP}, ${empty sessionScope.account})">
+                                <button class="btn btn-add-to-cart" onclick="addToCart(${sp.maSP}, ${empty sessionScope.user})">
                                     <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ
                                 </button>
                             </div>

@@ -44,24 +44,22 @@ public class ProductController extends HttpServlet {
             if (product != null) {
                 request.setAttribute("product", product);
                 
-                // Fetch reviews for the product
-                List<DanhGiaSanPham> reviews = danhGiaSanPhamDAO.getReviewsByProduct(productId, 0, 10); // Fetch first 10 reviews
+                List<DanhGiaSanPham> reviews = danhGiaSanPhamDAO.getReviewsByProduct(productId, 0, 10);
                 request.setAttribute("reviews", reviews);
 
-                // Check if the logged-in user has a completed order for this product
+                if (product.getCuaHang() != null) {
+                    Integer storeId = product.getCuaHang().getMaCH();
+                    List<SanPham> productsOfStore = sanPhamDAO.findByStore(storeId, 6);
+                    productsOfStore.removeIf(p -> p.getMaSP().equals(productId));
+                    request.setAttribute("productsOfStore", productsOfStore);
+                }
+
                 NguoiDung loggedInUser = (NguoiDung) request.getSession().getAttribute("user");
                 if (loggedInUser != null) {
-                    System.out.println("ProductController: Logged-in user found: " + loggedInUser.getMaND());
-                    System.out.println("ProductController: Checking for completed order for productId: " + productId + " by userId: " + loggedInUser.getMaND());
                     DonHang userOrderForProduct = donHangDAO.findCompletedOrderByUserAndProduct(loggedInUser.getMaND(), productId);
                     if (userOrderForProduct != null) {
                         request.setAttribute("userOrderForProduct", userOrderForProduct);
-                        System.out.println("ProductController: Found completed order with ID: " + userOrderForProduct.getMaDH());
-                    } else {
-                        System.out.println("ProductController: No completed order found for productId: " + productId + " by userId: " + loggedInUser.getMaND());
                     }
-                } else {
-                    System.out.println("ProductController: No user logged in.");
                 }
 
             } else {
@@ -88,7 +86,6 @@ public class ProductController extends HttpServlet {
         if ("addReview".equals(action)) {
             handleAddReview(request, response);
         } else {
-            // Handle other POST requests or return an error
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid action for POST request.");
         }
     }
