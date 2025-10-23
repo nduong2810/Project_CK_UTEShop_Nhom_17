@@ -24,7 +24,7 @@
             <rtexprvalue>true</rtexprvalue>
         </attribute>
         <attribute>
-            <name>write-entire-property</name>
+            <name>writeentireproperty</name>
             <required>false</required>
             <rtexprvalue>true</rtexprvalue>
         </attribute>

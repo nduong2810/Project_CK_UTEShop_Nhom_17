@@ -79,7 +79,6 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            min-height: 550px;
         }
 
         .product-card:hover {
@@ -88,19 +87,16 @@
         }
 
         .product-image-container {
-            height: 360px;
             position: relative;
             overflow: hidden;
             background: #f8f9fa;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 25px;
         }
 
         .product-image {
-            max-width: 100%;
-            max-height: 100%;
+            width: 100%;
             object-fit: contain;
             transition: transform 0.3s ease;
         }
@@ -369,9 +365,8 @@
                                 <a href="${pageContext.request.contextPath}/guest/product?id=${sp.maSP}">
                                     <img src="${pageContext.request.contextPath}/assets/img/${sp.hinhAnh}"
                                          alt="${sp.tenSP}"
-                                         class="product-image lazy-load"
-                                         onerror="this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png';"
-                                         onload="this.classList.add('loaded');">
+                                         class="product-image"
+                                         onerror="this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png';">
                                 </a>
                                 <c:if test="${top3ProductIds.contains(sp.maSP)}">
                                     <div class="badge-hot">HOT</div>

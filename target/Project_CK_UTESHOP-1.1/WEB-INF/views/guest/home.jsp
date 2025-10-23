@@ -347,7 +347,6 @@
             height: 100%;
             display: flex;
             flex-direction: column;
-            min-height: 550px;
         }
 
         .product-card:hover {
@@ -356,27 +355,20 @@
         }
 
         .product-image-container {
-            height: 360px;
+            height: 300px;
             position: relative;
             overflow: hidden;
             background: #f8f9fa;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 25px;
         }
 
         .product-image {
-            max-width: 100%;
-            max-height: 100%;
+            width: 100%;
+            height: 100%;
             object-fit: contain;
-            transition: transform 0.3s ease, opacity 0.3s ease;
-            opacity: 0; /* This is the problematic line */
-        }
-
-        /* New rule to make image visible */
-        .product-image.image-visible {
-            opacity: 1;
+            transition: transform 0.3s ease;
         }
 
         .product-card:hover .product-image {
@@ -717,8 +709,7 @@
                                             <img src="${pageContext.request.contextPath}/assets/img/${sp.hinhAnh}"
                                                  alt="${sp.tenSP}"
                                                  class="product-image"
-                                                 onload="this.classList.add('image-visible')"
-                                                 onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png'; this.classList.add('image-visible');">
+                                                 onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png';">
                                         </a>
                                         <c:if test="${hotProductIds.contains(sp.maSP)}">
                                             <div class="badge-hot">HOT</div>
