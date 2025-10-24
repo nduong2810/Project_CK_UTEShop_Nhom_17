@@ -703,7 +703,7 @@
                     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="productsContainer">
                         <c:forEach var="sp" items="${products}" varStatus="status">
                             <c:set var="product" value="${sp}" scope="request"/>
-                            <c:import url="/WEB-INF/views/guest/common/product-card.jsp"/>
+                            <c:import url="/WEB-INF/views/guest/product-card.jsp"/>
                         </c:forEach>
                     </div>
                     

@@ -1,5 +1,6 @@
 package com.uteshop.controller.guest;
 
+
 import com.uteshop.dao.SanPhamDAO;
 import com.uteshop.entity.SanPham;
 import jakarta.servlet.RequestDispatcher;
@@ -37,13 +38,13 @@ public class GuestServlet extends HttpServlet {
         String view;
         switch (path == null ? "" : path) {
             case "/login":
-                view = "/WEB-INF/views/guest/login.jsp";
+                view = "/WEB-INF/views/auth/login.jsp";
                 break;
             case "/register":
-                view = "/WEB-INF/views/guest/register.jsp";
+                view = "/WEB-INF/views/auth/register.jsp";
                 break;
             case "/verify-otp":
-                view = "/WEB-INF/views/guest/verify-otp.jsp";
+                view = "/WEB-INF/views/auth/verify-otp.jsp";
                 break;
             case "/logout":
                 // Xử lý đăng xuất
@@ -119,7 +120,7 @@ public class GuestServlet extends HttpServlet {
         // TODO: Implement login logic
         System.out.println("GuestServlet_DEPRECATED - Handling login");
         req.setAttribute("message", "Chức năng đăng nhập đang phát triển");
-        RequestDispatcher rd = req.getRequestDispatcher("/WEB-INF/views/guest/login.jsp");
+        RequestDispatcher rd = req.getRequestDispatcher("/WEB-INF/views/auth/login.jsp");
         rd.forward(req, resp);
     }
 
@@ -128,7 +129,7 @@ public class GuestServlet extends HttpServlet {
         // TODO: Implement register logic
         System.out.println("GuestServlet_DEPRECATED - Handling register");
         req.setAttribute("message", "Chức năng đăng ký đang phát triển");
-        RequestDispatcher rd = req.getRequestDispatcher("/WEB-INF/views/guest/register.jsp");
+        RequestDispatcher rd = req.getRequestDispatcher("/WEB-INF/views/auth/register.jsp");
         rd.forward(req, resp);
     }
 
@@ -137,7 +138,7 @@ public class GuestServlet extends HttpServlet {
         // TODO: Implement OTP verification logic
         System.out.println("GuestServlet_DEPRECATED - Handling verify OTP");
         req.setAttribute("message", "Chức năng xác thực OTP đang phát triển");
-        RequestDispatcher rd = req.getRequestDispatcher("/WEB-INF/views/guest/verify-otp.jsp");
+        RequestDispatcher rd = req.getRequestDispatcher("/WEB-INF/views/auth/verify-otp.jsp");
         rd.forward(req, resp);
     }
 
@@ -146,7 +147,7 @@ public class GuestServlet extends HttpServlet {
         // TODO: Implement resend OTP logic
         System.out.println("GuestServlet_DEPRECATED - Handling resend OTP");
         req.setAttribute("success", "Mã OTP đã được gửi lại");
-        RequestDispatcher rd = req.getRequestDispatcher("/WEB-INF/views/guest/verify-otp.jsp");
+        RequestDispatcher rd = req.getRequestDispatcher("/WEB-INF/views/auth/verify-otp.jsp");
         rd.forward(req, resp);
     }
 }
