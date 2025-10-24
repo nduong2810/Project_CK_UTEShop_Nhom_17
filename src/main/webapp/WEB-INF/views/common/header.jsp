@@ -295,30 +295,6 @@
                         </li>
                     </ul>
                 </li>
-                
-                <!-- Hỗ trợ -->
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="supportDropdown" role="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-question-circle me-1"></i>Hỗ trợ
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li>
-                            <a class="dropdown-item" href="${pageContext.request.contextPath}/guest/contact">
-                                <i class="fas fa-envelope me-2"></i>Liên hệ
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="${pageContext.request.contextPath}/guest/faq">
-                                <i class="fas fa-question me-2"></i>Câu hỏi thường gặp
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="${pageContext.request.contextPath}/guest/guide">
-                                <i class="fas fa-book me-2"></i>Hướng dẫn mua hàng
-                            </a>
-                        </li>
-                    </ul>
-                </li>
             </ul>
 
             <!-- Search Bar -->
