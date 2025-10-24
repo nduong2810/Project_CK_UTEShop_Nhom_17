@@ -359,49 +359,8 @@
         <c:when test="${not empty products}">
             <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
                 <c:forEach var="sp" items="${products}" varStatus="status">
-                    <div class="col">
-                        <div class="product-card">
-                            <div class="product-image-container">
-                                <a href="${pageContext.request.contextPath}/guest/product?id=${sp.maSP}">
-                                    <img src="${pageContext.request.contextPath}/assets/img/${sp.hinhAnh}"
-                                         alt="${sp.tenSP}"
-                                         class="product-image"
-                                         onerror="this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png';">
-                                </a>
-                                <c:if test="${top3ProductIds.contains(sp.maSP)}">
-                                    <div class="badge-hot">HOT</div>
-                                </c:if>
-                                <button class="btn-favorite" onclick="toggleFavorite(event, this, ${sp.maSP}, ${empty sessionScope.user})">
-                                    <i class="far fa-heart"></i>
-                                </button>
-                            </div>
-                            
-                            <div class="card-body">
-                                <h6 class="card-title">
-                                    <a href="${pageContext.request.contextPath}/guest/product?id=${sp.maSP}">${sp.tenSP}</a>
-                                </h6>
-                                
-                                <div class="d-flex justify-content-between align-items-center mb-3 price-line">
-                                    <div class="price">
-                                        <fmt:formatNumber value="${sp.donGia}" type="number" groupingUsed="true"/>₫
-                                    </div>
-                                    <small class="sold-count">
-                                        <i class="fas fa-shopping-cart me-1"></i>
-                                        ${sp.soLuongBan} đã bán
-                                    </small>
-                                </div>
-                                
-                                <div class="product-buttons">
-                                    <button class="btn btn-add-to-cart" onclick="addToCart(${sp.maSP}, ${empty sessionScope.user})">
-                                        <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ hàng
-                                    </button>
-                                    <button class="btn btn-buy-now" onclick="buyNow(${sp.maSP}, ${empty sessionScope.user})">
-                                        <i class="fas fa-bolt me-2"></i>Mua Ngay
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <c:set var="product" value="${sp}" scope="request"/>
+                    <c:import url="/WEB-INF/views/guest/common/product-card.jsp"/>
                 </c:forEach>
             </div>
 
