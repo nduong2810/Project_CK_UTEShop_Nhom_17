@@ -301,7 +301,7 @@
 											onclick="location.href='${pageContext.request.contextPath}/admin/products/edit?id=${p.maSP}'">
 											Quản lý</button>
 										<button class="btn btn-buy"
-											onclick="location.href='${pageContext.request.contextPath}/product/${p.maSP}'">
+											onclick="location.href='${pageContext.request.contextPath}/admin/products/view?id=${p.maSP}'">
 											Xem chi tiết</button>
 									</div>
 								</div>

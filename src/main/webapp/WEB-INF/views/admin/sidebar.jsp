@@ -187,8 +187,7 @@ boolean aSettings = uri.contains("/admin/settings");
 	<div class="admin-brand">
 		<button class="admin-hamburger" type="button"
 			onclick="adminToggleSidebar()" title="Thu gọn/mở rộng">☰</button>
-		<div class="admin-badge">U</div>
-		<div class="admin-title">UTEShop</div>
+		
 	</div>
 
 	<ul class="admin-menu">

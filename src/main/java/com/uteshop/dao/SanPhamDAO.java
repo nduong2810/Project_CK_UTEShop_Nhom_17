@@ -130,22 +130,22 @@ public class SanPhamDAO {
 		String orderByClause;
 		if (sortBy != null) {
 			switch (sortBy) {
-				case "price-asc":
-					orderByClause = "ORDER BY DonGia ASC, MaSP ASC";
-					break;
-				case "price-desc":
-					orderByClause = "ORDER BY DonGia DESC, MaSP ASC";
-					break;
-				case "newest":
-					orderByClause = "ORDER BY NgayTao DESC, MaSP ASC";
-					break;
-				case "all":
-					orderByClause = "ORDER BY MaSP ASC";
-					break;
-				case "bestseller":
-				default:
-					orderByClause = "ORDER BY SoLuongBan DESC, MaSP ASC";
-					break;
+			case "price-asc":
+				orderByClause = "ORDER BY DonGia ASC, MaSP ASC";
+				break;
+			case "price-desc":
+				orderByClause = "ORDER BY DonGia DESC, MaSP ASC";
+				break;
+			case "newest":
+				orderByClause = "ORDER BY NgayTao DESC, MaSP ASC";
+				break;
+			case "all":
+				orderByClause = "ORDER BY MaSP ASC";
+				break;
+			case "bestseller":
+			default:
+				orderByClause = "ORDER BY SoLuongBan DESC, MaSP ASC";
+				break;
 			}
 		} else {
 			orderByClause = "ORDER BY SoLuongBan DESC, MaSP ASC";
@@ -155,7 +155,8 @@ public class SanPhamDAO {
 		params.add(offset);
 		params.add(limit);
 
-		try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+		try (Connection conn = DBConnect.getConnection();
+				PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 			for (int i = 0; i < params.size(); i++) {
 				ps.setObject(i + 1, params.get(i));
 			}
@@ -222,7 +223,8 @@ public class SanPhamDAO {
 			}
 		}
 
-		try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+		try (Connection conn = DBConnect.getConnection();
+				PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 			for (int i = 0; i < params.size(); i++) {
 				ps.setObject(i + 1, params.get(i));
 			}
@@ -407,24 +409,24 @@ public class SanPhamDAO {
 
 			while (rs.next()) {
 				SanPham sp = new SanPham();
-					sp.setMaSP(rs.getInt("MaSP"));
-					sp.setTenSP(rs.getNString("TenSP"));
-					sp.setDonGia(rs.getBigDecimal("DonGia"));
-					sp.setSoLuongTon(rs.getInt("SoLuongTon"));
-					sp.setHinhAnh(rs.getNString("HinhAnh"));
-					sp.setMoTa(rs.getNString("MoTa"));
-					sp.setMaDM(rs.getInt("MaDM"));
-					sp.setMaCH(rs.getInt("MaCH"));
-					sp.setTrangThai(rs.getBoolean("TrangThai"));
+				sp.setMaSP(rs.getInt("MaSP"));
+				sp.setTenSP(rs.getNString("TenSP"));
+				sp.setDonGia(rs.getBigDecimal("DonGia"));
+				sp.setSoLuongTon(rs.getInt("SoLuongTon"));
+				sp.setHinhAnh(rs.getNString("HinhAnh"));
+				sp.setMoTa(rs.getNString("MoTa"));
+				sp.setMaDM(rs.getInt("MaDM"));
+				sp.setMaCH(rs.getInt("MaCH"));
+				sp.setTrangThai(rs.getBoolean("TrangThai"));
 
-					if (sp.getMaDM() != null && sp.getMaDM() > 0) {
-						DanhMuc dm = danhMucDAO.findById(sp.getMaDM());
-						sp.setDanhMuc(dm);
-					}
-					if (sp.getMaCH() != null && sp.getMaCH() > 0) {
-						CuaHang ch = cuaHangDAO.findById(sp.getMaCH());
-						sp.setCuaHang(ch);
-					}
+				if (sp.getMaDM() != null && sp.getMaDM() > 0) {
+					DanhMuc dm = danhMucDAO.findById(sp.getMaDM());
+					sp.setDanhMuc(dm);
+				}
+				if (sp.getMaCH() != null && sp.getMaCH() > 0) {
+					CuaHang ch = cuaHangDAO.findById(sp.getMaCH());
+					sp.setCuaHang(ch);
+				}
 				list.add(sp);
 			}
 		} catch (Exception e) {
@@ -446,6 +448,60 @@ public class SanPhamDAO {
 		}
 	}
 
+	public List<DanhMuc> listCategories() {
+		List<DanhMuc> list = new ArrayList<>();
+		// Chỉ select cột chắc chắn tồn tại để tránh lỗi schema
+		String sql = "SELECT MaDM, TenDM FROM DanhMuc ORDER BY TenDM ASC";
+
+		try (Connection con = DBConnect.getConnection();
+				PreparedStatement ps = con.prepareStatement(sql);
+				ResultSet rs = ps.executeQuery()) {
+
+			while (rs.next()) {
+				DanhMuc dm = new DanhMuc();
+				dm.setMaDM(rs.getInt("MaDM"));
+				dm.setTenDM(rs.getString("TenDM"));
+				// Các field còn lại (MoTa, HinhAnh, TrangThai, NgayTao/NgayCapNhat)
+				// sẽ giữ default theo constructor của entity.
+				list.add(dm);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace(); // hoặc log
+		}
+		return list;
+	}
+
+	public int countAll(String q, Integer catId) {
+		StringBuilder sql = new StringBuilder();
+		sql.append("SELECT COUNT(*) FROM SanPham WHERE 1=1 ");
+		if (q != null && !q.isBlank()) {
+			sql.append(" AND (LOWER(TenSP) LIKE ? OR CAST(MaSP AS NVARCHAR(50)) LIKE ?) ");
+		}
+		if (catId != null) {
+			sql.append(" AND MaDM = ? ");
+		}
+
+		try (Connection con = DBConnect.getConnection(); PreparedStatement ps = con.prepareStatement(sql.toString())) {
+
+			int idx = 1;
+			if (q != null && !q.isBlank()) {
+				String kw = "%" + q.toLowerCase() + "%";
+				ps.setString(idx++, kw);
+				ps.setString(idx++, kw);
+			}
+			if (catId != null) {
+				ps.setInt(idx++, catId);
+			}
+
+			try (ResultSet rs = ps.executeQuery()) {
+				return rs.next() ? rs.getInt(1) : 0;
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
+
 	public int countActive() {
 		String sql = "SELECT COUNT(*) FROM SanPham WHERE TrangThai = 1";
 		try (Connection conn = DBConnect.getConnection();
@@ -456,5 +512,124 @@ public class SanPhamDAO {
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private SanPham mapRow(ResultSet rs) throws SQLException {
+		SanPham sp = new SanPham();
+		sp.setMaSP(rs.getInt("MaSP"));
+		sp.setMaCH(rs.getInt("MaCH")); // nếu entity SanPham của bạn có trường này
+		sp.setMaDM(rs.getInt("MaDM")); // nếu bạn đang dùng ID thay vì @ManyToOne
+		sp.setTenSP(rs.getString("TenSP"));
+		sp.setDonGia(rs.getBigDecimal("DonGia"));
+		sp.setSoLuongTon(rs.getInt("SoLuongTon"));
+		sp.setSoLuongBan(rs.getInt("SoLuongBan"));
+		sp.setHinhAnh(rs.getString("HinhAnh"));
+		sp.setMoTa(rs.getString("MoTa"));
+		sp.setTrangThai(rs.getBoolean("TrangThai"));
+		sp.setNgayTao(rs.getTimestamp("NgayTao"));
+		return sp;
+	}
+
+	private String safeSort(String sort) {
+		if (sort == null)
+			return "";
+		return switch (sort) {
+		case "price_asc", "price_desc", "sold_desc", "newest" -> sort;
+		default -> "";
+		};
+	}
+
+	public List<SanPham> findPaged(int page, int pageSize, String q, Integer catId, String sort) {
+		List<SanPham> list = new ArrayList<>();
+		StringBuilder sql = new StringBuilder();
+		sql.append("""
+				SELECT MaSP, MaCH, MaDM, TenSP, DonGia, SoLuongTon, SoLuongBan, HinhAnh, MoTa, TrangThai, NgayTao
+				FROM SanPham
+				WHERE 1=1
+				""");
+
+		// filter
+		if (q != null && !q.isBlank()) {
+			sql.append(" AND (LOWER(TenSP) LIKE ? OR CAST(MaSP AS NVARCHAR(50)) LIKE ?) ");
+		}
+		if (catId != null) {
+			sql.append(" AND MaDM = ? ");
+		}
+
+		// sort an toàn (whitelist cột)
+		sql.append(" ORDER BY ");
+		switch (safeSort(sort)) {
+		case "price_asc" -> sql.append(" DonGia ASC ");
+		case "price_desc" -> sql.append(" DonGia DESC ");
+		case "sold_desc" -> sql.append(" SoLuongBan DESC ");
+		case "newest" -> sql.append(" NgayTao DESC ");
+		default -> sql.append(" MaSP DESC ");
+		}
+
+		// SQL Server: phân trang bằng OFFSET/FETCH
+		sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
+
+		try (Connection con = DBConnect.getConnection(); PreparedStatement ps = con.prepareStatement(sql.toString())) {
+
+			int idx = 1;
+			if (q != null && !q.isBlank()) {
+				String kw = "%" + q.toLowerCase() + "%";
+				ps.setString(idx++, kw);
+				ps.setString(idx++, kw);
+			}
+			if (catId != null) {
+				ps.setInt(idx++, catId);
+			}
+
+			int offset = Math.max(0, (page - 1)) * pageSize;
+			ps.setInt(idx++, offset);
+			ps.setInt(idx++, pageSize);
+
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					list.add(mapRow(rs));
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace(); // hoặc log
+		}
+		return list;
+	}
+
+	public boolean update(SanPham sp) {
+		String sql = "UPDATE SanPham SET MaDM=?, TenSP=?, DonGia=?, SoLuongTon=?, HinhAnh=?, MoTa=?, TrangThai=? "
+				+ "WHERE MaSP=?";
+		try (Connection con = DBConnect.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
+			int i = 1;
+			ps.setInt(i++, sp.getMaDM());
+			ps.setString(i++, sp.getTenSP());
+			ps.setBigDecimal(i++, sp.getDonGia());
+			ps.setInt(i++, sp.getSoLuongTon());
+			ps.setString(i++, sp.getHinhAnh());
+			ps.setString(i++, sp.getMoTa());
+			ps.setBoolean(i++, sp.getTrangThai());
+			ps.setInt(i++, sp.getMaSP());
+
+			return ps.executeUpdate() > 0;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	public String findCategoryNameById(Integer maDM) {
+		if (maDM == null)
+			return null;
+		String sql = "SELECT TenDM FROM DanhMuc WHERE MaDM = ?";
+		try (var con = DBConnect.getConnection(); var ps = con.prepareStatement(sql)) {
+			ps.setInt(1, maDM);
+			try (var rs = ps.executeQuery()) {
+				if (rs.next())
+					return rs.getString("TenDM");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 }
