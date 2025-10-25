@@ -1,6 +1,9 @@
 <%@page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions"%>
 
-<%-- Nếu bạn đã include header.jsp ở level controller/layout, đừng bọc <html> ở đây --%>
+<%-- Nếu đã include header tổng ở layout thì không bọc <html> ở đây --%>
 
 <style>
 :root {
@@ -9,17 +12,17 @@
 	--admin-card: #fff;
 	--admin-muted: #6b7280;
 	--admin-primary: #0b57d0;
-	--admin-radius: 12px;
+	--admin-radius: 12px
 }
 
 .admin-content {
 	flex: 1;
 	min-width: 0;
-	background: #f5f7fb;
+	background: #f5f7fb
 }
 
 .admin-container {
-	padding: 16px;
+	padding: 16px
 }
 
 .admin-page-title {
@@ -51,7 +54,7 @@
 	display: flex;
 	gap: 12px;
 	align-items: center;
-	min-height: 84px;
+	min-height: 84px
 }
 
 .kpi-ico {
@@ -167,18 +170,64 @@
 .mt-16 {
 	margin-top: 16px
 }
+
+/* Trạng thái */
+.badge {
+	display: inline-block;
+	padding: 3px 8px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 700
+}
+
+.b-new {
+	background: #eef2ff;
+	color: #0b57d0
+}
+
+.b-confirm {
+	background: #ecfeff;
+	color: #0284c7
+}
+
+.b-ship {
+	background: #fff7ed;
+	color: #ea580c
+}
+
+.b-done {
+	background: #ecfdf5;
+	color: #059669
+}
+
+.b-cancel {
+	background: #fef2f2;
+	color: #dc2626
+}
+
+.b-return {
+	background: #f5f3ff;
+	color: #6d28d9
+}
+
+.b-refund {
+	background: #fdf2f8;
+	color: #be185d
+}
+
+.right {
+	text-align: right
+}
 </style>
 
 <div class="admin-shell">
-	<%-- sidebar dùng chung --%>
 	<%@ include file="/WEB-INF/views/admin/sidebar.jsp"%>
 
 	<main class="admin-content">
 		<div class="admin-container">
 			<div class="admin-page-title">Bảng điều khiển</div>
-			<div class="admin-sub">Tổng quan nhanh hoạt động hệ thống hôm
-				nay.</div>
 
+			<!-- KPI -->
 			<section class="kpi-grid">
 				<div class="kpi-card">
 					<div class="kpi-ico">👥</div>
@@ -198,7 +247,9 @@
 					<div class="kpi-ico">💰</div>
 					<div class="kpi-meta">
 						<div class="kpi-title">Doanh thu hôm nay</div>
-						<div class="kpi-value">${revenueToday}</div>
+						<div class="kpi-value">
+							<fmt:formatNumber value="${revenueToday}" type="number" />
+						</div>
 					</div>
 				</div>
 				<div class="kpi-card">
@@ -210,6 +261,7 @@
 				</div>
 			</section>
 
+			<!-- Đơn hàng gần đây -->
 			<section class="panel mt-16">
 				<div class="panel-hd">
 					<div class="panel-title">Đơn hàng gần đây</div>
@@ -229,15 +281,58 @@
 								<th>Mã đơn</th>
 								<th>Khách hàng</th>
 								<th>Ngày đặt</th>
-								<th>Tổng thanh toán</th>
+								<th class="right">Tổng thanh toán</th>
 								<th>Trạng thái</th>
 							</tr>
 						</thead>
 						<tbody>
-							<tr>
-								<td class="muted" colspan="5">Chưa có dữ liệu (gắn sau).</td>
-							</tr>
+							<c:choose>
+								<c:when test="${empty recentOrders}">
+									<tr>
+										<td class="muted" colspan="5">Chưa có dữ liệu (gắn sau).</td>
+									</tr>
+								</c:when>
+								<c:otherwise>
+									<c:forEach var="o" items="${recentOrders}">
+										<tr>
+											<td>#${o.maDH}</td>
+											<td>${o.tenNguoiNhan}</td>
+											<td><fmt:formatDate value="${o.ngayDat}"
+													pattern="dd/MM/yyyy HH:mm" /></td>
+											<td class="right"><fmt:formatNumber
+													value="${o.tongThanhToan}" type="number" /></td>
+											<td><c:choose>
+													<c:when test="${o.trangThai == 'DON_HANG_MOI'}">
+														<span class="badge b-new">Mới tạo</span>
+													</c:when>
+													<c:when test="${o.trangThai == 'DA_XAC_NHAN'}">
+														<span class="badge b-confirm">Đã xác nhận</span>
+													</c:when>
+													<c:when test="${o.trangThai == 'DANG_GIAO'}">
+														<span class="badge b-ship">Đang giao</span>
+													</c:when>
+													<c:when test="${o.trangThai == 'DA_GIAO'}">
+														<span class="badge b-done">Đã giao</span>
+													</c:when>
+													<c:when test="${o.trangThai == 'DA_HUY'}">
+														<span class="badge b-cancel">Đã hủy</span>
+													</c:when>
+													<c:when test="${o.trangThai == 'TRA_HANG'}">
+														<span class="badge b-return">Trả hàng</span>
+													</c:when>
+													<c:when test="${o.trangThai == 'HOAN_TIEN'}">
+														<span class="badge b-refund">Hoàn tiền</span>
+													</c:when>
+													<c:otherwise>
+														<span class="badge">${o.trangThai}</span>
+													</c:otherwise>
+												</c:choose></td>
+										</tr>
+									</c:forEach>
+								</c:otherwise>
+							</c:choose>
 						</tbody>
+
 					</table>
 				</div>
 			</section>

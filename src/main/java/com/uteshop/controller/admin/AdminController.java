@@ -5,10 +5,14 @@ import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.List;
 
+import com.uteshop.dao.DashboardDAO;
 import com.uteshop.dao.DonHangDAO;
 import com.uteshop.dao.NguoiDungDAO;
 import com.uteshop.dao.SanPhamDAO;
+import com.uteshop.entity.DonHang;
 import com.uteshop.entity.SanPham;
 
 @WebServlet("/admin/home")
@@ -17,23 +21,19 @@ public class AdminController extends HttpServlet {
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		// Lấy số liệu hiển thị trên dashboard
-		int totalUsers = 0;
-		int totalOrders = 0;
-		int totalProducts = 0;
-		
-		
-		NguoiDungDAO userDAO = new NguoiDungDAO();
-		SanPhamDAO productDAO = new SanPhamDAO();
-//		DonHangDAO orderDAO = new DonHangDAO();
+		DashboardDAO dao = new DashboardDAO();
 
-		totalUsers = userDAO.countAllActive();
-//		totalOrders = orderDAO.countAll();
-		totalProducts  = productDAO.countActive();
-		
+		int totalUsers = dao.countUsers();
+		int ordersToday = dao.countOrdersToday();
+		BigDecimal revenueToday = dao.revenueToday();
+		int activeProducts = dao.countActiveProducts();
+		List<DonHang> recentOrders = dao.getRecentOrders(5);
 		
 		req.setAttribute("totalUsers", totalUsers);
-//		req.setAttribute("totalOrders", totalOrders);
-		req.setAttribute("totalProducts", totalProducts);
+		req.setAttribute("totalOrders", ordersToday);
+		req.setAttribute("revenueToday", revenueToday);
+		req.setAttribute("totalProducts", activeProducts);
+		req.setAttribute("recentOrders", recentOrders);
 		req.getRequestDispatcher("/WEB-INF/views/admin/home.jsp").forward(req, resp);
 	}
 }
