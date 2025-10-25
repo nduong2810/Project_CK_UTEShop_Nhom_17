@@ -363,7 +363,7 @@
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="${pageContext.request.contextPath}/user/addresses">
+                                    <a class="dropdown-item" href="${pageContext.request.contextPath}/user/address-form">
                                         <i class="fas fa-map-marker-alt me-2"></i>Địa chỉ giao hàng
                                     </a>
                                 </li>

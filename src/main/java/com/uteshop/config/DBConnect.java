@@ -9,33 +9,35 @@ import java.util.logging.Logger;
 public class DBConnect {
 	private static final Logger LOGGER = Logger.getLogger(DBConnect.class.getName());
 
-    // Use environment variables or system properties for sensitive data
-    private static final String URL = System.getProperty("db.url",
-        "jdbc:sqlserver://localhost:1433;databaseName=UTESHOP;encrypt=false;trustServerCertificate=true;sendStringParametersAsUnicode=true");
-    private static final String USER = System.getProperty("db.user",
-        System.getenv("DB_USER") != null ? System.getenv("DB_USER") : "sa");
-    private static final String PASSWORD = System.getProperty("db.password",
-        System.getenv("DB_PASSWORD") != null ? System.getenv("DB_PASSWORD") : "1");
+    // ⚙️ URL dùng Windows Authentication
+    private static final String URL =
+        "jdbc:sqlserver://localhost:1433;"
+        + "databaseName=UTESHOP;"
+        + "integratedSecurity=true;"
+        + "encrypt=false;"
+        + "trustServerCertificate=true;"
+        + "sendStringParametersAsUnicode=true;";
 
     static {
         try {
-            // Load driver class. If the driver JAR is placed in Tomcat's lib, this ensures it's registered.
+            // Tải driver JDBC
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
-            LOGGER.info("SQLServer JDBC driver loaded via Class.forName.");
+            LOGGER.info("✅ SQL Server JDBC driver loaded successfully.");
         } catch (ClassNotFoundException e) {
-            LOGGER.log(Level.SEVERE, "SQL Server JDBC driver not found on classpath.", e);
+            LOGGER.log(Level.SEVERE, "❌ SQL Server JDBC driver not found!", e);
         }
     }
 
+    // 🔌 Hàm lấy Connection
     public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
+        return DriverManager.getConnection(URL);
     }
 
-    // Test method should not be in production code - consider removing or making it private
+    // 🧪 Hàm test kết nối
     public static void testConnection() {
         try (Connection conn = getConnection()) {
-            if (conn != null) {
-                System.out.println("✅ Kết nối thành công SQL Server!");
+            if (conn != null && !conn.isClosed()) {
+                System.out.println("✅ Kết nối thành công SQL Server (Windows Authentication)!");
             } else {
                 System.out.println("❌ Kết nối thất bại!");
             }
@@ -43,5 +45,9 @@ public class DBConnect {
             System.err.println("❌ Lỗi kết nối database: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+    public static void main(String[] args) {
+        System.out.println("🔍 Đang kiểm tra kết nối đến SQL Server...");
+        testConnection();
     }
 }
