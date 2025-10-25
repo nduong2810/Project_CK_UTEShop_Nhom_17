@@ -83,7 +83,7 @@ public class DonHang implements Serializable {
     private List<ChiTietDonHang> chiTietDonHangs;
 
     public enum TrangThaiDonHang {
-        DON_HANG_MOI, DA_XAC_NHAN, DANG_GIAO, DA_GIAO, DA_HUY, TRA_HANG, HOAN_TIEN
+        DON_HANG_MOI, DA_XAC_NHAN, DANG_GIAO, DA_GIAO, DA_HUY, TRA_HANG, HOAN_TIEN, DANG_XU_LY,CHO_XAC_NHAN
     }
     
     public enum PhuongThucThanhToan {
