@@ -1,227 +1,158 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>UTESHOP Admin • Mã giảm giá</title>
-<link
-	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-	rel="stylesheet">
-<link
-	href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-	rel="stylesheet">
 <style>
 :root {
-	--w: 260px
+	--bd: #e5e7eb;
+	--bg: #f5f7fb;
+	--card: #fff;
+	--muted: #6b7280;
+	--primary: #0b57d0;
+	--r: 12px
 }
 
-body {
-	min-height: 100vh;
-	background: #f6f7fb
+.admin-content {
+	flex: 1;
+	min-width: 0;
+	background: var(--bg)
 }
 
-.hdr {
-	background: linear-gradient(90deg, #5b6cfb, #7a4bff 40%, #a64fff);
+.wrap {
+	padding: 16px
+}
+
+.title {
+	font-weight: 700;
+	font-size: 20px;
+	margin: 8px 0 4px
+}
+
+.sub {
+	color: var(--muted);
+	font-size: 13px;
+	margin-bottom: 16px
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: 1fr 2fr;
+	gap: 16px
+}
+
+.panel {
+	background: var(--card);
+	border: 1px solid var(--bd);
+	border-radius: var(--r)
+}
+
+.panel-hd {
+	padding: 12px 16px;
+	border-bottom: 1px solid var(--bd);
+	font-weight: 700
+}
+
+.panel-bd {
+	padding: 12px 16px
+}
+
+.input, .select {
+	height: 36px;
+	padding: 0 10px;
+	border: 1px solid var(--bd);
+	border-radius: 8px;
+	background: #fff;
+	width: 100%
+}
+
+.btn {
+	height: 36px;
+	padding: 0 12px;
+	border: 1px solid var(--bd);
+	border-radius: 8px;
+	background: #fff;
+	cursor: pointer
+}
+
+.btn-primary {
+	background: var(--primary);
 	color: #fff;
-	position: sticky;
-	top: 0;
-	z-index: 1040
+	border-color: transparent
 }
 
-.side {
-	width: var(--w);
-	position: fixed;
-	top: 64px;
-	left: 0;
-	bottom: 0;
-	background: #0d6efd;
-	color: #fff;
-	overflow: auto
+table {
+	width: 100%;
+	border-collapse: collapse
 }
 
-.side a {
-	color: #dbe9ff;
-	border-radius: .5rem;
-	margin: 4px 8px
+th, td {
+	padding: 10px 12px;
+	border-top: 1px solid var(--bd);
+	font-size: 14px
 }
 
-.side a.active, .side a:hover {
-	background: rgba(255, 255, 255, .15);
-	color: #fff
-}
-
-.rz {
-	position: fixed;
-	top: 64px;
-	bottom: 0;
-	left: calc(var(--w)- 3px);
-	width: 6px;
-	cursor: col-resize
-}
-
-.main {
-	margin-left: var(--w);
-	padding: 20px
-}
-
-@media ( max-width :991.98px) {
-	.side {
-		transform: translateX(-100%);
-		transition: .2s
-	}
-	.side.show {
-		transform: translateX(0)
-	}
-	.rz {
-		display: none
-	}
-	.main {
-		margin-left: 0
-	}
-}
-
-.collapsed .side {
-	width: 72px
-}
-
-.collapsed .main {
-	margin-left: 72px
-}
-
-.collapsed .side .lbl {
-	display: none
+th {
+	background: #fafafa;
+	text-align: left
 }
 </style>
-</head>
-<body>
-	<header class="hdr">
-		<div class="container-fluid d-flex align-items-center py-2">
-			<button id="btn" class="btn btn-light me-2 d-lg-none">
-				<i class="bi bi-list"></i>
-			</button>
-			<a href="${pageContext.request.contextPath}/admin/home"
-				class="d-flex align-items-center text-white text-decoration-none me-3">
-				<img
-				src="${pageContext.request.contextPath}/assets/img/logo-uteshop.png"
-				style="height: 34px" class="me-2"><b>UTESHOP</b>
-			</a>
-			<button class="btn btn-primary ms-auto" data-bs-toggle="modal"
-				data-bs-target="#m">
-				<i class="bi bi-plus-lg me-1"></i>Thêm
-			</button>
-		</div>
-	</header>
-	<aside class="side" id="side">
-		<ul class="nav flex-column mt-2">
-			<li><a class="nav-link active"
-				href="${pageContext.request.contextPath}/admin/coupons"><i
-					class="bi bi-ticket-perforated me-2"></i><span class="lbl">Mã
-						giảm giá</span></a></li>
-		</ul>
-	</aside>
-	<div class="rz d-none d-lg-block" id="rz"></div>
 
-	<main class="main container-fluid">
-		<!-- set: coupons (MaGiamGia) -->
-		<div class="card shadow-sm">
-			<div class="table-responsive">
-				<table class="table table-hover align-middle mb-0">
-					<thead class="table-light">
-						<tr>
-							<th>#</th>
-							<th>Mã</th>
-							<th>Chương trình</th>
-							<th>Loại</th>
-							<th>Giá trị</th>
-							<th>BĐ</th>
-							<th>KT</th>
-							<th class="text-end">Thao tác</th>
-						</tr>
-					</thead>
-					<tbody>
-						<c:forEach var="g" items="${coupons}" varStatus="i">
-							<tr>
-								<td>${i.index+1}</td>
-								<td>${g.maCode}</td>
-								<td>${g.tenChuongTrinh}</td>
-								<td>${g.loaiGiam}</td>
-								<td>${g.giaTriGiam}</td>
-								<td>${g.ngayBatDau}</td>
-								<td>${g.ngayKetThuc}</td>
-								<td class="text-end"><a
-									class="btn btn-sm btn-outline-primary"
-									href="${pageContext.request.contextPath}/admin/coupons/edit?id=${g.maGG}"><i
-										class="bi bi-pencil"></i></a></td>
-							</tr>
-						</c:forEach>
-						<c:if test="${empty coupons}">
-							<tr>
-								<td colspan="8" class="text-center py-4 text-muted">Chưa có
-									dữ liệu</td>
-							</tr>
-						</c:if>
-					</tbody>
-				</table>
-			</div>
-		</div>
-	</main>
+<div class="admin-shell">
+	<%@ include file="/WEB-INF/views/admin/sidebar.jsp"%>
+	<main class="admin-content">
+		<div class="wrap">
+			<div class="title">Mã giảm giá</div>
+			<div class="sub">Chương trình khuyến mãi: giảm sản phẩm / phí
+				vận chuyển.</div>
 
-	<!-- modal -->
-	<div class="modal fade" id="m" tabindex="-1">
-		<div class="modal-dialog">
-			<form class="modal-content" method="post"
-				action="${pageContext.request.contextPath}/admin/coupons/save">
-				<div class="modal-header">
-					<h5 class="modal-title">Mã giảm giá</h5>
-					<button class="btn-close" data-bs-dismiss="modal"></button>
-				</div>
-				<div class="modal-body">
-					<div class="row g-2">
-						<div class="col-md-4">
-							<label class="form-label">Mã code</label><input
-								class="form-control" name="maCode" required>
-						</div>
-						<div class="col-md-8">
-							<label class="form-label">Tên CT</label><input
-								class="form-control" name="tenChuongTrinh" required>
-						</div>
-						<div class="col-md-4">
-							<label class="form-label">Loại</label><select class="form-select"
-								name="loaiGiam"><option value="PERCENT">PERCENT</option>
-								<option value="AMOUNT">AMOUNT</option></select>
-						</div>
-						<div class="col-md-4">
-							<label class="form-label">Giá trị</label><input type="number"
-								step="0.01" class="form-control" name="giaTriGiam" required>
-						</div>
-						<div class="col-md-4">
-							<label class="form-label">Tối thiểu</label><input type="number"
-								step="0.01" class="form-control" name="giaTriToiThieu">
-						</div>
-						<div class="col-md-6">
-							<label class="form-label">Bắt đầu</label><input
-								type="datetime-local" class="form-control" name="ngayBatDau"
-								required>
-						</div>
-						<div class="col-md-6">
-							<label class="form-label">Kết thúc</label><input
-								type="datetime-local" class="form-control" name="ngayKetThuc"
-								required>
+			<div class="grid">
+				<div class="panel">
+					<div class="panel-hd">Tạo / Sửa</div>
+					<div class="panel-bd"
+						style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+						<input class="input" placeholder="Mã code"> <input
+							class="input" placeholder="Mã số CT"> <input
+							class="input" style="grid-column: span 2"
+							placeholder="Tên chương trình"> <select class="select"><option
+								value="GIAM_TIEN">Giảm tiền</option>
+							<option value="GIAM_PHI_SHIP">Giảm phí VC</option>
+							<option value="PHAN_TRAM">Giảm %</option></select> <input class="input"
+							type="number" step="1000" placeholder="Giá trị giảm"> <input
+							class="input" type="date"><input class="input"
+							type="date"> <input class="input" type="number"
+							placeholder="% tối đa"> <input class="input"
+							type="number" step="1000" placeholder="Giá trị tối thiểu">
+						<input class="input" type="datetime-local"
+							style="grid-column: span 2" placeholder="Hạn sử dụng">
+						<div style="grid-column: span 2; display: flex; gap: 8px">
+							<button class="btn">Làm mới</button>
+							<button class="btn btn-primary">Lưu</button>
 						</div>
 					</div>
 				</div>
-				<div class="modal-footer">
-					<button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-					<button class="btn btn-primary">Lưu</button>
-				</div>
-			</form>
-		</div>
-	</div>
 
-	<script
-		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-	<script>/* sidebar/resizer */const r=document.documentElement,sw=w=>r.style.setProperty('--w',w+'px');const s=+localStorage.getItem('w');if(s&&s>=180&&s<=480)sw(s);const sb=document.getElementById('side'),rz=document.getElementById('rz'),btn=document.getElementById('btn');const mq=window.matchMedia('(max-width:991.98px)');const sync=()=>rz.style.display=mq.matches?'none':'block';mq.addEventListener('change',sync);sync();btn?.addEventListener('click',()=>{if(mq.matches)sb.classList.toggle('show');else{document.body.classList.toggle('collapsed');sw(document.body.classList.contains('collapsed')?72:(s||260));}});let d=false,x=0,w0=0;rz?.addEventListener('pointerdown',e=>{if(mq.matches||document.body.classList.contains('collapsed'))return;d=true;x=e.clientX;w0=parseInt(getComputedStyle(r).getPropertyValue('--w'));rz.setPointerCapture(e.pointerId)});rz?.addEventListener('pointermove',e=>{if(!d)return;sw(Math.min(480,Math.max(180,w0+(e.clientX-x))))});function up(){if(!d)return;d=false;localStorage.setItem('w',parseInt(getComputedStyle(r).getPropertyValue('--w')))}rz?.addEventListener('pointerup',up);rz?.addEventListener('pointercancel',up);</script>
-</body>
-</html>
+				<div class="panel">
+					<div class="panel-hd">Danh sách mã</div>
+					<div class="panel-bd" style="padding: 0">
+						<table>
+							<thead>
+								<tr>
+									<th>#</th>
+									<th>Code</th>
+									<th>Tên CT</th>
+									<th>Loại</th>
+									<th>Giá trị</th>
+									<th>Thời gian</th>
+									<th style="width: 140px">Thao tác</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td colspan="7" style="color: #6b7280">Chưa có dữ liệu.</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</main>
+</div>
