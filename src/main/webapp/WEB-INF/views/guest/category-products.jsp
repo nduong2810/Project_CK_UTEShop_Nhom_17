@@ -320,7 +320,6 @@
             <div class="col-md-3 mb-3 mb-md-0">
                 <label for="categoryFilter" class="form-label fw-bold"><i class="fa fa-filter me-2"></i>Danh mục</label>
                 <select class="form-select" id="categoryFilter">
-                    <option value="all">Tất cả danh mục</option>
                     <c:forEach var="cat" items="${allCategories}">
                         <option value="${cat.maDM}" ${cat.maDM == param.category ? 'selected' : ''}>
                             ${cat.tenDM}

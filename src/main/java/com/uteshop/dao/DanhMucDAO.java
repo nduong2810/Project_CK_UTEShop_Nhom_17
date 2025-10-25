@@ -30,6 +30,7 @@ public class DanhMucDAO {
                     dm.setNgayTao(rs.getTimestamp("NgayTao"));
                     dm.setNgayCapNhat(rs.getTimestamp("NgayCapNhat"));
                     dm.setTrangThai(rs.getInt("TrangThai"));
+
                 }
             }
 
@@ -81,7 +82,6 @@ public class DanhMucDAO {
                 dm.setHinhAnh(rs.getNString("HinhAnh"));
                 dm.setNgayTao(rs.getTimestamp("NgayTao"));
                 dm.setNgayCapNhat(rs.getTimestamp("NgayCapNhat"));
-                dm.setTrangThai(rs.getInt("TrangThai"));
                 list.add(dm);
             }
 
