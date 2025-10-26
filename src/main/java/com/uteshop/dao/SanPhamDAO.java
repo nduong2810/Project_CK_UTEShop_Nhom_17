@@ -302,6 +302,36 @@ public class SanPhamDAO {
             em.close();
         }
     }
+    public boolean delete(SanPham sp) {
+        EntityManager em = getEntityManager();
+        EntityTransaction trans = em.getTransaction();
+        try {
+            trans.begin();
+            
+            // Kiểm tra xem sản phẩm có tồn tại không
+            SanPham managedSp = em.find(SanPham.class, sp.getMaSP());
+            if (managedSp == null) {
+                trans.rollback();
+                System.out.println("Không tìm thấy sản phẩm với MaSP: " + sp.getMaSP());
+                return false;
+            }
+            
+            // Xóa sản phẩm
+            em.remove(managedSp);
+            System.out.println("Đã xóa sản phẩm với MaSP: " + sp.getMaSP());
+            trans.commit();
+            return true;
+        } catch (Exception e) {
+            if (trans.isActive()) {
+                trans.rollback();
+            }
+            System.err.println("Lỗi khi xóa sản phẩm: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } finally {
+            em.close();
+        }
+    }
 
     public void updateSanPhamTextFields(SanPham sp) {
         EntityManager em = getEntityManager();
@@ -388,6 +418,17 @@ public class SanPhamDAO {
                     .setParameter("store", storeId)
                     .setMaxResults(limit)
                     .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+    public List<SanPham> findByCuaHangId(Integer maCH) {
+        EntityManager em = getEntityManager();
+        try {
+            TypedQuery<SanPham> query = em.createQuery(
+                "SELECT s FROM SanPham s JOIN FETCH s.danhMuc WHERE s.cuaHang.maCH = :maCH", SanPham.class);
+            query.setParameter("maCH", maCH);
+            return query.getResultList();
         } finally {
             em.close();
         }
