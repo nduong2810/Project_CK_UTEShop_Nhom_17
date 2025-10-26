@@ -7,9 +7,11 @@
 <head>
     <meta charset="UTF-8">
     <title>${pageTitle}</title>
+    <!-- Bootstrap CSS (nếu chưa có) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container-fluid">
+    <div class="container-fluid py-4">
         <h2 class="text-primary">${pageTitle}</h2>
         <p class="text-muted">Quản lý sản phẩm của <span class="fw-bold">${store.tenCH}</span></p>
 
@@ -21,9 +23,7 @@
             <div class="alert alert-success">${param.msg}</div>
         </c:if>
 
-
         <form method="POST" action="${pageContext.request.contextPath}/vendor/product-crud" enctype="multipart/form-data">
-            
             <input type="hidden" name="maSP" value="${product.maSP}">
             
             <div class="mb-3">
@@ -31,18 +31,25 @@
                 <input type="text" class="form-control" id="tenSP" name="tenSP" value="${product.tenSP}" required>
             </div>
             
-            <!-- THÊM LOGIC LỰA CHỌN DANH MỤC -->
+            <!-- Sửa logic chọn Danh mục sử dụng product.maDM -->
             <div class="mb-3">
                 <label for="maDM" class="form-label">Danh mục (*)</label>
                 <select class="form-select" id="maDM" name="maDM" required>
-                    <option value="" disabled <c:if test="${empty product.danhMuc}">selected</c:if>>-- Chọn Danh mục --</option>
-                    <c:forEach var="category" items="${categories}">
-                        <option value="${category.maDM}" 
-                                <c:if test="${not empty product.danhMuc && product.danhMuc.maDM == category.maDM}">selected</c:if>
-                        >
-                            ${category.tenDM}
-                        </option>
-                    </c:forEach>
+                    <option value="" disabled <c:if test="${empty product.maDM}">selected</c:if>>-- Chọn Danh mục --</option>
+                    <c:choose>
+                        <c:when test="${not empty categories}">
+                            <c:forEach var="category" items="${categories}">
+                                <option value="${category.maDM}" 
+                                        <c:if test="${not empty product.maDM && product.maDM == category.maDM}">selected</c:if>
+                                >
+                                    ${category.tenDM}
+                                </option>
+                            </c:forEach>
+                        </c:when>
+                        <c:otherwise>
+                            <option value="" disabled>Không có danh mục nào</option>
+                        </c:otherwise>
+                    </c:choose>
                 </select>
             </div>
             

@@ -52,29 +52,25 @@ public class SanPham implements Serializable {
     private Integer luotYeuThich = 0;
 
     @Column(name = "DiemDanhGiaTrungBinh")
-    private BigDecimal diemDanhGiaTrungBinh; // Changed to BigDecimal
+    private BigDecimal diemDanhGiaTrungBinh = BigDecimal.ZERO;
 
     @Column(name = "SoLuongDanhGia")
     private Integer soLuongDanhGia = 0;
 
     @Column(name = "MaDM")
     private Integer maDM;
-    
-    @Column(name = "MaCH", nullable = false)
-    private Integer maCH;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaDM", insertable = false, updatable = false)
+    @JoinColumn(name = "MaDM", nullable = false, insertable = false, updatable = false)
     private DanhMuc danhMuc;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaCH", insertable = false, updatable = false)
+    @JoinColumn(name = "MaCH", nullable = false)
     private CuaHang cuaHang;
 
     @OneToMany(mappedBy = "sanPham", fetch = FetchType.LAZY)
     private List<ChiTietDonHang> chiTietDonHangs;
 
-    // Corrected Default constructor
     public SanPham() {
         this.ngayTao = new Date();
         this.trangThai = true;
@@ -83,161 +79,63 @@ public class SanPham implements Serializable {
         this.luotXem = 0;
         this.luotYeuThich = 0;
         this.soLuongDanhGia = 0;
-        this.diemDanhGiaTrungBinh = BigDecimal.ZERO; // Changed to BigDecimal.ZERO
+        this.diemDanhGiaTrungBinh = BigDecimal.ZERO;
     }
 
     // Getters and Setters
-    public Integer getMaSP() {
-        return maSP;
-    }
+    public Integer getMaSP() { return maSP; }
+    public void setMaSP(Integer maSP) { this.maSP = maSP; }
 
-    public void setMaSP(Integer maSP) {
-        this.maSP = maSP;
-    }
+    public String getTenSP() { return tenSP; }
+    public void setTenSP(String tenSP) { this.tenSP = tenSP; }
 
-    public String getTenSP() {
-        return tenSP;
-    }
+    public String getMoTa() { return moTa; }
+    public void setMoTa(String moTa) { this.moTa = moTa; }
 
-    public void setTenSP(String tenSP) {
-        this.tenSP = tenSP;
-    }
+    public BigDecimal getDonGia() { return donGia; }
+    public void setDonGia(BigDecimal donGia) { this.donGia = donGia; }
 
-    public String getMoTa() {
-        return moTa;
-    }
+    public Integer getSoLuongTon() { return soLuongTon; }
+    public void setSoLuongTon(Integer soLuongTon) { this.soLuongTon = soLuongTon; }
 
-    public void setMoTa(String moTa) {
-        this.moTa = moTa;
-    }
+    public Integer getSoLuongBan() { return soLuongBan; }
+    public void setSoLuongBan(Integer soLuongBan) { this.soLuongBan = soLuongBan; }
 
-    public BigDecimal getDonGia() {
-        return donGia;
-    }
+    public String getHinhAnh() { return hinhAnh; }
+    public void setHinhAnh(String hinhAnh) { this.hinhAnh = hinhAnh; }
 
-    public void setDonGia(BigDecimal donGia) {
-        this.donGia = donGia;
-    }
+    public Boolean getTrangThai() { return trangThai; }
+    public void setTrangThai(Boolean trangThai) { this.trangThai = trangThai; }
 
-    public Integer getSoLuongTon() {
-        return soLuongTon;
-    }
+    public Date getNgayTao() { return ngayTao; }
+    public void setNgayTao(Date ngayTao) { this.ngayTao = ngayTao; }
 
-    public void setSoLuongTon(Integer soLuongTon) {
-        this.soLuongTon = soLuongTon;
-    }
+    public Date getNgayCapNhat() { return ngayCapNhat; }
+    public void setNgayCapNhat(Date ngayCapNhat) { this.ngayCapNhat = ngayCapNhat; }
 
-    public Integer getSoLuongBan() {
-        return soLuongBan;
-    }
+    public Integer getLuotXem() { return luotXem; }
+    public void setLuotXem(Integer luotXem) { this.luotXem = luotXem; }
 
-    public void setSoLuongBan(Integer soLuongBan) {
-        this.soLuongBan = soLuongBan;
-    }
+    public Integer getLuotYeuThich() { return luotYeuThich; }
+    public void setLuotYeuThich(Integer luotYeuThich) { this.luotYeuThich = luotYeuThich; }
 
-    public String getHinhAnh() {
-        return hinhAnh;
-    }
+    public BigDecimal getDiemDanhGiaTrungBinh() { return diemDanhGiaTrungBinh; }
+    public void setDiemDanhGiaTrungBinh(BigDecimal diemDanhGiaTrungBinh) { this.diemDanhGiaTrungBinh = diemDanhGiaTrungBinh; }
 
-    public void setHinhAnh(String hinhAnh) {
-        this.hinhAnh = hinhAnh;
-    }
+    public Integer getSoLuongDanhGia() { return soLuongDanhGia; }
+    public void setSoLuongDanhGia(Integer soLuongDanhGia) { this.soLuongDanhGia = soLuongDanhGia; }
 
-    public Boolean getTrangThai() {
-        return trangThai;
-    }
+    public Integer getMaDM() { return maDM; } // Thêm getter
+    public void setMaDM(Integer maDM) { this.maDM = maDM; } // Đảm bảo setter
 
-    public void setTrangThai(Boolean trangThai) {
-        this.trangThai = trangThai;
-    }
+    public DanhMuc getDanhMuc() { return danhMuc; }
+    public void setDanhMuc(DanhMuc danhMuc) { this.danhMuc = danhMuc; }
 
-    public Date getNgayTao() {
-        return ngayTao;
-    }
+    public CuaHang getCuaHang() { return cuaHang; }
+    public void setCuaHang(CuaHang cuaHang) { this.cuaHang = cuaHang; }
 
-    public void setNgayTao(Date ngayTao) {
-        this.ngayTao = ngayTao;
-    }
-
-    public Date getNgayCapNhat() {
-        return ngayCapNhat;
-    }
-
-    public void setNgayCapNhat(Date ngayCapNhat) {
-        this.ngayCapNhat = ngayCapNhat;
-    }
-
-    public Integer getMaDM() {
-        return maDM;
-    }
-
-    public void setMaDM(Integer maDM) {
-        this.maDM = maDM;
-    }
-    
-    public Integer getMaCH() {
-        return maCH;
-    }
-
-    public void setMaCH(Integer maCH) {
-        this.maCH = maCH;
-    }
-    
-    public DanhMuc getDanhMuc() {
-        return danhMuc;
-    }
-
-    public void setDanhMuc(DanhMuc danhMuc) {
-        this.danhMuc = danhMuc;
-    }
-
-    public CuaHang getCuaHang() {
-        return cuaHang;
-    }
-
-    public void setCuaHang(CuaHang cuaHang) {
-        this.cuaHang = cuaHang;
-    }
-
-    public Integer getLuotXem() {
-        return luotXem;
-    }
-
-    public void setLuotXem(Integer luotXem) {
-        this.luotXem = luotXem;
-    }
-
-    public Integer getLuotYeuThich() {
-        return luotYeuThich;
-    }
-
-    public void setLuotYeuThich(Integer luotYeuThich) {
-        this.luotYeuThich = luotYeuThich;
-    }
-
-    public BigDecimal getDiemDanhGiaTrungBinh() { // Changed return type to BigDecimal
-        return diemDanhGiaTrungBinh;
-    }
-
-    public void setDiemDanhGiaTrungBinh(BigDecimal diemDanhGiaTrungBinh) { // Changed parameter type to BigDecimal
-        this.diemDanhGiaTrungBinh = diemDanhGiaTrungBinh;
-    }
-
-    public Integer getSoLuongDanhGia() {
-        return soLuongDanhGia;
-    }
-
-    public void setSoLuongDanhGia(Integer soLuongDanhGia) {
-        this.soLuongDanhGia = soLuongDanhGia;
-    }
-
-    public List<ChiTietDonHang> getChiTietDonHangs() {
-        return chiTietDonHangs;
-    }
-
-    public void setChiTietDonHangs(List<ChiTietDonHang> chiTietDonHangs) {
-        this.chiTietDonHangs = chiTietDonHangs;
-    }
+    public List<ChiTietDonHang> getChiTietDonHangs() { return chiTietDonHangs; }
+    public void setChiTietDonHangs(List<ChiTietDonHang> chiTietDonHangs) { this.chiTietDonHangs = chiTietDonHangs; }
 
     @PreUpdate
     public void preUpdate() {

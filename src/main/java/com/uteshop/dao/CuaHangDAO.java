@@ -1,16 +1,11 @@
 package com.uteshop.dao;
 
-import com.uteshop.config.DBConnect;
 import com.uteshop.entity.CuaHang;
 import com.uteshop.util.JPAUtil;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.TypedQuery;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class CuaHangDAO {
@@ -30,10 +25,13 @@ public class CuaHangDAO {
             TypedQuery<CuaHang> query = em.createQuery("SELECT c FROM CuaHang c WHERE c.nguoiDung.id = :userId", CuaHang.class);
             query.setParameter("userId", userId);
             return query.getSingleResult();
-        } catch (Exception e) {
+        } catch (NoResultException e) {
+            System.err.println("Không tìm thấy CuaHang cho userId: " + userId);
             return null;
-        }
-        finally {
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally {
             em.close();
         }
     }
