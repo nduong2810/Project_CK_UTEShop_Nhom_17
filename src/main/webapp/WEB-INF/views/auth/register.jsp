@@ -619,7 +619,7 @@
                                 <div class="role-tab shipper" data-role="shipper">
                                     <i class="fas fa-shipping-fast me-1"></i>Shipper
                                 </div>
-                                <div class="role-tab" data-role="supplier">
+                                <div class="role-tab" data-role="vendor">
                                     <i class="fas fa-store me-1"></i>Nhà cung cấp
                                 </div>
                             </div>
@@ -914,7 +914,7 @@
                     const buttonTexts = {
                         'user': '<i class="fas fa-user-plus me-2"></i>Đăng ký Khách hàng',
                         'shipper': '<i class="fas fa-shipping-fast me-2"></i>Đăng ký Shipper',
-                        'supplier': '<i class="fas fa-store me-2"></i>Đăng ký Nhà cung cấp'
+                        'vendor': '<i class="fas fa-store me-2"></i>Đăng ký Nhà cung cấp'
                     };
                     
                     registerBtn.innerHTML = buttonTexts[role] || buttonTexts['user'];

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "SanPham")
@@ -69,6 +70,9 @@ public class SanPham implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MaCH", insertable = false, updatable = false)
     private CuaHang cuaHang;
+
+    @OneToMany(mappedBy = "sanPham", fetch = FetchType.LAZY)
+    private List<ChiTietDonHang> chiTietDonHangs;
 
     // Corrected Default constructor
     public SanPham() {
@@ -225,6 +229,14 @@ public class SanPham implements Serializable {
 
     public void setSoLuongDanhGia(Integer soLuongDanhGia) {
         this.soLuongDanhGia = soLuongDanhGia;
+    }
+
+    public List<ChiTietDonHang> getChiTietDonHangs() {
+        return chiTietDonHangs;
+    }
+
+    public void setChiTietDonHangs(List<ChiTietDonHang> chiTietDonHangs) {
+        this.chiTietDonHangs = chiTietDonHangs;
     }
 
     @PreUpdate

@@ -1,344 +1,348 @@
-<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>UTESHOP Admin • Sản phẩm</title>
-<link
-	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-	rel="stylesheet">
-<link
-	href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
-	rel="stylesheet">
+<%@page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+
 <style>
+/* ===== Layout admin chung (tương thích sidebar hiện có) ===== */
 :root {
-	--w: 260px
+	--admin-bg: #f5f7fb;
+	--admin-border: #e5e7eb;
+	--card: #fff;
+	--muted: #6b7280;
+	--primary: #1a73e8;
+	--accent: #ff7a00;
+	--radius: 16px;
+	--shadow: 0 8px 20px rgba(17, 24, 39, .08);
 }
 
-body {
-	min-height: 100vh;
-	background: #f6f7fb
+.admin-shell {
+	display: flex;
+	min-height: calc(100vh - 0px);
+	background: var(--admin-bg)
 }
 
-.hdr {
-	background: linear-gradient(90deg, #5b6cfb, #7a4bff 40%, #a64fff);
-	color: #fff;
-	position: sticky;
-	top: 0;
-	z-index: 1040
+.admin-content {
+	flex: 1;
+	min-width: 0
 }
 
-.search {
-	width: 520px;
-	position: relative
+.admin-container {
+	padding: 16px
 }
 
-.search input {
-	border-radius: 999px
+/* ===== Toolbar trên cùng ===== */
+.page-title {
+	font-size: 20px;
+	font-weight: 800;
+	margin: 8px 0 12px;
+	color: #111827
 }
 
-.search button {
+.toolbar {
+	display: flex;
+	gap: 10px;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 10px
+}
+
+.toolbar .right {
+	display: flex;
+	gap: 10px
+}
+
+.input, .select {
+	height: 38px;
+	border: 1px solid var(--admin-border);
+	border-radius: 10px;
+	padding: 0 10px;
+	background: #fff
+}
+
+/* ===== Grid cards ===== */
+.grid {
+	display: grid;
+	gap: 24px;
+	grid-template-columns: repeat(12, 1fr)
+}
+
+.card {
+	grid-column: span 4;
+	background: var(--card);
+	border-radius: 20px;
+	overflow: hidden;
+	box-shadow: var(--shadow);
+	border: 1px solid #eef2ff
+}
+
+@media ( max-width :1280px) {
+	.card {
+		grid-column: span 6
+	}
+}
+
+@media ( max-width :768px) {
+	.card {
+		grid-column: span 12
+	}
+}
+
+.card-hd {
+	position: relative;
+	background: #f7f7fb;
+	height: 220px;
+	display: flex;
+	align-items: center;
+	justify-content: center
+}
+
+.card-hd img {
+	max-width: 80%;
+	max-height: 80%;
+	object-fit: contain
+}
+
+.badge {
 	position: absolute;
-	right: 4px;
-	top: 3px;
-	bottom: 3px;
-	border: 0;
-	background: linear-gradient(180deg, #ff8f3c, #ff6a39);
+	top: 14px;
+	left: 14px;
+	background: #ff5a5f;
 	color: #fff;
+	padding: 6px 10px;
 	border-radius: 999px;
-	width: 44px
+	font-weight: 800;
+	font-size: 12px
 }
 
-.side {
-	width: var(--w);
-	position: fixed;
-	top: 64px;
-	left: 0;
-	bottom: 0;
-	background: #0d6efd;
+.wish {
+	position: absolute;
+	top: 10px;
+	right: 14px;
+	width: 36px;
+	height: 36px;
+	border-radius: 999px;
+	background: #fff;
+	display: grid;
+	place-items: center;
+	border: 1px solid #e5e7eb;
+	cursor: pointer
+}
+
+.card-bd {
+	padding: 18px
+}
+
+.title {
+	font-size: 18px;
+	font-weight: 700;
+	line-height: 1.4;
+	height: 48px;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden
+}
+
+.row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 10px
+}
+
+.price {
+	font-size: 24px;
+	font-weight: 900;
+	color: #1a56db
+}
+
+.sold {
+	color: var(--muted)
+}
+
+.actions {
+	display: flex;
+	gap: 10px;
+	margin-top: 14px
+}
+
+.btn {
+	flex: 1;
+	height: 44px;
+	border-radius: 12px;
+	border: 1px solid var(--admin-border);
+	background: #fff;
+	font-weight: 800;
+	cursor: pointer
+}
+
+.btn-cart {
+	background: var(--primary);
 	color: #fff;
-	overflow: auto
+	border-color: transparent
 }
 
-.side a {
-	color: #dbe9ff;
-	border-radius: .5rem;
-	margin: 4px 8px
+.btn-buy {
+	background: var(--accent);
+	color: #fff;
+	border-color: transparent
 }
 
-.side a.active, .side a:hover {
-	background: rgba(255, 255, 255, .15);
-	color: #fff
+/* ===== Pagination ===== */
+.pagination {
+	display: flex;
+	gap: 8px;
+	justify-content: center;
+	align-items: center;
+	margin: 22px 0
 }
 
-.rz {
-	position: fixed;
-	top: 64px;
-	bottom: 0;
-	left: calc(var(--w)- 3px);
-	width: 6px;
-	cursor: col-resize
+.p-btn {
+	min-width: 42px;
+	height: 40px;
+	border: 1px solid var(--admin-border);
+	background: #fff;
+	border-radius: 8px;
+	cursor: pointer
 }
 
-.main {
-	margin-left: var(--w);
-	padding: 20px
+.p-btn.active {
+	background: var(--primary);
+	color: #fff;
+	border-color: transparent
 }
 
-@media ( max-width :991.98px) {
-	.side {
-		transform: translateX(-100%);
-		transition: .2s
-	}
-	.side.show {
-		transform: translateX(0)
-	}
-	.rz {
-		display: none
-	}
-	.main {
-		margin-left: 0
-	}
+.muted {
+	color: var(--muted)
 }
 
-.collapsed .side {
-	width: 72px
-}
-
-.collapsed .main {
-	margin-left: 72px
-}
-
-.collapsed .side .lbl {
-	display: none
+.empty {
+	padding: 28px;
+	text-align: center;
+	color: var(--muted);
+	border: 1px dashed var(--admin-border);
+	border-radius: 12px;
+	background: #fff
 }
 </style>
-</head>
-<body>
-	<header class="hdr">
-		<div class="container-fluid d-flex align-items-center py-2">
-			<button id="btn" class="btn btn-light me-2 d-lg-none">
-				<i class="bi bi-list"></i>
-			</button>
-			<a href="${pageContext.request.contextPath}/admin/home"
-				class="d-flex align-items-center text-white text-decoration-none me-3">
-				<img
-				src="${pageContext.request.contextPath}/assets/img/logo-uteshop.png"
-				style="height: 34px" class="me-2"><b>UTESHOP</b>
-			</a>
-			<form class="search ms-auto me-3 d-none d-lg-flex"
-				action="${pageContext.request.contextPath}/admin/products">
-				<input class="form-control" name="q" value="${param.q}"
-					placeholder="Tìm kiếm...">
-				<button class="btn">
-					<i class="bi bi-search"></i>
-				</button>
-			</form>
-			<div class="dropdown">
-				<button class="btn btn-outline-light rounded-pill px-3"
-					data-bs-toggle="dropdown">
-					<i class="bi bi-person-circle me-1"></i>
-					<c:out
-						value="${sessionScope.account!=null?sessionScope.account.tenDangNhap:'admin'}" />
-				</button>
-				<ul class="dropdown-menu dropdown-menu-end">
-					<li><a class="dropdown-item"
-						href="${pageContext.request.contextPath}/logout">Đăng xuất</a></li>
-				</ul>
-			</div>
-		</div>
-	</header>
-	<aside class="side" id="side">
-		<ul class="nav flex-column mt-2">
-			<li><a class="nav-link"
-				href="${pageContext.request.contextPath}/admin/home"><i
-					class="bi bi-speedometer2 me-2"></i><span class="lbl">Bảng
-						điều khiển</span></a></li>
-			<li><a class="nav-link active"
-				href="${pageContext.request.contextPath}/admin/products"><i
-					class="bi bi-box-seam me-2"></i><span class="lbl">Sản phẩm</span></a></li>
-			<li><a class="nav-link"
-				href="${pageContext.request.contextPath}/admin/categories"><i
-					class="bi bi-tags me-2"></i><span class="lbl">Danh mục</span></a></li>
-			<li><a class="nav-link"
-				href="${pageContext.request.contextPath}/admin/orders"><i
-					class="bi bi-receipt me-2"></i><span class="lbl">Đơn hàng</span></a></li>
-			<li><a class="nav-link"
-				href="${pageContext.request.contextPath}/admin/customers"><i
-					class="bi bi-people me-2"></i><span class="lbl">Khách hàng</span></a></li>
-			<li><a class="nav-link"
-				href="${pageContext.request.contextPath}/admin/suppliers"><i
-					class="bi bi-buildings me-2"></i><span class="lbl">Nhà cung
-						cấp</span></a></li>
-			<li><a class="nav-link"
-				href="${pageContext.request.contextPath}/admin/settings"><i
-					class="bi bi-gear me-2"></i><span class="lbl">Cài đặt</span></a></li>
-		</ul>
-	</aside>
-	<div class="rz d-none d-lg-block" id="rz"></div>
 
-	<main class="main container-fluid">
-		<!-- set: categories (List<DanhMuc>), products (JOIN TenDM), page,totalPages,totalItems -->
-		<div class="d-flex align-items-center justify-content-between mb-3">
-			<h5 class="mb-0">Sản phẩm</h5>
-			<div class="d-flex gap-2">
-				<form class="d-flex" method="get"
-					action="${pageContext.request.contextPath}/admin/products">
-					<select class="form-select" name="cat" style="max-width: 220px"><option
-							value="">Tất cả danh mục</option>
-						<c:forEach var="dm" items="${categories}">
-							<option value="${dm.maDM}" ${param.cat==dm.maDM?'selected':''}>${dm.tenDM}</option>
-						</c:forEach>
-					</select> <input class="form-control ms-2" name="q" value="${param.q}"
-						placeholder="Tên/Mã sản phẩm">
-					<button class="btn btn-outline-secondary ms-2">
-						<i class="bi bi-search"></i>
-					</button>
+<div class="admin-shell">
+	<!-- SIDEBAR BÊN TRÁI: dùng lại file đã có -->
+	<%@ include file="/WEB-INF/views/admin/sidebar.jsp"%>
+
+	<!-- NỘI DUNG BÊN PHẢI -->
+	<main class="admin-content">
+		<div class="admin-container">
+			<div class="page-title">Sản phẩm</div>
+
+			<!-- Thanh công cụ nhỏ (lọc nhanh/ page size) -->
+			<div class="toolbar">
+				<div class="muted">Tổng: ${totalProducts} sản phẩm</div>
+				<form method="get" class="right">
+					<input type="text" name="q" class="input"
+						placeholder="Tìm theo tên/mã..." value="${param.q}" /> <select
+						name="pageSize" class="select" onchange="this.form.submit()">
+						<option value="8" ${pageSize==8  ? 'selected':''}>8 /
+							trang</option>
+						<option value="10" ${pageSize==10 ? 'selected':''}>10 /
+							trang</option>
+						<option value="12" ${pageSize==12 ? 'selected':''}>12 /
+							trang</option>
+					</select> <select name="sort" class="select" onchange="this.form.submit()">
+						<option value="">Sắp xếp</option>
+						<option value="price_asc" ${param.sort=='price_asc'?'selected':''}>Giá
+							tăng dần</option>
+						<option value="price_desc"
+							${param.sort=='price_desc'?'selected':''}>Giá giảm dần</option>
+						<option value="sold_desc" ${param.sort=='sold_desc'?'selected':''}>Bán
+							chạy</option>
+						<option value="newest" ${param.sort=='newest'?'selected':''}>Mới
+							nhất</option>
+					</select>
 				</form>
-				<button class="btn btn-primary" data-bs-toggle="modal"
-					data-bs-target="#modal">
-					<i class="bi bi-plus-lg me-1"></i>Thêm
-				</button>
 			</div>
-		</div>
-		<div class="card shadow-sm">
-			<div class="table-responsive">
-				<table class="table table-hover align-middle mb-0">
-					<thead class="table-light">
-						<tr>
-							<th>#</th>
-							<th>Mã</th>
-							<th>Tên</th>
-							<th>Danh mục</th>
-							<th>Tồn</th>
-							<th>Giá</th>
-							<th>Trạng thái</th>
-							<th class="text-end">Thao tác</th>
-						</tr>
-					</thead>
-					<tbody>
-						<c:forEach var="p" items="${products}" varStatus="st">
-							<tr>
-								<td>${st.index+1}</td>
-								<td>SP${p.maSP}</td>
-								<td>${p.tenSP}</td>
-								<td>${p.tenDM}</td>
-								<td>${p.soLuongTon}</td>
-								<td><fmt:formatNumber value="${p.donGia}" type="currency"
-										currencySymbol="₫" /></td>
-								<td><span
-									class="badge bg-${p.trangThai?'success':'secondary'}">${p.trangThai?'Đang bán':'Ngừng bán'}</span></td>
-								<td class="text-end">
-									<button class="btn btn-sm btn-outline-primary me-1 e"
-										data-id="${p.maSP}" data-name="${p.tenSP}"
-										data-price="${p.donGia}" data-stock="${p.soLuongTon}"
-										data-cat="${p.maDM}" data-active="${p.trangThai}">
-										<i class="bi bi-pencil"></i>
-									</button>
-									<form class="d-inline" method="post"
-										action="${pageContext.request.contextPath}/admin/products/delete">
-										<input type="hidden" name="id" value="${p.maSP}">
-										<button class="btn btn-sm btn-outline-danger"
-											onclick="return confirm('Xóa sản phẩm?')">
-											<i class="bi bi-trash"></i>
-										</button>
-									</form>
-								</td>
-							</tr>
+
+			<!-- GRID SẢN PHẨM -->
+			<c:choose>
+				<c:when test="${empty products}">
+					<div class="empty">Chưa có sản phẩm nào.</div>
+				</c:when>
+				<c:otherwise>
+					<div class="grid">
+						<c:forEach var="p" items="${products}">
+							<div class="card">
+								<div class="card-hd">
+									<span class="badge">HOT</span>
+									<button class="wish" title="Yêu thích">♡</button>
+									<c:choose>
+										<c:when test="${not empty p.hinhAnh}">
+											<img src="${pageContext.request.contextPath}/${p.hinhAnh}"
+												alt="${p.tenSP}" />
+										</c:when>
+										<c:otherwise>
+											<img
+												src="${pageContext.request.contextPath}/assets/img/placeholder-product.png"
+												alt="${p.tenSP}" />
+										</c:otherwise>
+									</c:choose>
+								</div>
+
+								<div class="card-bd">
+									<div class="title">${p.tenSP}</div>
+									<div class="row">
+										<div class="price">
+											<fmt:formatNumber value="${p.donGia}" type="number" />
+											đ
+										</div>
+										<div class="sold">🛒 ${p.soLuongBan} đã bán</div>
+									</div>
+									<div class="actions">
+										<button class="btn btn-cart"
+											onclick="location.href='${pageContext.request.contextPath}/admin/products/edit?id=${p.maSP}'">
+											Quản lý</button>
+										<button class="btn btn-buy"
+											onclick="location.href='${pageContext.request.contextPath}/admin/products/view?id=${p.maSP}'">
+											Xem chi tiết</button>
+									</div>
+								</div>
+							</div>
 						</c:forEach>
-						<c:if test="${empty products}">
-							<tr>
-								<td colspan="8" class="text-center py-4 text-muted">Chưa có
-									dữ liệu</td>
-							</tr>
-						</c:if>
-					</tbody>
-				</table>
-			</div>
-			<div class="card-body d-flex justify-content-between">
-				<div class="text-muted">
-					Tổng: <b>${totalItems}</b> SP
-				</div>
-				<nav>
-					<ul class="pagination mb-0">
-						<li class="page-item ${page<=1?'disabled':''}"><a
-							class="page-link"
-							href="?page=${page-1}&q=${param.q}&cat=${param.cat}">Trước</a></li>
+					</div>
+
+					<!-- PHÂN TRANG -->
+					<div class="pagination">
+						<form method="get" style="display: inline">
+							<input type="hidden" name="q" value="${param.q}" /> <input
+								type="hidden" name="sort" value="${param.sort}" /> <input
+								type="hidden" name="pageSize" value="${pageSize}" />
+							<button type="submit" class="p-btn" name="page"
+								value="${currentPage-1}"
+								<c:if test="${currentPage<=1}">disabled</c:if>>Trước</button>
+						</form>
+
 						<c:forEach var="i" begin="1" end="${totalPages}">
-							<li class="page-item ${i==page?'active':''}"><a
-								class="page-link"
-								href="?page=${i}&q=${param.q}&cat=${param.cat}">${i}</a></li>
+							<form method="get" style="display: inline">
+								<input type="hidden" name="q" value="${param.q}" /> <input
+									type="hidden" name="sort" value="${param.sort}" /> <input
+									type="hidden" name="pageSize" value="${pageSize}" />
+								<button type="submit"
+									class="p-btn <c:if test='${i==currentPage}'>active</c:if>"
+									name="page" value="${i}">${i}</button>
+							</form>
 						</c:forEach>
-						<li class="page-item ${page>=totalPages?'disabled':''}"><a
-							class="page-link"
-							href="?page=${page+1}&q=${param.q}&cat=${param.cat}">Sau</a></li>
-					</ul>
-				</nav>
-			</div>
+
+						<form method="get" style="display: inline">
+							<input type="hidden" name="q" value="${param.q}" /> <input
+								type="hidden" name="sort" value="${param.sort}" /> <input
+								type="hidden" name="pageSize" value="${pageSize}" />
+							<button type="submit" class="p-btn" name="page"
+								value="${currentPage+1}"
+								<c:if test="${currentPage>=totalPages}">disabled</c:if>>Sau</button>
+						</form>
+					</div>
+				</c:otherwise>
+			</c:choose>
+
 		</div>
 	</main>
-
-	<!-- modal -->
-	<div class="modal fade" id="modal" tabindex="-1">
-		<div class="modal-dialog modal-lg">
-			<form class="modal-content" method="post"
-				action="${pageContext.request.contextPath}/admin/products/save">
-				<div class="modal-header">
-					<h5 class="modal-title">Sản phẩm</h5>
-					<button class="btn-close" data-bs-dismiss="modal"></button>
-				</div>
-				<div class="modal-body">
-					<input type="hidden" name="maSP" id="id">
-					<div class="row g-3">
-						<div class="col-md-8">
-							<label class="form-label">Tên</label><input class="form-control"
-								name="tenSP" id="name" required>
-						</div>
-						<div class="col-md-4">
-							<label class="form-label">Giá</label><input type="number" min="0"
-								class="form-control" name="donGia" id="price" required>
-						</div>
-						<div class="col-md-4">
-							<label class="form-label">Danh mục</label><select
-								class="form-select" name="maDM" id="cat"><c:forEach
-									var="dm" items="${categories}">
-									<option value="${dm.maDM}">${dm.tenDM}</option>
-								</c:forEach></select>
-						</div>
-						<div class="col-md-4">
-							<label class="form-label">Tồn kho</label><input type="number"
-								min="0" class="form-control" name="soLuongTon" id="stock">
-						</div>
-						<div class="col-md-4 d-flex align-items-end">
-							<div class="form-check">
-								<input class="form-check-input" type="checkbox" name="trangThai"
-									id="active" checked><label
-									class="form-check-label ms-1">Đang bán</label>
-							</div>
-						</div>
-						<div class="col-12">
-							<label class="form-label">Mô tả</label>
-							<textarea class="form-control" name="moTa" rows="3"></textarea>
-						</div>
-					</div>
-				</div>
-				<div class="modal-footer">
-					<button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-					<button class="btn btn-primary">
-						<i class="bi bi-save me-1"></i>Lưu
-					</button>
-				</div>
-			</form>
-		</div>
-	</div>
-
-	<script
-		src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-	<script>const r=document.documentElement,sw=w=>r.style.setProperty('--w',w+'px');const s=+localStorage.getItem('w');if(s&&s>=180&&s<=480)sw(s);const sb=document.getElementById('side'),rz=document.getElementById('rz'),btn=document.getElementById('btn');const mq=window.matchMedia('(max-width:991.98px)');const sync=()=>rz.style.display=mq.matches?'none':'block';mq.addEventListener('change',sync);sync();btn?.addEventListener('click',()=>{if(mq.matches)sb.classList.toggle('show');else{document.body.classList.toggle('collapsed');sw(document.body.classList.contains('collapsed')?72:(s||260));}});let d=false,x=0,w0=0;rz?.addEventListener('pointerdown',e=>{if(mq.matches||document.body.classList.contains('collapsed'))return;d=true;x=e.clientX;w0=parseInt(getComputedStyle(r).getPropertyValue('--w'));rz.setPointerCapture(e.pointerId)});rz?.addEventListener('pointermove',e=>{if(!d)return;sw(Math.min(480,Math.max(180,w0+(e.clientX-x))))});function up(){if(!d)return;d=false;localStorage.setItem('w',parseInt(getComputedStyle(r).getPropertyValue('--w')))}rz?.addEventListener('pointerup',up);rz?.addEventListener('pointercancel',up);
-// edit
-document.querySelectorAll('.e').forEach(b=>b.addEventListener('click',()=>{id.value=b.dataset.id;name.value=b.dataset.name;price.value=b.dataset.price;stock.value=b.dataset.stock;cat.value=b.dataset.cat;active.checked=(b.dataset.active==='true'||b.dataset.active==='1');new bootstrap.Modal('#modal').show()}));</script>
-</body>
-</html>
+</div>

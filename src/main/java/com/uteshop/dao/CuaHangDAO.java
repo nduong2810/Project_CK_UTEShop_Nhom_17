@@ -1,18 +1,22 @@
 package com.uteshop.dao;
 
+import com.uteshop.config.DBConnect;
 import com.uteshop.entity.CuaHang;
 import com.uteshop.util.JPAUtil;
-import jakarta.persistence.*;
-import java.util.List;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 public class CuaHangDAO {
-    private EntityManager getEntityManager() {
-        return JPAUtil.getEntityManager();
-    }
 
     public CuaHang findById(Integer id) {
-        EntityManager em = getEntityManager();
+        EntityManager em = JPAUtil.getEntityManager();
         try {
             return em.find(CuaHang.class, id);
         } finally {
@@ -20,98 +24,57 @@ public class CuaHangDAO {
         }
     }
 
-    // TÌM CỬA HÀNG THEO ID NGƯỜI DÙNG (Cho Vendor)
-    public CuaHang findByUserId(Integer maND) {
-        EntityManager em = JPAUtil.getEntityManager(); // Giả định có JPAUtil
-        CuaHang store = null;
+    public CuaHang findByUserId(Integer userId) {
+        EntityManager em = JPAUtil.getEntityManager();
         try {
-            // JPQL để tìm CuaHang dựa trên MaND
-            String jpql = "SELECT ch FROM CuaHang ch WHERE ch.maND = :maND";
-            
-            TypedQuery<CuaHang> query = em.createQuery(jpql, CuaHang.class);
-            query.setParameter("maND", maND);
-            
-            // THAY THẾ logic getSingleResult() bằng getResultList() 
-            // để tránh NonUniqueResultException khi có nhiều kết quả.
-            List<CuaHang> results = query.getResultList();
-
-            if (!results.isEmpty()) {
-                // Lấy bản ghi đầu tiên trong trường hợp có nhiều bản ghi trùng
-                store = results.get(0); 
-            }
-            
+            TypedQuery<CuaHang> query = em.createQuery("SELECT c FROM CuaHang c WHERE c.nguoiDung.id = :userId", CuaHang.class);
+            query.setParameter("userId", userId);
+            return query.getSingleResult();
         } catch (Exception e) {
-            e.printStackTrace();
-            // Nếu có lỗi khác, trả về null
             return null;
-        } finally {
-            if (em != null && em.isOpen()) {
-                em.close();
-            }
         }
-        return store;
+        finally {
+            em.close();
+        }
+    }
+    
+    public boolean insert(CuaHang cuaHang) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.persist(cuaHang);
+            em.getTransaction().commit();
+            return true;
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            return false;
+        } finally {
+            em.close();
+        }
     }
 
-    // TÌM TẤT CẢ CỬA HÀNG (Sử dụng cho Frontend/Admin)
     public List<CuaHang> findAll() {
-        EntityManager em = getEntityManager();
-        // Giữ lại truy vấn phức tạp của bạn
-        String jpql = "SELECT ch, SUM(CASE WHEN ctdh.soLuong IS NULL THEN 0L ELSE ctdh.soLuong END) AS TongSoLuongBan " +
-                      "FROM CuaHang ch LEFT JOIN ch.sanPhams sp LEFT JOIN sp.chiTietDonHangs ctdh " +
-                      "WHERE ch.trangThai = TRUE GROUP BY ch ORDER BY TongSoLuongBan DESC";
+        EntityManager em = JPAUtil.getEntityManager();
         try {
-            List<Object[]> results = em.createQuery(jpql, Object[].class).getResultList();
-            List<CuaHang> list = new ArrayList<>();
-            for (Object[] result : results) {
-                list.add((CuaHang) result[0]);
-            }
-            return list;
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ArrayList<>();
+            String jpql = "SELECT ch FROM CuaHang ch LEFT JOIN ch.sanPhams sp LEFT JOIN sp.chiTietDonHangs ctdh " +
+                          "WHERE ch.trangThai = TRUE " +
+                          "GROUP BY ch " +
+                          "ORDER BY SUM(ctdh.soLuong) DESC";
+            TypedQuery<CuaHang> query = em.createQuery(jpql, CuaHang.class);
+            return query.getResultList();
         } finally {
             em.close();
         }
     }
 
-    // THÊM CỬA HÀNG (Đăng ký)
-    public boolean insert(CuaHang ch) {
-        EntityManager em = getEntityManager();
-        EntityTransaction trans = em.getTransaction();
-        try {
-            trans.begin();
-            em.persist(ch);
-            trans.commit();
-            return true;
-        } catch (Exception e) {
-            if (trans.isActive()) trans.rollback();
-            e.printStackTrace();
-            return false;
-        } finally {
-            em.close();
-        }
-    }
-    
-    // CẬP NHẬT CỬA HÀNG (Quản lý trang chủ shop)
-    public boolean update(CuaHang ch) {
-        EntityManager em = getEntityManager();
-        EntityTransaction trans = em.getTransaction();
-        try {
-            trans.begin();
-            em.merge(ch);
-            trans.commit();
-            return true;
-        } catch (Exception e) {
-            if (trans.isActive()) trans.rollback();
-            e.printStackTrace();
-            return false;
-        } finally {
-            em.close();
-        }
-    }
-    
     public long countStores() {
-        // ... (giữ nguyên)
-        return 0; 
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            String jpql = "SELECT COUNT(c) FROM CuaHang c WHERE c.trangThai = TRUE";
+            TypedQuery<Long> query = em.createQuery(jpql, Long.class);
+            return query.getSingleResult();
+        } finally {
+            em.close();
+        }
     }
 }

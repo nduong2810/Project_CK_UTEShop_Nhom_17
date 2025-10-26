@@ -1,6 +1,7 @@
 package com.uteshop.controller.vendor;
 
 import com.uteshop.dao.CuaHangDAO;
+import com.uteshop.dao.NguoiDungDAO;
 import com.uteshop.entity.CuaHang;
 import com.uteshop.entity.NguoiDung;
 
@@ -21,19 +22,15 @@ public class VendorRegisterController extends HttpServlet {
     private static final long serialVersionUID = 1L;
     
     private final CuaHangDAO cuaHangDAO = new CuaHangDAO();
-    // private final NguoiDungDAO nguoiDungDAO = new NguoiDungDAO(); // Khai báo nếu cần
+    private final NguoiDungDAO nguoiDungDAO = new NguoiDungDAO(); // Khai báo nếu cần
 
-    // Phương thức hỗ trợ kiểm tra quyền (Giả định VaiTro là String)
+    // Phương thức hỗ trợ kiểm tra quyền
     private NguoiDung getAuthenticatedUser(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-        NguoiDung user = (NguoiDung) session.getAttribute("user");
-        
-        // Kiểm tra người dùng đã đăng nhập VÀ có vai trò là VENDOR (hoặc chuẩn bị làm VENDOR)
-        // Đã sửa lỗi toUpperCase bằng cách gọi toString()
-        if (user == null || user.getVaiTro() == null || !user.getVaiTro().toString().toUpperCase().contains("VENDOR")) {
-            return null;
+        if (session != null) {
+            return (NguoiDung) session.getAttribute("user");
         }
-        return user;
+        return null;
     }
 
     @Override
@@ -135,10 +132,9 @@ public class VendorRegisterController extends HttpServlet {
                 // Đăng ký thành công, chuyển hướng về Dashboard
                 response.sendRedirect(request.getContextPath() + "/vendor/dashboard");
                 
-                // TODO: CẦN CẬP NHẬT VAI TRÒ CỦA NGƯỜI DÙNG TỪ USER SANG VENDOR (Nếu cần)
-                // user.setVaiTro("VENDOR"); 
-                // nguoiDungDAO.update(user);
-                // request.getSession().setAttribute("user", user);
+                user.setVaiTro(NguoiDung.VaiTro.VENDOR); 
+                nguoiDungDAO.update(user);
+                request.getSession().setAttribute("user", user);
                 
             } else {
                 // Lỗi DB hoặc lỗi khác từ DAO (DAO trả về false)
