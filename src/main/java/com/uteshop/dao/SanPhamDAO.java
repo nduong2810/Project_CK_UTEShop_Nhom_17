@@ -234,19 +234,42 @@ public class SanPhamDAO {
 
     public boolean insert(SanPham sp) {
         EntityManager em = getEntityManager();
-        EntityTransaction tx = em.getTransaction();
+        EntityTransaction trans = em.getTransaction();
         try {
-            tx.begin();
-            if (sp.getDanhMuc() != null && sp.getDanhMuc().getMaDM() != null)
-                sp.setDanhMuc(em.find(DanhMuc.class, sp.getDanhMuc().getMaDM()));
-            if (sp.getCuaHang() != null && sp.getCuaHang().getMaCH() != null)
-                sp.setCuaHang(em.find(CuaHang.class, sp.getCuaHang().getMaCH()));
-            sp.setTrangThai(true);
+            trans.begin();
+            
+            System.out.println("MaCH before processing: " + (sp.getCuaHang() != null ? sp.getCuaHang().getMaCH() : "NULL"));
+            
+            // Xử lý DanhMuc
+            if (sp.getMaDM() != null) {
+                DanhMuc dm = em.find(DanhMuc.class, sp.getMaDM());
+                if (dm == null) throw new IllegalArgumentException("Danh mục (maDM) không tồn tại: " + sp.getMaDM());
+                sp.setDanhMuc(dm);
+            } else {
+                throw new IllegalArgumentException("Thiếu thông tin Danh mục.");
+            }
+            
+            // Xử lý CuaHang
+            if (sp.getCuaHang() != null && sp.getCuaHang().getMaCH() != null) {
+                CuaHang ch = em.find(CuaHang.class, sp.getCuaHang().getMaCH());
+                if (ch == null) throw new IllegalArgumentException("Cửa hàng (maCH) không tồn tại.");
+                sp.setCuaHang(ch);
+                System.out.println("MaCH after setting managed CuaHang: " + ch.getMaCH());
+            } else {
+                throw new IllegalArgumentException("Thiếu thông tin Cửa hàng.");
+            }
+            
+            if (sp.getTrangThai() == null) {
+                sp.setTrangThai(true);
+            }
+
             em.persist(sp);
-            tx.commit();
+            System.out.println("Persisted MaCH: " + (sp.getCuaHang() != null ? sp.getCuaHang().getMaCH() : "NULL"));
+            trans.commit();
             return true;
         } catch (Exception e) {
-            if (tx.isActive()) tx.rollback();
+            if (trans.isActive()) trans.rollback();
+            System.err.println("Lỗi khi thêm sản phẩm: " + e.getMessage());
             e.printStackTrace();
             return false;
         } finally {

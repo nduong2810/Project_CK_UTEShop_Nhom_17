@@ -35,11 +35,11 @@ public class SanPham implements Serializable {
     private String hinhAnh;
 
     @Column(name = "TrangThai")
-    private Boolean trangThai = true;
+    private Boolean trangThai;
 
     @Column(name = "NgayTao")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date ngayTao = new Date();
+    private Date ngayTao;
 
     @Column(name = "NgayCapNhat")
     @Temporal(TemporalType.TIMESTAMP)
@@ -57,26 +57,20 @@ public class SanPham implements Serializable {
     @Column(name = "SoLuongDanhGia")
     private Integer soLuongDanhGia = 0;
 
-    // ====== KHÓA NGOẠI ======
-    @Column(name = "MaDM", nullable = false)
+    @Column(name = "MaDM")
     private Integer maDM;
 
-    @Column(name = "MaCH", nullable = false)
-    private Integer maCH;
-
-    // ====== QUAN HỆ ======
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "MaDM", insertable = false, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaDM", nullable = false, insertable = false, updatable = false)
     private DanhMuc danhMuc;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "MaCH", insertable = false, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaCH", nullable = false)
     private CuaHang cuaHang;
 
-    @OneToMany(mappedBy = "sanPham", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "sanPham", fetch = FetchType.LAZY)
     private List<ChiTietDonHang> chiTietDonHangs;
 
-    // ====== CONSTRUCTOR ======
     public SanPham() {
         this.ngayTao = new Date();
         this.trangThai = true;
@@ -88,7 +82,7 @@ public class SanPham implements Serializable {
         this.diemDanhGiaTrungBinh = BigDecimal.ZERO;
     }
 
-    // ====== GETTERS & SETTERS ======
+    // Getters and Setters
     public Integer getMaSP() { return maSP; }
     public void setMaSP(Integer maSP) { this.maSP = maSP; }
 
@@ -133,9 +127,6 @@ public class SanPham implements Serializable {
 
     public Integer getMaDM() { return maDM; }
     public void setMaDM(Integer maDM) { this.maDM = maDM; }
-
-    public Integer getMaCH() { return maCH; }
-    public void setMaCH(Integer maCH) { this.maCH = maCH; }
 
     public DanhMuc getDanhMuc() { return danhMuc; }
     public void setDanhMuc(DanhMuc danhMuc) { this.danhMuc = danhMuc; }
