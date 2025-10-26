@@ -1,93 +1,69 @@
 package com.uteshop.dao;
 
-import com.uteshop.config.DBConnect;
 import com.uteshop.entity.DanhMuc;
+import com.uteshop.util.JPAUtil; // Sử dụng JPAUtil đã tạo trước đó
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DanhMucDAO {
 
+    // Phương thức chung để lấy EntityManager
+    private EntityManager getEntityManager() {
+        return JPAUtil.getEntityManager();
+    }
+
+    /**
+     * Find category by ID
+     */
     public DanhMuc findById(Integer id) {
-        String sql = "SELECT * FROM DanhMuc WHERE MaDM = ?";
-        DanhMuc dm = null;
-
-        try (Connection conn = DBConnect.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setInt(1, id);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    dm = new DanhMuc();
-                    dm.setMaDM(rs.getInt("MaDM"));
-                    dm.setTenDM(rs.getNString("TenDM"));
-                    dm.setMoTa(rs.getNString("MoTa"));
-                    dm.setHinhAnh(rs.getNString("HinhAnh"));
-                    dm.setNgayTao(rs.getTimestamp("NgayTao"));
-                    dm.setNgayCapNhat(rs.getTimestamp("NgayCapNhat"));
-                    dm.setTrangThai(rs.getInt("TrangThai"));
-
-                }
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
+        EntityManager em = getEntityManager();
+        try {
+            // Sử dụng find() là cách chuẩn và đơn giản nhất trong JPA để tìm theo Primary Key.
+            return em.find(DanhMuc.class, id);
+        } finally {
+            em.close();
         }
-        return dm;
     }
 
+    /**
+     * Find all active categories (TrangThai = 1 or TRUE).
+     * Assumes TrangThai is mapped as a boolean or integer in the entity.
+     */
     public List<DanhMuc> findAll() {
-        List<DanhMuc> list = new ArrayList<>();
-        String sql = "SELECT * FROM DanhMuc WHERE TrangThai = 1";
+        EntityManager em = getEntityManager();
+        // Giả định TrangThai được lưu là TRUE/1
+        String jpql = "SELECT d FROM DanhMuc d WHERE d.trangThai = 1"; 
 
-        try (Connection conn = DBConnect.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                DanhMuc dm = new DanhMuc();
-                dm.setMaDM(rs.getInt("MaDM"));
-                dm.setTenDM(rs.getNString("TenDM"));
-                dm.setMoTa(rs.getNString("MoTa"));
-                dm.setHinhAnh(rs.getNString("HinhAnh"));
-                dm.setNgayTao(rs.getTimestamp("NgayTao"));
-                dm.setNgayCapNhat(rs.getTimestamp("NgayCapNhat"));
-                dm.setTrangThai(rs.getInt("TrangThai"));
-                list.add(dm);
-            }
-
-        } catch (SQLException e) {
+        try {
+            // TypedQuery tự động ánh xạ kết quả truy vấn sang List<DanhMuc>
+            TypedQuery<DanhMuc> query = em.createQuery(jpql, DanhMuc.class);
+            return query.getResultList();
+        } catch (Exception e) {
             e.printStackTrace();
+            return new ArrayList<>();
+        } finally {
+            em.close();
         }
-        return list;
     }
 
+    /**
+     * Get all active categories, ordered by name (TenDM ASC).
+     */
     public List<DanhMuc> getAllCategories() {
-        List<DanhMuc> list = new ArrayList<>();
-        String sql = "SELECT * FROM DanhMuc WHERE TrangThai = 1 ORDER BY TenDM ASC";
+        EntityManager em = getEntityManager();
+        String jpql = "SELECT d FROM DanhMuc d WHERE d.trangThai = 1 ORDER BY d.tenDM ASC";
 
-        try (Connection conn = DBConnect.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-
-            while (rs.next()) {
-                DanhMuc dm = new DanhMuc();
-                dm.setMaDM(rs.getInt("MaDM"));
-                dm.setTenDM(rs.getNString("TenDM"));
-                dm.setMoTa(rs.getNString("MoTa"));
-                dm.setHinhAnh(rs.getNString("HinhAnh"));
-                dm.setNgayTao(rs.getTimestamp("NgayTao"));
-                dm.setNgayCapNhat(rs.getTimestamp("NgayCapNhat"));
-                list.add(dm);
-            }
-
-        } catch (SQLException e) {
+        try {
+            TypedQuery<DanhMuc> query = em.createQuery(jpql, DanhMuc.class);
+            return query.getResultList();
+        } catch (Exception e) {
             e.printStackTrace();
+            return new ArrayList<>();
+        } finally {
+            em.close();
         }
-        return list;
     }
 }
