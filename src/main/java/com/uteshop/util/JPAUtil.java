@@ -4,26 +4,29 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
-public class JPAUtil {
+/**
+ * Tiện ích quản lý EntityManagerFactory và EntityManager.
+ * Chỉ khởi tạo 1 factory duy nhất trong suốt vòng đời ứng dụng.
+ */
+public final class JPAUtil {
 
-    // Tên của Persistence Unit (đơn vị bền vững) được định nghĩa trong file persistence.xml
-    private static final String PERSISTENCE_UNIT_NAME = "uteshop-pu"; // Đặt tên theo dự án của bạn, thường là Tên_Dự_Án + PU
+    private static final String PERSISTENCE_UNIT_NAME = "uteshop-pu";
+    private static EntityManagerFactory emf;
 
-    // EntityManagerFactory chỉ cần tạo một lần duy nhất khi ứng dụng khởi động
-    private static EntityManagerFactory factory;
+    // Private constructor để ngăn tạo đối tượng JPAUtil
+    private JPAUtil() {}
 
     /**
-     * Khởi tạo EntityManagerFactory
-     * Phương thức này nên được gọi 1 lần khi ứng dụng bắt đầu (ví dụ: trong context listener)
+     * Khởi tạo EntityManagerFactory (chỉ 1 lần duy nhất).
+     * Gọi tự động khi cần hoặc thủ công trong AppContextListener.
      */
-    public static void buildEntityManagerFactory() {
-        if (factory == null) {
+    private static synchronized void init() {
+        if (emf == null) {
             try {
-                // Tạo Factory từ tên Persistence Unit
-                factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
-                System.out.println("✅ EntityManagerFactory initialized successfully.");
+                emf = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
+                System.out.println("✅ JPAUtil: EntityManagerFactory initialized for " + PERSISTENCE_UNIT_NAME);
             } catch (Exception e) {
-                System.err.println("❌ Initializing EntityManagerFactory failed.");
+                System.err.println("❌ JPAUtil: Failed to initialize EntityManagerFactory for " + PERSISTENCE_UNIT_NAME);
                 e.printStackTrace();
                 throw new ExceptionInInitializerError(e);
             }
@@ -31,24 +34,24 @@ public class JPAUtil {
     }
 
     /**
-     * Cung cấp một EntityManager mới để thực hiện các thao tác CRUD.
-     * Mỗi request (hoặc mỗi DAO method) nên tạo và đóng một EntityManager riêng biệt.
+     * Trả về một EntityManager mới (dành riêng cho mỗi DAO hoặc mỗi request).
      */
     public static EntityManager getEntityManager() {
-        if (factory == null) {
-            // Đảm bảo Factory đã được khởi tạo
-            buildEntityManagerFactory(); 
+        if (emf == null) {
+            init();
         }
-        return factory.createEntityManager();
+        return emf.createEntityManager();
     }
 
     /**
-     * Đóng EntityManagerFactory khi ứng dụng tắt.
+     * Đóng EntityManagerFactory khi ứng dụng dừng.
+     * Nên gọi từ ServletContextListener.contextDestroyed().
      */
-    public static void shutdown() {
-        if (factory != null && factory.isOpen()) {
-            factory.close();
-            System.out.println("ℹ️ EntityManagerFactory shut down.");
+    public static void closeFactory() {
+        if (emf != null && emf.isOpen()) {
+            emf.close();
+            emf = null;
+            System.out.println("ℹ️ JPAUtil: EntityManagerFactory closed.");
         }
     }
 }

@@ -1,153 +1,108 @@
 package com.uteshop.filter;
 
 import com.uteshop.entity.NguoiDung;
+import com.uteshop.util.JwtUtil;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.*;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-/**
- * Filter để kiểm tra authentication và authorization
- * Tự động redirect về trang login nếu chưa đăng nhập
- * Kiểm tra quyền truy cập dựa trên role từ database
- */
 @WebFilter(urlPatterns = {"/*"})
 public class AuthFilter implements Filter {
 
-    // Các URL công khai không cần đăng nhập
     private static final List<String> PUBLIC_URLS = Arrays.asList(
-        "/auth/login",
-        "/auth/register",
-        "/auth/logout",
-        "/auth/send-otp",      // Thêm endpoint gửi OTP
-        "/auth/verify-otp",    // Thêm endpoint xác thực OTP
-        "/auth/resend-otp",    // Thêm endpoint gửi lại OTP
-        "/auth/forgot-password",    // Thêm trang quên mật khẩu
-        "/auth/reset-password",     // Thêm trang đặt lại mật khẩu
-        "/auth/forgot-send-otp",    // Thêm endpoint gửi OTP quên mật khẩu
-        "/auth/forgot-verify-otp",  // Thêm endpoint xác thực OTP quên mật khẩu
-        "/guest",  // Tất cả guest URLs đều public
-        "/assets",
-        "/css",
-        "/js",
-        "/images",
-        "/img",    // Thêm /img để load hình ảnh
-        "/favicon.ico"
+            "/auth/login", "/auth/register", "/auth/logout",
+            "/auth/send-otp", "/auth/verify-otp", "/auth/resend-otp",
+            "/auth/forgot-password", "/auth/reset-password",
+            "/auth/forgot-send-otp", "/auth/forgot-verify-otp",
+            "/guest", "/assets", "/css", "/js", "/images", "/img", "/favicon.ico"
     );
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException {
-        
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        HttpServletResponse httpResponse = (HttpServletResponse) response;
-        
-        String requestURI = httpRequest.getRequestURI();
-        String contextPath = httpRequest.getContextPath();
+
+        HttpServletRequest req = (HttpServletRequest) request;
+        HttpServletResponse resp = (HttpServletResponse) response;
+
+        String requestURI = req.getRequestURI();
+        String contextPath = req.getContextPath();
         String path = requestURI.substring(contextPath.length());
-        String queryString = httpRequest.getQueryString();
 
-        // Debug logging
-        System.out.println("AuthFilter: Processing request - " + path);
-        System.out.println("AuthFilter: Full Request URL - " + httpRequest.getRequestURL() + (queryString != null ? "?" + queryString : ""));
-        System.out.println("AuthFilter: Query String - " + queryString);
+        // Debug log
+        System.out.println("AuthFilter: Processing " + path);
 
-        // ADDED: Log all request parameters
-        Map<String, String[]> parameterMap = httpRequest.getParameterMap();
-        if (parameterMap != null && !parameterMap.isEmpty()) {
-            System.out.println("AuthFilter: Request Parameters:");
-            for (Map.Entry<String, String[]> entry : parameterMap.entrySet()) {
-                System.out.println("  - " + entry.getKey() + ": " + Arrays.toString(entry.getValue()));
-            }
-        } else {
-            System.out.println("AuthFilter: No Request Parameters found.");
-        }
-        
-        // Cho phép truy cập các URL công khai (bao gồm tất cả /guest/*)
-        if (isPublicUrl(path, contextPath)) { // Truyền contextPath vào đây
-            System.out.println("AuthFilter: Public URL, allowing access - " + path);
+        // Cho phép truy cập các URL công khai
+        if (isPublicUrl(path)) {
             chain.doFilter(request, response);
             return;
         }
-        
-        // Kiểm tra session
-        HttpSession session = httpRequest.getSession(false);
+
+        HttpSession session = req.getSession(false);
         NguoiDung user = (session != null) ? (NguoiDung) session.getAttribute("user") : null;
-        
-        System.out.println("AuthFilter: User logged in? " + (user != null));
-        if (user != null) {
-            System.out.println("AuthFilter: User role = " + user.getVaiTro());
+
+        // Nếu chưa có session thì thử đọc JWT từ cookie
+        if (user == null && req.getCookies() != null) {
+            for (Cookie cookie : req.getCookies()) {
+                if ("jwt_token".equals(cookie.getName())) {
+                    try {
+                        Claims claims = JwtUtil.validateToken(cookie.getValue());
+                        String username = claims.getSubject();
+                        String role = (String) claims.get("role");
+
+                        NguoiDung u = new NguoiDung();
+                        u.setTenDangNhap(username);
+                        u.setVaiTro(NguoiDung.VaiTro.valueOf(role));
+
+                        HttpSession newSession = req.getSession(true);
+                        newSession.setAttribute("user", u);
+                        newSession.setAttribute("userRole", role);
+                        user = u;
+
+                        System.out.println("AuthFilter: Restored session from JWT for " + username);
+                    } catch (Exception e) {
+                        System.out.println("AuthFilter: Invalid JWT token → " + e.getMessage());
+                    }
+                    break;
+                }
+            }
         }
-        
-        // Nếu chưa đăng nhập, redirect về login
+
+        // Nếu chưa đăng nhập (vẫn không có user)
         if (user == null) {
             System.out.println("AuthFilter: Not logged in, redirecting to login");
-            httpResponse.sendRedirect(contextPath + "/auth/login");
+            resp.sendRedirect(contextPath + "/auth/login");
             return;
         }
-        
-        // Kiểm tra quyền truy cập dựa trên role từ database
+
+        // Kiểm tra quyền truy cập
         if (!hasAccess(user, path)) {
-            System.out.println("AuthFilter: Access denied for role " + user.getVaiTro() + " to path " + path);
-            // Redirect về trang dashboard của role hiện tại
-            httpResponse.sendRedirect(contextPath + getDefaultPageForRole(user.getVaiTro()));
+            System.out.println("AuthFilter: Access denied for role " + user.getVaiTro() + " to " + path);
+            resp.sendRedirect(contextPath + getDefaultPageForRole(user.getVaiTro()));
             return;
         }
-        
-        System.out.println("AuthFilter: Access granted");
+
         // Cho phép truy cập
         chain.doFilter(request, response);
     }
-    
-    /**
-     * Kiểm tra xem URL có phải là public không
-     */
-    private boolean isPublicUrl(String path, String contextPath) { // Thêm contextPath vào chữ ký
-        // Chuẩn hóa path để đảm bảo nó thực sự là context-relative
-        String normalizedPath = path;
-        // Nếu path vẫn bắt đầu bằng contextPath (do URL bị lặp lại), hãy loại bỏ nó
-        if (contextPath != null && !contextPath.isEmpty() && !contextPath.equals("/") && normalizedPath.startsWith(contextPath)) {
-            normalizedPath = normalizedPath.substring(contextPath.length());
-            System.out.println("AuthFilter: Normalized path (removed duplicated contextPath): " + normalizedPath); // ADDED LOG
-        }
-        // Đảm bảo normalizedPath luôn bắt đầu bằng "/"
-        if (!normalizedPath.startsWith("/")) {
-            normalizedPath = "/" + normalizedPath;
-            System.out.println("AuthFilter: Normalized path (added leading slash): " + normalizedPath); // ADDED LOG
-        }
 
-        // Kiểm tra từng pattern trong PUBLIC_URLS
+    /** Xác định URL public */
+    private boolean isPublicUrl(String path) {
         for (String publicUrl : PUBLIC_URLS) {
-            if (normalizedPath.startsWith(publicUrl)) {
-                return true;
-            }
+            if (path.startsWith(publicUrl)) return true;
         }
         return false;
     }
-    
-    /**
-     * Kiểm tra quyền truy cập dựa trên role từ database
-     * TẤT CẢ các role đều có thể truy cập /guest/* vì nó là public
-     */
+
+    /** Kiểm tra quyền theo vai trò */
     private boolean hasAccess(NguoiDung user, String path) {
         NguoiDung.VaiTro role = user.getVaiTro();
-        
-        // Guest URLs - TẤT CẢ đã đăng nhập đều truy cập được
-        if (path.startsWith("/guest")) {
-            return true;
-        }
-        
-        // Admin có quyền truy cập tất cả
-        if (role == NguoiDung.VaiTro.ADMIN) {
-            return true;
-        }
-        
-        // Kiểm tra quyền theo từng role cho các trang riêng
+
+        if (path.startsWith("/guest")) return true;
+        if (role == NguoiDung.VaiTro.ADMIN) return true;
+
         switch (role) {
             case VENDOR:
                 return path.startsWith("/vendor") || path.startsWith("/user");
@@ -159,10 +114,8 @@ public class AuthFilter implements Filter {
                 return false;
         }
     }
-    
-    /**
-     * Lấy trang mặc định cho mỗi role
-     */
+
+    /** Trang mặc định theo vai trò */
     private String getDefaultPageForRole(NguoiDung.VaiTro role) {
         switch (role) {
             case ADMIN:
@@ -171,17 +124,16 @@ public class AuthFilter implements Filter {
                 return "/vendor/dashboard";
             case SHIPPER:
                 return "/shipper/dashboard";
-            case USER:
             default:
                 return "/guest/home";
         }
     }
-    
+
     @Override
-    public void init(FilterConfig filterConfig) throws ServletException {
-        System.out.println("AuthFilter initialized - Protecting all routes");
+    public void init(FilterConfig filterConfig) {
+        System.out.println("AuthFilter initialized (JWT-compatible)");
     }
-    
+
     @Override
     public void destroy() {
         System.out.println("AuthFilter destroyed");

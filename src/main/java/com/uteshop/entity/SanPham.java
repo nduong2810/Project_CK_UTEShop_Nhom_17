@@ -59,6 +59,7 @@ public class SanPham implements Serializable {
 
     @Column(name = "MaDM")
     private Integer maDM;
+<<<<<<< Updated upstream
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MaDM", nullable = false, insertable = false, updatable = false)
@@ -66,6 +67,18 @@ public class SanPham implements Serializable {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MaCH", nullable = false)
+=======
+    
+    @Column(name = "MaCH", nullable = false)
+    private Integer maCH;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "MaDM", insertable = false, updatable = false)
+    private DanhMuc danhMuc;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "MaCH", insertable = false, updatable = false)
+>>>>>>> Stashed changes
     private CuaHang cuaHang;
 
     @OneToMany(mappedBy = "sanPham", fetch = FetchType.LAZY)

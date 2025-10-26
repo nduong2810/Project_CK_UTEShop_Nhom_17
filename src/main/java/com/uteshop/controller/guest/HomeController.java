@@ -4,7 +4,6 @@ import com.uteshop.dao.DanhMucDAO;
 import com.uteshop.dao.SanPhamDAO;
 import com.uteshop.entity.DanhMuc;
 import com.uteshop.entity.SanPham;
-
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
@@ -17,84 +16,84 @@ public class HomeController extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final SanPhamDAO sanPhamDAO = new SanPhamDAO();
     private final DanhMucDAO danhMucDAO = new DanhMucDAO();
-
-    private static final int PAGINATION_PAGE_SIZE = 8; // Products per page
+    private static final int PAGE_SIZE = 8; // số sản phẩm mỗi trang
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
-        request.setCharacterEncoding("UTF-8");
-        response.setCharacterEncoding("UTF-8");
-        response.setContentType("text/html;charset=UTF-8");
-        handleHomePage(request, response);
+        req.setCharacterEncoding("UTF-8");
+        resp.setCharacterEncoding("UTF-8");
+        resp.setContentType("text/html;charset=UTF-8");
+        handleHomePage(req, resp);
     }
 
-    private void handleHomePage(HttpServletRequest request, HttpServletResponse response)
+    private void handleHomePage(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
         try {
-            // Get filter parameters from request
-            String sortParam = request.getParameter("sort");
-            String priceParam = request.getParameter("price");
-            String categoryParam = request.getParameter("category");
+            // --- Lấy tham số lọc ---
+            String sort = req.getParameter("sort");
+            String price = req.getParameter("price");
+            String category = req.getParameter("category");
 
             Integer categoryId = null;
-            if (categoryParam != null && !categoryParam.isEmpty()) {
+            if (category != null && !category.isEmpty() && !category.equals("all")) {
                 try {
-                    categoryId = Integer.parseInt(categoryParam);
-                } catch (NumberFormatException e) {
-                    // Ignore invalid category parameter
-                }
+                    categoryId = Integer.parseInt(category);
+                } catch (NumberFormatException ignored) {}
             }
 
-            long totalProducts = sanPhamDAO.countProducts(sortParam, priceParam, categoryId);
-            int totalPages = (int) Math.ceil((double) totalProducts / PAGINATION_PAGE_SIZE);
+            // --- Lấy tổng sản phẩm theo bộ lọc ---
+            long totalProducts = sanPhamDAO.countProducts(sort, price, categoryId);
+            int totalPages = (int) Math.ceil((double) totalProducts / PAGE_SIZE);
             if (totalPages == 0) totalPages = 1;
 
-            String pageParam = request.getParameter("page");
+            // --- Xử lý phân trang ---
             int currentPage = 1;
+            String pageParam = req.getParameter("page");
             if (pageParam != null && !pageParam.isEmpty()) {
                 try {
                     currentPage = Integer.parseInt(pageParam);
-                } catch (NumberFormatException e) {
-                    currentPage = 1;
-                }
+                } catch (NumberFormatException ignored) {}
             }
-
             if (currentPage < 1) currentPage = 1;
             if (currentPage > totalPages) currentPage = totalPages;
 
-            int currentOffset = (currentPage - 1) * PAGINATION_PAGE_SIZE;
-            List<SanPham> products = sanPhamDAO.findAll(currentOffset, PAGINATION_PAGE_SIZE, sortParam, priceParam, categoryId);
+            int offset = (currentPage - 1) * PAGE_SIZE;
 
+            // --- Truy vấn danh sách sản phẩm ---
+            List<SanPham> products = sanPhamDAO.findAll(offset, PAGE_SIZE, sort, price, categoryId);
+
+            // --- Danh mục ---
             List<DanhMuc> categories = danhMucDAO.getAllCategories();
 
-            // Get top products for HOT badge
+            // --- Sản phẩm HOT ---
             List<Integer> hotProductIds;
             if (categoryId != null) {
-                // Top 3 for the selected category
-                List<SanPham> top3Products = sanPhamDAO.findTopNProductsByCategoryId(3, categoryId);
-                hotProductIds = top3Products.stream().map(SanPham::getMaSP).collect(Collectors.toList());
+                hotProductIds = sanPhamDAO.findTopNProductsByCategoryId(3, categoryId)
+                        .stream().map(SanPham::getMaSP).collect(Collectors.toList());
             } else {
-                // Top 5 overall
-                List<SanPham> top5Products = sanPhamDAO.findTopNProducts(5);
-                hotProductIds = top5Products.stream().map(SanPham::getMaSP).collect(Collectors.toList());
+                hotProductIds = sanPhamDAO.findTopNProducts(5)
+                        .stream().map(SanPham::getMaSP).collect(Collectors.toList());
             }
 
-            request.setAttribute("products", products);
-            request.setAttribute("categories", categories);
-            request.setAttribute("totalProducts", totalProducts);
-            request.setAttribute("paginationPageSize", PAGINATION_PAGE_SIZE);
-            request.setAttribute("currentPage", currentPage);
-            request.setAttribute("totalPages", totalPages);
-            request.setAttribute("hotProductIds", hotProductIds);
+            // --- Gửi dữ liệu sang JSP ---
+            req.setAttribute("products", products);
+            req.setAttribute("categories", categories);
+            req.setAttribute("hotProductIds", hotProductIds);
+            req.setAttribute("totalProducts", totalProducts);
+            req.setAttribute("totalPages", totalPages);
+            req.setAttribute("currentPage", currentPage);
+            req.setAttribute("price", price);
+            req.setAttribute("sort", sort);
+            req.setAttribute("category", categoryId);
 
-            request.getRequestDispatcher("/WEB-INF/views/guest/home.jsp").forward(request, response);
+            req.getRequestDispatcher("/WEB-INF/views/guest/home.jsp").forward(req, resp);
 
         } catch (Exception e) {
-            System.err.println("!!! ERROR in HomeController.handleHomePage()");
+            System.err.println("❌ ERROR in HomeController.handleHomePage()");
             e.printStackTrace();
-            request.setAttribute("errorMessage", "Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
-            request.getRequestDispatcher("/WEB-INF/views/guest/home.jsp").forward(request, response);
+            req.setAttribute("errorMessage", "Không thể tải danh sách sản phẩm. Vui lòng thử lại sau.");
+            req.getRequestDispatcher("/WEB-INF/views/guest/home.jsp").forward(req, resp);
         }
     }
 
