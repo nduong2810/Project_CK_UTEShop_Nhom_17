@@ -35,11 +35,11 @@ public class SanPham implements Serializable {
     private String hinhAnh;
 
     @Column(name = "TrangThai")
-    private Boolean trangThai;
+    private Boolean trangThai = true;
 
     @Column(name = "NgayTao")
     @Temporal(TemporalType.TIMESTAMP)
-    private Date ngayTao;
+    private Date ngayTao = new Date();
 
     @Column(name = "NgayCapNhat")
     @Temporal(TemporalType.TIMESTAMP)
@@ -57,33 +57,26 @@ public class SanPham implements Serializable {
     @Column(name = "SoLuongDanhGia")
     private Integer soLuongDanhGia = 0;
 
-    @Column(name = "MaDM")
+    // ====== KHÓA NGOẠI ======
+    @Column(name = "MaDM", nullable = false)
     private Integer maDM;
-<<<<<<< Updated upstream
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaDM", nullable = false, insertable = false, updatable = false)
-    private DanhMuc danhMuc;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaCH", nullable = false)
-=======
-    
     @Column(name = "MaCH", nullable = false)
     private Integer maCH;
 
+    // ====== QUAN HỆ ======
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "MaDM", insertable = false, updatable = false)
     private DanhMuc danhMuc;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "MaCH", insertable = false, updatable = false)
->>>>>>> Stashed changes
     private CuaHang cuaHang;
 
-    @OneToMany(mappedBy = "sanPham", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "sanPham", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<ChiTietDonHang> chiTietDonHangs;
 
+    // ====== CONSTRUCTOR ======
     public SanPham() {
         this.ngayTao = new Date();
         this.trangThai = true;
@@ -95,7 +88,7 @@ public class SanPham implements Serializable {
         this.diemDanhGiaTrungBinh = BigDecimal.ZERO;
     }
 
-    // Getters and Setters
+    // ====== GETTERS & SETTERS ======
     public Integer getMaSP() { return maSP; }
     public void setMaSP(Integer maSP) { this.maSP = maSP; }
 
@@ -138,8 +131,11 @@ public class SanPham implements Serializable {
     public Integer getSoLuongDanhGia() { return soLuongDanhGia; }
     public void setSoLuongDanhGia(Integer soLuongDanhGia) { this.soLuongDanhGia = soLuongDanhGia; }
 
-    public Integer getMaDM() { return maDM; } // Thêm getter
-    public void setMaDM(Integer maDM) { this.maDM = maDM; } // Đảm bảo setter
+    public Integer getMaDM() { return maDM; }
+    public void setMaDM(Integer maDM) { this.maDM = maDM; }
+
+    public Integer getMaCH() { return maCH; }
+    public void setMaCH(Integer maCH) { this.maCH = maCH; }
 
     public DanhMuc getDanhMuc() { return danhMuc; }
     public void setDanhMuc(DanhMuc danhMuc) { this.danhMuc = danhMuc; }
