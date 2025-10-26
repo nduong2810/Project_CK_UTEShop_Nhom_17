@@ -1,635 +1,573 @@
 package com.uteshop.dao;
 
-import com.uteshop.config.DBConnect;
 import com.uteshop.entity.CuaHang;
 import com.uteshop.entity.DanhMuc;
 import com.uteshop.entity.SanPham;
+import com.uteshop.util.JPAUtil; // Sử dụng JPAUtil đã tạo trước đó
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.TypedQuery;
 import java.math.BigDecimal;
-import java.sql.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class SanPhamDAO {
 
-	private final DanhMucDAO danhMucDAO = new DanhMucDAO();
-	private final CuaHangDAO cuaHangDAO = new CuaHangDAO();
-
-	public List<SanPham> findTopNProducts(int limit) {
-		List<SanPham> list = new ArrayList<>();
-		String sql = "SELECT TOP (?) * FROM SanPham WHERE TrangThai = 1 ORDER BY SoLuongBan DESC, MaSP ASC";
-
-		try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-			ps.setInt(1, limit);
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					SanPham sp = new SanPham();
-					sp.setMaSP(rs.getInt("MaSP"));
-					sp.setTenSP(rs.getNString("TenSP"));
-					sp.setDonGia(rs.getBigDecimal("DonGia"));
-					sp.setSoLuongBan(rs.getInt("SoLuongBan"));
-					sp.setHinhAnh(rs.getNString("HinhAnh"));
-					sp.setMoTa(rs.getNString("MoTa"));
-					sp.setSoLuongTon(rs.getInt("SoLuongTon"));
-					sp.setTrangThai(rs.getBoolean("TrangThai"));
-					sp.setLuotXem(rs.getInt("LuotXem"));
-					sp.setLuotYeuThich(rs.getInt("LuotYeuThich"));
-					sp.setDiemDanhGiaTrungBinh(rs.getBigDecimal("DiemDanhGiaTrungBinh"));
-					sp.setSoLuongDanhGia(rs.getInt("SoLuongDanhGia"));
-					sp.setMaDM(rs.getInt("MaDM"));
-					sp.setMaCH(rs.getInt("MaCH"));
-
-					if (sp.getMaDM() != null && sp.getMaDM() > 0) {
-						DanhMuc dm = danhMucDAO.findById(sp.getMaDM());
-						sp.setDanhMuc(dm);
-					}
-					if (sp.getMaCH() != null && sp.getMaCH() > 0) {
-						CuaHang ch = cuaHangDAO.findById(sp.getMaCH());
-						sp.setCuaHang(ch);
-					}
-					list.add(sp);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return list;
-	}
-
-	public List<SanPham> findTopNProductsByCategoryId(int limit, Integer categoryId) {
-		List<SanPham> list = new ArrayList<>();
-		String sql = "SELECT TOP (?) * FROM SanPham WHERE TrangThai = 1 AND MaDM = ? ORDER BY SoLuongBan DESC, MaSP ASC";
-
-		try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-			ps.setInt(1, limit);
-			ps.setInt(2, categoryId);
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					SanPham sp = new SanPham();
-					sp.setMaSP(rs.getInt("MaSP"));
-					sp.setTenSP(rs.getNString("TenSP"));
-					sp.setDonGia(rs.getBigDecimal("DonGia"));
-					sp.setSoLuongBan(rs.getInt("SoLuongBan"));
-					sp.setHinhAnh(rs.getNString("HinhAnh"));
-					sp.setMoTa(rs.getNString("MoTa"));
-					sp.setSoLuongTon(rs.getInt("SoLuongTon"));
-					sp.setTrangThai(rs.getBoolean("TrangThai"));
-					sp.setLuotXem(rs.getInt("LuotXem"));
-					sp.setLuotYeuThich(rs.getInt("LuotYeuThich"));
-					sp.setDiemDanhGiaTrungBinh(rs.getBigDecimal("DiemDanhGiaTrungBinh"));
-					sp.setSoLuongDanhGia(rs.getInt("SoLuongDanhGia"));
-					sp.setMaDM(rs.getInt("MaDM"));
-					sp.setMaCH(rs.getInt("MaCH"));
-
-					if (sp.getMaDM() != null && sp.getMaDM() > 0) {
-						DanhMuc dm = danhMucDAO.findById(sp.getMaDM());
-						sp.setDanhMuc(dm);
-					}
-					if (sp.getMaCH() != null && sp.getMaCH() > 0) {
-						CuaHang ch = cuaHangDAO.findById(sp.getMaCH());
-						sp.setCuaHang(ch);
-					}
-					list.add(sp);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return list;
-	}
-
-	public List<SanPham> findAll(int offset, int limit, String sortBy, String priceRange, Integer categoryId) {
-		List<SanPham> list = new ArrayList<>();
-		StringBuilder sql = new StringBuilder("SELECT * FROM SanPham WHERE TrangThai = 1 ");
-		List<Object> params = new ArrayList<>();
-
-		if (categoryId != null) {
-			sql.append("AND MaDM = ? ");
-			params.add(categoryId);
-		}
-
-		if ("bestseller".equals(sortBy)) {
-			sql.append("AND SoLuongBan > 10 ");
-		}
-
-		if (priceRange != null && !priceRange.isEmpty()) {
-			if (priceRange.endsWith("-")) {
-				String minPrice = priceRange.substring(0, priceRange.length() - 1);
-				sql.append("AND DonGia >= ? ");
-				params.add(new BigDecimal(minPrice));
-			} else {
-				String[] prices = priceRange.split("-");
-				if (prices.length == 2) {
-					sql.append("AND DonGia BETWEEN ? AND ? ");
-					params.add(new BigDecimal(prices[0]));
-					params.add(new BigDecimal(prices[1]));
-				}
-			}
-		}
-
-		String orderByClause;
-		if (sortBy != null) {
-			switch (sortBy) {
-			case "price-asc":
-				orderByClause = "ORDER BY DonGia ASC, MaSP ASC";
-				break;
-			case "price-desc":
-				orderByClause = "ORDER BY DonGia DESC, MaSP ASC";
-				break;
-			case "newest":
-				orderByClause = "ORDER BY NgayTao DESC, MaSP ASC";
-				break;
-			case "all":
-				orderByClause = "ORDER BY MaSP ASC";
-				break;
-			case "bestseller":
-			default:
-				orderByClause = "ORDER BY SoLuongBan DESC, MaSP ASC";
-				break;
-			}
-		} else {
-			orderByClause = "ORDER BY SoLuongBan DESC, MaSP ASC";
-		}
-
-		sql.append(orderByClause).append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
-		params.add(offset);
-		params.add(limit);
-
-		try (Connection conn = DBConnect.getConnection();
-				PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-			for (int i = 0; i < params.size(); i++) {
-				ps.setObject(i + 1, params.get(i));
-			}
-
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					SanPham sp = new SanPham();
-					sp.setMaSP(rs.getInt("MaSP"));
-					sp.setTenSP(rs.getNString("TenSP"));
-					sp.setDonGia(rs.getBigDecimal("DonGia"));
-					sp.setSoLuongBan(rs.getInt("SoLuongBan"));
-					sp.setHinhAnh(rs.getNString("HinhAnh"));
-					sp.setMoTa(rs.getNString("MoTa"));
-					sp.setTrangThai(rs.getBoolean("TrangThai"));
-					sp.setLuotXem(rs.getInt("LuotXem"));
-					sp.setLuotYeuThich(rs.getInt("LuotYeuThich"));
-					sp.setDiemDanhGiaTrungBinh(rs.getBigDecimal("DiemDanhGiaTrungBinh"));
-					sp.setSoLuongDanhGia(rs.getInt("SoLuongDanhGia"));
-					sp.setMaDM(rs.getInt("MaDM"));
-					sp.setMaCH(rs.getInt("MaCH"));
-
-					if (sp.getMaDM() != null && sp.getMaDM() > 0) {
-						DanhMuc dm = danhMucDAO.findById(sp.getMaDM());
-						sp.setDanhMuc(dm);
-					}
-					if (sp.getMaCH() != null && sp.getMaCH() > 0) {
-						CuaHang ch = cuaHangDAO.findById(sp.getMaCH());
-						sp.setCuaHang(ch);
-					}
-					list.add(sp);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return list;
-	}
-
-	public long countProducts(String sortBy, String priceRange, Integer categoryId) {
-		StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM SanPham WHERE TrangThai = 1 ");
-		List<Object> params = new ArrayList<>();
-
-		if (categoryId != null) {
-			sql.append("AND MaDM = ? ");
-			params.add(categoryId);
-		}
-
-		if ("bestseller".equals(sortBy)) {
-			sql.append("AND SoLuongBan > 10 ");
-		}
-
-		if (priceRange != null && !priceRange.isEmpty()) {
-			if (priceRange.endsWith("-")) {
-				String minPrice = priceRange.substring(0, priceRange.length() - 1);
-				sql.append("AND DonGia >= ? ");
-				params.add(new BigDecimal(minPrice));
-			} else {
-				String[] prices = priceRange.split("-");
-				if (prices.length == 2) {
-					sql.append("AND DonGia BETWEEN ? AND ? ");
-					params.add(new BigDecimal(prices[0]));
-					params.add(new BigDecimal(prices[1]));
-				}
-			}
-		}
-
-		try (Connection conn = DBConnect.getConnection();
-				PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-			for (int i = 0; i < params.size(); i++) {
-				ps.setObject(i + 1, params.get(i));
-			}
-
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					return rs.getLong(1);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return 0;
-	}
-
-	public SanPham findById(Integer id) {
-		String sql = "SELECT * FROM SanPham WHERE MaSP = ?";
-		SanPham sp = null;
-
-		try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-
-			ps.setInt(1, id);
-			try (ResultSet rs = ps.executeQuery()) {
-				if (rs.next()) {
-					sp = new SanPham();
-					sp.setMaSP(rs.getInt("MaSP"));
-					sp.setTenSP(rs.getNString("TenSP"));
-					sp.setDonGia(rs.getBigDecimal("DonGia"));
-					sp.setSoLuongBan(rs.getInt("SoLuongBan"));
-					sp.setHinhAnh(rs.getNString("HinhAnh"));
-					sp.setMoTa(rs.getNString("MoTa"));
-					sp.setSoLuongTon(rs.getInt("SoLuongTon"));
-					sp.setTrangThai(rs.getBoolean("TrangThai"));
-					sp.setLuotXem(rs.getInt("LuotXem"));
-					sp.setLuotYeuThich(rs.getInt("LuotYeuThich"));
-					sp.setDiemDanhGiaTrungBinh(rs.getBigDecimal("DiemDanhGiaTrungBinh"));
-					sp.setSoLuongDanhGia(rs.getInt("SoLuongDanhGia"));
-					sp.setMaDM(rs.getInt("MaDM"));
-					sp.setMaCH(rs.getInt("MaCH"));
-
-					if (sp.getMaDM() != null && sp.getMaDM() > 0) {
-						DanhMuc dm = danhMucDAO.findById(sp.getMaDM());
-						sp.setDanhMuc(dm);
-					}
-					if (sp.getMaCH() != null && sp.getMaCH() > 0) {
-						CuaHang ch = cuaHangDAO.findById(sp.getMaCH());
-						sp.setCuaHang(ch);
-					}
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return sp;
-	}
-
-	public List<SanPham> findByCategoryId(Integer categoryId) {
-		List<SanPham> list = new ArrayList<>();
-		String sql = "SELECT * FROM SanPham WHERE MaDM = ? AND TrangThai = 1 ORDER BY SoLuongBan DESC";
-
-		try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-
-			ps.setInt(1, categoryId);
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					SanPham sp = new SanPham();
-					sp.setMaSP(rs.getInt("MaSP"));
-					sp.setTenSP(rs.getNString("TenSP"));
-					sp.setDonGia(rs.getBigDecimal("DonGia"));
-					sp.setSoLuongBan(rs.getInt("SoLuongBan"));
-					sp.setHinhAnh(rs.getNString("HinhAnh"));
-					sp.setMoTa(rs.getNString("MoTa"));
-					sp.setMaDM(rs.getInt("MaDM"));
-					sp.setMaCH(rs.getInt("MaCH"));
-					sp.setTrangThai(rs.getBoolean("TrangThai"));
-
-					if (sp.getMaDM() != null && sp.getMaDM() > 0) {
-						DanhMuc dm = danhMucDAO.findById(sp.getMaDM());
-						sp.setDanhMuc(dm);
-					}
-					if (sp.getMaCH() != null && sp.getMaCH() > 0) {
-						CuaHang ch = cuaHangDAO.findById(sp.getMaCH());
-						sp.setCuaHang(ch);
-					}
-					list.add(sp);
-				}
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return list;
-	}
-
-	public List<SanPham> findByStoreId(int storeId) {
-		List<SanPham> list = new ArrayList<>();
-		String sql = "SELECT * FROM SanPham WHERE MaCH = ? AND TrangThai = 1 ORDER BY SoLuongBan DESC";
-
-		try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-
-			ps.setInt(1, storeId);
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					SanPham sp = new SanPham();
-					sp.setMaSP(rs.getInt("MaSP"));
-					sp.setTenSP(rs.getNString("TenSP"));
-					sp.setDonGia(rs.getBigDecimal("DonGia"));
-					sp.setSoLuongBan(rs.getInt("SoLuongBan"));
-					sp.setHinhAnh(rs.getNString("HinhAnh"));
-					sp.setMoTa(rs.getNString("MoTa"));
-					sp.setMaDM(rs.getInt("MaDM"));
-					sp.setMaCH(rs.getInt("MaCH"));
-					sp.setTrangThai(rs.getBoolean("TrangThai"));
-
-					if (sp.getMaDM() != null && sp.getMaDM() > 0) {
-						DanhMuc dm = danhMucDAO.findById(sp.getMaDM());
-						sp.setDanhMuc(dm);
-					}
-					if (sp.getMaCH() != null && sp.getMaCH() > 0) {
-						CuaHang ch = cuaHangDAO.findById(sp.getMaCH());
-						sp.setCuaHang(ch);
-					}
-					list.add(sp);
-				}
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return list;
-	}
-
-	public List<SanPham> findByStore(Integer storeId, int limit) {
-		List<SanPham> list = new ArrayList<>();
-		String sql = "SELECT TOP (?) * FROM SanPham WHERE MaCH = ? AND TrangThai = 1 ORDER BY SoLuongBan DESC";
-
-		try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-
-			ps.setInt(1, limit);
-			ps.setInt(2, storeId);
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					SanPham sp = new SanPham();
-					sp.setMaSP(rs.getInt("MaSP"));
-					sp.setTenSP(rs.getNString("TenSP"));
-					sp.setDonGia(rs.getBigDecimal("DonGia"));
-					sp.setSoLuongBan(rs.getInt("SoLuongBan"));
-					sp.setHinhAnh(rs.getNString("HinhAnh"));
-					sp.setMoTa(rs.getNString("MoTa"));
-					sp.setMaDM(rs.getInt("MaDM"));
-					sp.setMaCH(rs.getInt("MaCH"));
-					sp.setTrangThai(rs.getBoolean("TrangThai"));
-
-					if (sp.getMaDM() != null && sp.getMaDM() > 0) {
-						DanhMuc dm = danhMucDAO.findById(sp.getMaDM());
-						sp.setDanhMuc(dm);
-					}
-					if (sp.getMaCH() != null && sp.getMaCH() > 0) {
-						CuaHang ch = cuaHangDAO.findById(sp.getMaCH());
-						sp.setCuaHang(ch);
-					}
-					list.add(sp);
-				}
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return list;
-	}
-
-	public List<SanPham> getAllProducts() {
-		List<SanPham> list = new ArrayList<>();
-		String sql = "SELECT * FROM SanPham WHERE TrangThai = 1 ORDER BY SoLuongBan DESC";
-
-		try (Connection conn = DBConnect.getConnection();
-				PreparedStatement ps = conn.prepareStatement(sql);
-				ResultSet rs = ps.executeQuery()) {
-
-			while (rs.next()) {
-				SanPham sp = new SanPham();
-				sp.setMaSP(rs.getInt("MaSP"));
-				sp.setTenSP(rs.getNString("TenSP"));
-				sp.setDonGia(rs.getBigDecimal("DonGia"));
-				sp.setSoLuongTon(rs.getInt("SoLuongTon"));
-				sp.setHinhAnh(rs.getNString("HinhAnh"));
-				sp.setMoTa(rs.getNString("MoTa"));
-				sp.setMaDM(rs.getInt("MaDM"));
-				sp.setMaCH(rs.getInt("MaCH"));
-				sp.setTrangThai(rs.getBoolean("TrangThai"));
-
-				if (sp.getMaDM() != null && sp.getMaDM() > 0) {
-					DanhMuc dm = danhMucDAO.findById(sp.getMaDM());
-					sp.setDanhMuc(dm);
-				}
-				if (sp.getMaCH() != null && sp.getMaCH() > 0) {
-					CuaHang ch = cuaHangDAO.findById(sp.getMaCH());
-					sp.setCuaHang(ch);
-				}
-				list.add(sp);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return list;
-	}
-
-	public void updateSanPhamTextFields(SanPham sp) {
-		String sql = "UPDATE SanPham SET TenSP = ?, MoTa = ?, HinhAnh = ? WHERE MaSP = ?";
-		try (Connection conn = DBConnect.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-			ps.setNString(1, sp.getTenSP());
-			ps.setNString(2, sp.getMoTa());
-			ps.setNString(3, sp.getHinhAnh());
-			ps.setInt(4, sp.getMaSP());
-			ps.executeUpdate();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	public List<DanhMuc> listCategories() {
-		List<DanhMuc> list = new ArrayList<>();
-		// Chỉ select cột chắc chắn tồn tại để tránh lỗi schema
-		String sql = "SELECT MaDM, TenDM FROM DanhMuc ORDER BY TenDM ASC";
-
-		try (Connection con = DBConnect.getConnection();
-				PreparedStatement ps = con.prepareStatement(sql);
-				ResultSet rs = ps.executeQuery()) {
-
-			while (rs.next()) {
-				DanhMuc dm = new DanhMuc();
-				dm.setMaDM(rs.getInt("MaDM"));
-				dm.setTenDM(rs.getString("TenDM"));
-				// Các field còn lại (MoTa, HinhAnh, TrangThai, NgayTao/NgayCapNhat)
-				// sẽ giữ default theo constructor của entity.
-				list.add(dm);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace(); // hoặc log
-		}
-		return list;
-	}
-
-	public int countAll(String q, Integer catId) {
-		StringBuilder sql = new StringBuilder();
-		sql.append("SELECT COUNT(*) FROM SanPham WHERE 1=1 ");
-		if (q != null && !q.isBlank()) {
-			sql.append(" AND (LOWER(TenSP) LIKE ? OR CAST(MaSP AS NVARCHAR(50)) LIKE ?) ");
-		}
-		if (catId != null) {
-			sql.append(" AND MaDM = ? ");
-		}
-
-		try (Connection con = DBConnect.getConnection(); PreparedStatement ps = con.prepareStatement(sql.toString())) {
-
-			int idx = 1;
-			if (q != null && !q.isBlank()) {
-				String kw = "%" + q.toLowerCase() + "%";
-				ps.setString(idx++, kw);
-				ps.setString(idx++, kw);
-			}
-			if (catId != null) {
-				ps.setInt(idx++, catId);
-			}
-
-			try (ResultSet rs = ps.executeQuery()) {
-				return rs.next() ? rs.getInt(1) : 0;
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return 0;
-		}
-	}
-
-	public int countActive() {
-		String sql = "SELECT COUNT(*) FROM SanPham WHERE TrangThai = 1";
-		try (Connection conn = DBConnect.getConnection();
-				PreparedStatement ps = conn.prepareStatement(sql);
-				ResultSet rs = ps.executeQuery()) {
-			rs.next();
-			return rs.getInt(1);
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	private SanPham mapRow(ResultSet rs) throws SQLException {
-		SanPham sp = new SanPham();
-		sp.setMaSP(rs.getInt("MaSP"));
-		sp.setMaCH(rs.getInt("MaCH")); // nếu entity SanPham của bạn có trường này
-		sp.setMaDM(rs.getInt("MaDM")); // nếu bạn đang dùng ID thay vì @ManyToOne
-		sp.setTenSP(rs.getString("TenSP"));
-		sp.setDonGia(rs.getBigDecimal("DonGia"));
-		sp.setSoLuongTon(rs.getInt("SoLuongTon"));
-		sp.setSoLuongBan(rs.getInt("SoLuongBan"));
-		sp.setHinhAnh(rs.getString("HinhAnh"));
-		sp.setMoTa(rs.getString("MoTa"));
-		sp.setTrangThai(rs.getBoolean("TrangThai"));
-		sp.setNgayTao(rs.getTimestamp("NgayTao"));
-		return sp;
-	}
-
-	private String safeSort(String sort) {
-		if (sort == null)
-			return "";
-		return switch (sort) {
-		case "price_asc", "price_desc", "sold_desc", "newest" -> sort;
-		default -> "";
-		};
-	}
-
-	public List<SanPham> findPaged(int page, int pageSize, String q, Integer catId, String sort) {
-		List<SanPham> list = new ArrayList<>();
-		StringBuilder sql = new StringBuilder();
-		sql.append("""
-				SELECT MaSP, MaCH, MaDM, TenSP, DonGia, SoLuongTon, SoLuongBan, HinhAnh, MoTa, TrangThai, NgayTao
-				FROM SanPham
-				WHERE 1=1
-				""");
-
-		// filter
-		if (q != null && !q.isBlank()) {
-			sql.append(" AND (LOWER(TenSP) LIKE ? OR CAST(MaSP AS NVARCHAR(50)) LIKE ?) ");
-		}
-		if (catId != null) {
-			sql.append(" AND MaDM = ? ");
-		}
-
-		// sort an toàn (whitelist cột)
-		sql.append(" ORDER BY ");
-		switch (safeSort(sort)) {
-		case "price_asc" -> sql.append(" DonGia ASC ");
-		case "price_desc" -> sql.append(" DonGia DESC ");
-		case "sold_desc" -> sql.append(" SoLuongBan DESC ");
-		case "newest" -> sql.append(" NgayTao DESC ");
-		default -> sql.append(" MaSP DESC ");
-		}
-
-		// SQL Server: phân trang bằng OFFSET/FETCH
-		sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY ");
-
-		try (Connection con = DBConnect.getConnection(); PreparedStatement ps = con.prepareStatement(sql.toString())) {
-
-			int idx = 1;
-			if (q != null && !q.isBlank()) {
-				String kw = "%" + q.toLowerCase() + "%";
-				ps.setString(idx++, kw);
-				ps.setString(idx++, kw);
-			}
-			if (catId != null) {
-				ps.setInt(idx++, catId);
-			}
-
-			int offset = Math.max(0, (page - 1)) * pageSize;
-			ps.setInt(idx++, offset);
-			ps.setInt(idx++, pageSize);
-
-			try (ResultSet rs = ps.executeQuery()) {
-				while (rs.next()) {
-					list.add(mapRow(rs));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace(); // hoặc log
-		}
-		return list;
-	}
-
-	public boolean update(SanPham sp) {
-		String sql = "UPDATE SanPham SET MaDM=?, TenSP=?, DonGia=?, SoLuongTon=?, HinhAnh=?, MoTa=?, TrangThai=? "
-				+ "WHERE MaSP=?";
-		try (Connection con = DBConnect.getConnection(); PreparedStatement ps = con.prepareStatement(sql)) {
-			int i = 1;
-			ps.setInt(i++, sp.getMaDM());
-			ps.setString(i++, sp.getTenSP());
-			ps.setBigDecimal(i++, sp.getDonGia());
-			ps.setInt(i++, sp.getSoLuongTon());
-			ps.setString(i++, sp.getHinhAnh());
-			ps.setString(i++, sp.getMoTa());
-			ps.setBoolean(i++, sp.getTrangThai());
-			ps.setInt(i++, sp.getMaSP());
-
-			return ps.executeUpdate() > 0;
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
-
-	public String findCategoryNameById(Integer maDM) {
-		if (maDM == null)
-			return null;
-		String sql = "SELECT TenDM FROM DanhMuc WHERE MaDM = ?";
-		try (var con = DBConnect.getConnection(); var ps = con.prepareStatement(sql)) {
-			ps.setInt(1, maDM);
-			try (var rs = ps.executeQuery()) {
-				if (rs.next())
-					return rs.getString("TenDM");
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
+    // Phương thức chung để lấy EntityManager
+    private EntityManager getEntityManager() {
+        return JPAUtil.getEntityManager();
+    }
+
+    /**
+     * Helper method to create dynamic JPQL query for filtering and counting
+     */
+    private void buildProductQuery(StringBuilder jpql, List<Object> params, Integer categoryId, String sortBy, String priceRange, boolean isCount) {
+        // Chỉ chọn các sản phẩm đang hoạt động
+        jpql.append(" WHERE s.trangThai = TRUE ");
+
+        if (categoryId != null && categoryId > 0) {
+            jpql.append(" AND s.danhMuc.maDM = :categoryId "); // Sử dụng quan hệ s.danhMuc.maDM
+        }
+
+        if (sortBy != null && "bestseller".equals(sortBy)) {
+            jpql.append(" AND s.soLuongBan > 10 ");
+        }
+
+        if (priceRange != null && !priceRange.isEmpty()) {
+            if (priceRange.endsWith("-")) {
+                String minPrice = priceRange.substring(0, priceRange.length() - 1);
+                jpql.append(" AND s.donGia >= :minPrice ");
+            } else {
+                String[] prices = priceRange.split("-");
+                if (prices.length == 2) {
+                    jpql.append(" AND s.donGia BETWEEN :minPrice AND :maxPrice ");
+                }
+            }
+        }
+    }
+
+    /**
+     * Helper method to set dynamic parameters for a query
+     */
+    private TypedQuery<SanPham> setProductQueryParams(TypedQuery<SanPham> query, Integer categoryId, String sortBy, String priceRange) {
+        // Logic giống hệt setCountQueryParams, nhưng trả về TypedQuery<SanPham>
+        if (categoryId != null && categoryId > 0) {
+            query.setParameter("categoryId", categoryId);
+        }
+        // ... (còn lại logic thiết lập tham số cho giá)
+        if (priceRange != null && !priceRange.isEmpty()) {
+            if (priceRange.endsWith("-")) {
+                String minPrice = priceRange.substring(0, priceRange.length() - 1);
+                query.setParameter("minPrice", new BigDecimal(minPrice));
+            } else {
+                String[] prices = priceRange.split("-");
+                if (prices.length == 2) {
+                    query.setParameter("minPrice", new BigDecimal(prices[0]));
+                    query.setParameter("maxPrice", new BigDecimal(prices[1]));
+                }
+            }
+        }
+        return query;
+    }
+
+    // -------------------------------------------------------------------------
+    // FIND OPERATIONS
+    // -------------------------------------------------------------------------
+
+    /**
+     * Find top N products by sales
+     */
+    public List<SanPham> findTopNProducts(int limit) {
+        EntityManager em = getEntityManager();
+        // Sắp xếp theo SoLuongBan DESC (bán chạy nhất)
+        String jpql = "SELECT s FROM SanPham s WHERE s.trangThai = TRUE ORDER BY s.soLuongBan DESC, s.maSP ASC";
+        try {
+            return em.createQuery(jpql, SanPham.class)
+                     .setMaxResults(limit)
+                     .getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Find top N products by category
+     */
+    public List<SanPham> findTopNProductsByCategoryId(int limit, Integer categoryId) {
+        EntityManager em = getEntityManager();
+        String jpql = "SELECT s FROM SanPham s WHERE s.trangThai = TRUE AND s.danhMuc.maDM = :categoryId ORDER BY s.soLuongBan DESC, s.maSP ASC";
+        try {
+            return em.createQuery(jpql, SanPham.class)
+                     .setParameter("categoryId", categoryId)
+                     .setMaxResults(limit)
+                     .getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        } finally {
+            em.close();
+        }
+    }
+    
+    public List<SanPham> findByStoreId(Integer maCH) {
+        EntityManager em = getEntityManager();
+        String jpql = "SELECT sp FROM SanPham sp WHERE sp.cuaHang.maCH = :maCH";
+        try {
+            return em.createQuery(jpql, SanPham.class)
+                     .setParameter("maCH", maCH)
+                     .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+    
+    /**
+     * Insert a new product (ĐÃ CẬP NHẬT để xử lý Entity liên quan)
+     */
+    public boolean insert(SanPham sp) {
+        EntityManager em = getEntityManager();
+        EntityTransaction trans = em.getTransaction();
+        try {
+            trans.begin();
+            
+            // Xử lý DanhMuc (TÌM Entity DanhMuc từ ID được gán trong Controller)
+            if (sp.getDanhMuc() != null && sp.getDanhMuc().getMaDM() != null) {
+                 DanhMuc dm = em.find(DanhMuc.class, sp.getDanhMuc().getMaDM());
+                 if (dm == null) throw new IllegalArgumentException("Danh mục (maDM) không tồn tại.");
+                 sp.setDanhMuc(dm);
+            } else {
+                 throw new IllegalArgumentException("Thiếu thông tin Danh mục.");
+            }
+            
+            // Xử lý CuaHang (TÌM Entity CuaHang)
+            if (sp.getCuaHang() != null && sp.getCuaHang().getMaCH() != null) {
+                 CuaHang ch = em.find(CuaHang.class, sp.getCuaHang().getMaCH());
+                 if (ch == null) throw new IllegalArgumentException("Cửa hàng (maCH) không tồn tại.");
+                 sp.setCuaHang(ch);
+            } else {
+                throw new IllegalArgumentException("Thiếu thông tin Cửa hàng.");
+            }
+            
+            // Thiết lập trạng thái và ngày tạo mặc định nếu cần
+            if (sp.getTrangThai() == null) {
+                sp.setTrangThai(true); 
+            }
+            // sp.setNgayTao(new Date()); // Nếu có trường ngày tạo
+
+            em.persist(sp);
+            trans.commit();
+            return true;
+        } catch (Exception e) {
+            if (trans.isActive()) trans.rollback();
+            // In chi tiết lỗi để dễ dàng debug
+            System.err.println("Lỗi khi thêm sản phẩm: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Find all products with pagination, filtering, and sorting
+     */
+    public List<SanPham> findAll(int offset, int limit, String sortBy, String priceRange, Integer categoryId) {
+        EntityManager em = getEntityManager();
+        StringBuilder jpql = new StringBuilder("SELECT s FROM SanPham s");
+        
+        // 1. Xây dựng JPQL WHERE clauses
+        buildProductQuery(jpql, new ArrayList<>(), categoryId, sortBy, priceRange, false);
+
+        // 2. Xây dựng ORDER BY clause
+        String orderByClause;
+        switch (sortBy != null ? sortBy : "") {
+            case "price-asc":
+                orderByClause = " ORDER BY s.donGia ASC, s.maSP ASC";
+                break;
+            case "price-desc":
+                orderByClause = " ORDER BY s.donGia DESC, s.maSP ASC";
+                break;
+            case "newest":
+                orderByClause = " ORDER BY s.ngayTao DESC, s.maSP ASC";
+                break;
+            case "all":
+            case "bestseller": // Mặc định bestseller (cũng là default)
+            default:
+                orderByClause = " ORDER BY s.soLuongBan DESC, s.maSP ASC";
+                break;
+        }
+        jpql.append(orderByClause);
+
+        try {
+            TypedQuery<SanPham> query = em.createQuery(jpql.toString(), SanPham.class);
+            
+            // 3. Set Parameters
+            query = setProductQueryParams(query, categoryId, sortBy, priceRange);
+            
+            // 4. Set Pagination
+            query.setFirstResult(offset);
+            query.setMaxResults(limit);
+
+            return query.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Count products based on filters
+     */
+    private TypedQuery<Long> setCountQueryParams(TypedQuery<Long> query, Integer categoryId, String sortBy, String priceRange) {
+        if (categoryId != null && categoryId > 0) {
+            query.setParameter("categoryId", categoryId);
+        }
+
+        if (priceRange != null && !priceRange.isEmpty()) {
+            if (priceRange.endsWith("-")) {
+                String minPrice = priceRange.substring(0, priceRange.length() - 1);
+                query.setParameter("minPrice", new BigDecimal(minPrice));
+            } else {
+                String[] prices = priceRange.split("-");
+                if (prices.length == 2) {
+                    query.setParameter("minPrice", new BigDecimal(prices[0]));
+                    query.setParameter("maxPrice", new BigDecimal(prices[1]));
+                }
+            }
+        }
+        return query;
+    }
+    
+    public long countProducts(String sortBy, String priceRange, Integer categoryId) {
+        EntityManager em = getEntityManager();
+        StringBuilder jpql = new StringBuilder("SELECT COUNT(s) FROM SanPham s");
+
+        // 1. Xây dựng JPQL WHERE clauses
+        buildProductQuery(jpql, new ArrayList<>(), categoryId, sortBy, priceRange, true);
+
+        try {
+            TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
+
+            // 2. Set Parameters (Sử dụng hàm mới hoặc sửa lại hàm cũ)
+            // Loại bỏ dòng lỗi: query = (TypedQuery<Long>) setProductQueryParams((TypedQuery<SanPham>) query, categoryId, sortBy, priceRange);
+            query = setCountQueryParams(query, categoryId, sortBy, priceRange); 
+
+            return query.getSingleResult();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Find product by ID
+     */
+    public SanPham findById(Integer id) {
+        EntityManager em = getEntityManager();
+        try {
+            // JPA find() tự động xử lý và load các entity liên quan (DanhMuc, CuaHang)
+            return em.find(SanPham.class, id);
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Find products by category ID
+     */
+    public List<SanPham> findByCategoryId(Integer categoryId) {
+        EntityManager em = getEntityManager();
+        String jpql = "SELECT s FROM SanPham s WHERE s.danhMuc.maDM = :categoryId AND s.trangThai = TRUE ORDER BY s.soLuongBan DESC";
+        try {
+            return em.createQuery(jpql, SanPham.class)
+                     .setParameter("categoryId", categoryId)
+                     .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Find products by store ID
+     */
+    public List<SanPham> findByStoreId(int storeId) {
+        EntityManager em = getEntityManager();
+        String jpql = "SELECT s FROM SanPham s WHERE s.cuaHang.maCH = :storeId AND s.trangThai = TRUE ORDER BY s.soLuongBan DESC";
+        try {
+            return em.createQuery(jpql, SanPham.class)
+                     .setParameter("storeId", storeId)
+                     .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+    
+    /**
+     * Find top N products by store ID
+     */
+    public List<SanPham> findByStore(Integer storeId, int limit) {
+        EntityManager em = getEntityManager();
+        String jpql = "SELECT s FROM SanPham s WHERE s.cuaHang.maCH = :storeId AND s.trangThai = TRUE ORDER BY s.soLuongBan DESC";
+        try {
+            return em.createQuery(jpql, SanPham.class)
+                     .setParameter("storeId", storeId)
+                     .setMaxResults(limit)
+                     .getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Get all active products
+     */
+    public List<SanPham> getAllProducts() {
+        EntityManager em = getEntityManager();
+        String jpql = "SELECT s FROM SanPham s WHERE s.trangThai = TRUE ORDER BY s.soLuongBan DESC";
+        try {
+            return em.createQuery(jpql, SanPham.class).getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Update SanPham's text fields (TenSP, MoTa, HinhAnh)
+     */
+    public void updateSanPhamTextFields(SanPham sp) {
+        EntityManager em = getEntityManager();
+        EntityTransaction trans = em.getTransaction();
+        try {
+            trans.begin();
+            // Lấy entity đang được quản lý
+            SanPham managedSp = em.find(SanPham.class, sp.getMaSP());
+            if (managedSp != null) {
+                // Cập nhật các trường cụ thể
+                managedSp.setTenSP(sp.getTenSP());
+                managedSp.setMoTa(sp.getMoTa());
+                managedSp.setHinhAnh(sp.getHinhAnh());
+                em.merge(managedSp); // Đảm bảo entity được cập nhật (nếu cần)
+            }
+            trans.commit();
+        } catch (Exception e) {
+            if (trans.isActive()) {
+                trans.rollback();
+            }
+            e.printStackTrace();
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Lấy danh sách danh mục (cần được chuyển sang DanhMucDAO)
+     */
+    public List<DanhMuc> listCategories() {
+        EntityManager em = getEntityManager();
+        String jpql = "SELECT d FROM DanhMuc d ORDER BY d.tenDM ASC";
+        try {
+            return em.createQuery(jpql, DanhMuc.class).getResultList();
+        } finally {
+            em.close();
+        }
+    }
+    
+    /**
+     * Count all products with filtering
+     */
+    public int countAll(String q, Integer catId) {
+        EntityManager em = getEntityManager();
+        StringBuilder jpql = new StringBuilder("SELECT COUNT(s) FROM SanPham s WHERE 1=1 ");
+        
+        if (q != null && !q.isBlank()) {
+            // Sử dụng hàm LOWER() và LIKE cho việc tìm kiếm không phân biệt chữ hoa/thường
+            jpql.append(" AND (LOWER(s.tenSP) LIKE :keyword OR CAST(s.maSP AS string) LIKE :keyword) ");
+        }
+        if (catId != null) {
+            jpql.append(" AND s.danhMuc.maDM = :catId ");
+        }
+
+        try {
+            TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
+            
+            if (q != null && !q.isBlank()) {
+                String kw = "%" + q.toLowerCase() + "%";
+                query.setParameter("keyword", kw);
+            }
+            if (catId != null) {
+                query.setParameter("catId", catId);
+            }
+            
+            return query.getSingleResult().intValue();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Count active products
+     */
+    public int countActive() {
+        EntityManager em = getEntityManager();
+        String jpql = "SELECT COUNT(s) FROM SanPham s WHERE s.trangThai = TRUE";
+        try {
+            return em.createQuery(jpql, Long.class).getSingleResult().intValue();
+        } catch (Exception e) {
+            throw new RuntimeException("Error counting active products", e);
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Find paginated products with search/filter/sort
+     */
+    public List<SanPham> findPaged(int page, int pageSize, String q, Integer catId, String sort) {
+        EntityManager em = getEntityManager();
+        StringBuilder jpql = new StringBuilder("SELECT s FROM SanPham s WHERE 1=1 ");
+
+        // filter
+        if (q != null && !q.isBlank()) {
+            jpql.append(" AND (LOWER(s.tenSP) LIKE :keyword OR CAST(s.maSP AS string) LIKE :keyword) ");
+        }
+        if (catId != null) {
+            jpql.append(" AND s.danhMuc.maDM = :catId ");
+        }
+
+        // sort an toàn (whitelist cột)
+        jpql.append(" ORDER BY ");
+        switch (sort != null ? sort : "") {
+            case "price_asc" -> jpql.append(" s.donGia ASC ");
+            case "price_desc" -> jpql.append(" s.donGia DESC ");
+            case "sold_desc" -> jpql.append(" s.soLuongBan DESC ");
+            case "newest" -> jpql.append(" s.ngayTao DESC ");
+            default -> jpql.append(" s.maSP DESC ");
+        }
+        
+        try {
+            TypedQuery<SanPham> query = em.createQuery(jpql.toString(), SanPham.class);
+            
+            int idx = 1;
+            if (q != null && !q.isBlank()) {
+                String kw = "%" + q.toLowerCase() + "%";
+                query.setParameter("keyword", kw);
+            }
+            if (catId != null) {
+                query.setParameter("catId", catId);
+            }
+
+            int offset = Math.max(0, (page - 1)) * pageSize;
+            query.setFirstResult(offset);
+            query.setMaxResults(pageSize);
+            
+            return query.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace(); 
+            return new ArrayList<>();
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Update a product (all primary fields) (ĐÃ CẬP NHẬT để xử lý Entity liên quan)
+     */
+    public boolean update(SanPham sp) {
+        EntityManager em = getEntityManager();
+        EntityTransaction trans = em.getTransaction();
+        try {
+            trans.begin();
+            // Lấy entity đang được quản lý để merge
+            SanPham managedSp = em.find(SanPham.class, sp.getMaSP());
+            if (managedSp == null) {
+                trans.rollback();
+                return false;
+            }
+            
+            // --- ĐIỂM SỬA LỖI CHÍNH: Xử lý DanhMuc an toàn ---
+            // Entity SanPham truyền vào từ Controller thường chỉ có maDM, ta phải tìm Entity đầy đủ.
+            if (sp.getDanhMuc() != null && sp.getDanhMuc().getMaDM() != null) {
+                 DanhMuc dm = em.find(DanhMuc.class, sp.getDanhMuc().getMaDM());
+                 if (dm == null) throw new IllegalArgumentException("Danh mục (maDM) không tồn tại.");
+                 managedSp.setDanhMuc(dm);
+            } else if (sp.getDanhMuc() == null && sp.getMaDM() != null) { // Trường hợp maDM được gán trực tiếp
+                DanhMuc dm = em.find(DanhMuc.class, sp.getMaDM());
+                if (dm == null) throw new IllegalArgumentException("Danh mục (maDM) không tồn tại.");
+                managedSp.setDanhMuc(dm);
+            } else {
+                 throw new IllegalArgumentException("Thiếu thông tin Danh mục.");
+            }
+            
+            // Giữ lại CuaHang (Không thay đổi CuaHang khi Update)
+            if (managedSp.getCuaHang() == null) {
+                // Trường hợp đặc biệt, nếu CuaHang bị null, cố gắng tìm lại từ ID nếu có
+                if (sp.getCuaHang() != null && sp.getCuaHang().getMaCH() != null) {
+                    CuaHang ch = em.find(CuaHang.class, sp.getCuaHang().getMaCH());
+                    managedSp.setCuaHang(ch);
+                }
+            }
+            
+            // Cập nhật các trường từ đối tượng sp truyền vào
+            managedSp.setTenSP(sp.getTenSP());
+            managedSp.setDonGia(sp.getDonGia());
+            managedSp.setSoLuongTon(sp.getSoLuongTon());
+            
+            // Chỉ cập nhật HinhAnh nếu có HinhAnh mới được gửi từ Controller
+            if (sp.getHinhAnh() != null && !sp.getHinhAnh().isEmpty()) {
+                 managedSp.setHinhAnh(sp.getHinhAnh());
+            }
+
+            managedSp.setMoTa(sp.getMoTa());
+            managedSp.setTrangThai(sp.getTrangThai() != null ? sp.getTrangThai() : true);
+            
+            // Nếu bạn có trường ngày cập nhật, hãy cập nhật nó:
+            // managedSp.setNgayCapNhat(new Date()); 
+            
+            em.merge(managedSp); 
+            trans.commit();
+            return true;
+        } catch (Exception e) {
+            if (trans.isActive()) {
+                trans.rollback();
+            }
+            // In chi tiết lỗi để dễ dàng debug
+            System.err.println("Lỗi khi cập nhật sản phẩm: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Find category name by ID
+     */
+    public String findCategoryNameById(Integer maDM) {
+        if (maDM == null) return null;
+        EntityManager em = getEntityManager();
+        try {
+            // Lấy entity DanhMuc và truy cập thuộc tính TenDM
+            DanhMuc dm = em.find(DanhMuc.class, maDM);
+            return (dm != null) ? dm.getTenDM() : null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            em.close();
+        }
+    }
+    
 }
