@@ -204,6 +204,7 @@ public class AuthController extends HttpServlet {
             newUser.setSoDienThoai(phone.trim());
             newUser.setDiaChi(address.trim());
             newUser.setMatKhau(PasswordUtil.hashPassword(password));
+            newUser.setGioiTinh(gender);
             newUser.setTrangThai(true);
             newUser.setNgayTao(new java.util.Date());
 

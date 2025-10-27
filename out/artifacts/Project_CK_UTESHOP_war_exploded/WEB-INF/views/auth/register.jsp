@@ -701,9 +701,9 @@
                                     <div class="form-floating">
                                         <select class="form-select" id="gender" name="gender" required>
                                             <option value="">Chọn giới tính</option>
-                                            <option value="male">Nam</option>
-                                            <option value="female">Nữ</option>
-                                            <option value="other">Khác</option>
+                                            <option value="Nam">Nam</option>
+                                            <option value="Nữ">Nữ</option>
+                                            <option value="Khác">Khác</option>
                                         </select>
                                         <label for="gender">
                                             <i class="fas fa-venus-mars me-2"></i>Giới tính

@@ -391,4 +391,34 @@ public class NguoiDungDAO {
             em.close();
         }
     }
+    /**
+     * Update user's avatar (store only file name in DB)
+     */
+    public boolean updateAvatar(int userId, String fileName) {
+        EntityManager em = JPAUtil.getEntityManager();
+        EntityTransaction trans = em.getTransaction();
+        try {
+            NguoiDung user = em.find(NguoiDung.class, userId);
+            if (user == null) {
+                System.err.println("⚠️ User not found for avatar update: " + userId);
+                return false;
+            }
+
+            trans.begin();
+            user.setAvatar(fileName);
+            user.setNgayCapNhat(new Date());
+            em.merge(user);
+            trans.commit();
+
+            System.out.println("✅ Avatar updated successfully for user ID " + userId + ": " + fileName);
+            return true;
+        } catch (Exception e) {
+            if (trans.isActive()) trans.rollback();
+            System.err.println("💥 Error updating avatar: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } finally {
+            em.close();
+        }
+    }
 }
