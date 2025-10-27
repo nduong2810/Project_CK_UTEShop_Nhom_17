@@ -1,35 +1,15 @@
 package com.uteshop.dao;
 
 import com.uteshop.entity.MaGiamGia;
-<<<<<<< HEAD
 import com.uteshop.entity.CuaHang;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
-import jakarta.persistence.TypedQuery;
-
-import java.time.LocalDateTime;
-import java.util.List;
-
-public class MaGiamGiaDAO {
-    private static EntityManagerFactory emf = Persistence.createEntityManagerFactory("uteshop-pu");
-
-    // Lấy danh sách mã giảm giá theo cửa hàng
-    public List<MaGiamGia> findByCuaHangId(int maCH) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            TypedQuery<MaGiamGia> query = em.createQuery(
-                "SELECT m FROM MaGiamGia m WHERE m.cuaHang.maCH = :maCH ORDER BY m.ngayTao DESC", 
-                MaGiamGia.class
-            );
-            query.setParameter("maCH", maCH);
-            return query.getResultList();
-=======
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.Persistence;
 import jakarta.persistence.TypedQuery;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 public class MaGiamGiaDAO {
     private EntityManagerFactory emf = Persistence.createEntityManagerFactory("uteshop-pu");
@@ -38,6 +18,7 @@ public class MaGiamGiaDAO {
         return emf.createEntityManager();
     }
 
+    // Phương thức từ team (tìm theo code)
     public MaGiamGia findByCode(String code) {
         EntityManager em = getEntityManager();
         try {
@@ -46,16 +27,56 @@ public class MaGiamGiaDAO {
             return q.getSingleResult();
         } catch (NoResultException e) {
             return null;
->>>>>>> origin/main
         } finally {
             em.close();
         }
     }
 
-<<<<<<< HEAD
+    // Phương thức từ team - tăng số lượng sử dụng
+    public boolean incrementUsage(int maGG) {
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            MaGiamGia m = em.find(MaGiamGia.class, maGG);
+            if (m == null) {
+                em.getTransaction().rollback();
+                return false;
+            }
+            m.setSoLuongDaSuDung(m.getSoLuongDaSuDung() + 1);
+            em.merge(m);
+            em.getTransaction().commit();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            try { 
+                if (em.getTransaction().isActive()) {
+                    em.getTransaction().rollback();
+                }
+            } catch (Exception ex) {}
+            return false;
+        } finally {
+            em.close();
+        }
+    }
+
+    // Lấy danh sách mã giảm giá theo cửa hàng
+    public List<MaGiamGia> findByCuaHangId(int maCH) {
+        EntityManager em = getEntityManager();
+        try {
+            TypedQuery<MaGiamGia> query = em.createQuery(
+                "SELECT m FROM MaGiamGia m WHERE m.cuaHang.maCH = :maCH ORDER BY m.ngayTao DESC", 
+                MaGiamGia.class
+            );
+            query.setParameter("maCH", maCH);
+            return query.getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
     // Lấy danh sách mã giảm giá theo cửa hàng với phân trang
     public List<MaGiamGia> findByCuaHangIdWithPaging(int maCH, int offset, int limit) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEntityManager();
         try {
             TypedQuery<MaGiamGia> query = em.createQuery(
                 "SELECT m FROM MaGiamGia m WHERE m.cuaHang.maCH = :maCH ORDER BY m.ngayTao DESC", 
@@ -72,7 +93,7 @@ public class MaGiamGiaDAO {
 
     // Đếm số lượng mã giảm giá theo cửa hàng
     public int countByCuaHangId(int maCH) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEntityManager();
         try {
             TypedQuery<Long> query = em.createQuery(
                 "SELECT COUNT(m) FROM MaGiamGia m WHERE m.cuaHang.maCH = :maCH", 
@@ -87,7 +108,7 @@ public class MaGiamGiaDAO {
 
     // Tìm mã giảm giá theo mã số
     public MaGiamGia findByMaSo(String maSo) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEntityManager();
         try {
             TypedQuery<MaGiamGia> query = em.createQuery(
                 "SELECT m FROM MaGiamGia m WHERE m.maSo = :maSo", 
@@ -103,7 +124,7 @@ public class MaGiamGiaDAO {
 
     // Tìm mã giảm giá theo ID
     public MaGiamGia findById(int maGG) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEntityManager();
         try {
             return em.find(MaGiamGia.class, maGG);
         } finally {
@@ -113,7 +134,7 @@ public class MaGiamGiaDAO {
 
     // Thêm mã giảm giá mới
     public boolean save(MaGiamGia maGiamGia) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEntityManager();
         try {
             em.getTransaction().begin();
             if (maGiamGia.getMaGG() == 0) {
@@ -124,43 +145,28 @@ public class MaGiamGiaDAO {
             em.getTransaction().commit();
             return true;
         } catch (Exception e) {
-            em.getTransaction().rollback();
-            e.printStackTrace();
-=======
-    public boolean incrementUsage(int maGG) {
-        EntityManager em = getEntityManager();
-        try {
-            em.getTransaction().begin();
-            MaGiamGia m = em.find(MaGiamGia.class, maGG);
-            if (m == null) {
+            if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
-                return false;
             }
-            m.setSoLuongDaSuDung(m.getSoLuongDaSuDung() + 1);
-            em.merge(m);
-            em.getTransaction().commit();
-            return true;
-        } catch (Exception e) {
             e.printStackTrace();
-            try { if (em.getTransaction().isActive()) em.getTransaction().rollback(); } catch (Exception ex) {}
->>>>>>> origin/main
             return false;
         } finally {
             em.close();
         }
     }
-<<<<<<< HEAD
 
     // Cập nhật mã giảm giá
     public boolean update(MaGiamGia maGiamGia) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEntityManager();
         try {
             em.getTransaction().begin();
             em.merge(maGiamGia);
             em.getTransaction().commit();
             return true;
         } catch (Exception e) {
-            em.getTransaction().rollback();
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
             e.printStackTrace();
             return false;
         } finally {
@@ -170,7 +176,7 @@ public class MaGiamGiaDAO {
 
     // Xóa mã giảm giá
     public boolean delete(int maGG) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEntityManager();
         try {
             em.getTransaction().begin();
             MaGiamGia maGiamGia = em.find(MaGiamGia.class, maGG);
@@ -180,7 +186,9 @@ public class MaGiamGiaDAO {
             em.getTransaction().commit();
             return true;
         } catch (Exception e) {
-            em.getTransaction().rollback();
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
             e.printStackTrace();
             return false;
         } finally {
@@ -190,7 +198,7 @@ public class MaGiamGiaDAO {
 
     // Kiểm tra mã giảm giá có hợp lệ không (chưa hết hạn, còn lượt sử dụng)
     public boolean isValidDiscountCode(String maSo, int maCH) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEntityManager();
         try {
             TypedQuery<MaGiamGia> query = em.createQuery(
                 "SELECT m FROM MaGiamGia m WHERE m.maSo = :maSo AND m.cuaHang.maCH = :maCH " +
@@ -209,30 +217,14 @@ public class MaGiamGiaDAO {
         }
     }
 
-    // Cập nhật số lượng đã sử dụng
+    // Cập nhật số lượng đã sử dụng (alias cho incrementUsage để tương thích)
     public boolean incrementUsageCount(int maGG) {
-        EntityManager em = emf.createEntityManager();
-        try {
-            em.getTransaction().begin();
-            MaGiamGia maGiamGia = em.find(MaGiamGia.class, maGG);
-            if (maGiamGia != null) {
-                maGiamGia.setSoLuongDaSuDung(maGiamGia.getSoLuongDaSuDung() + 1);
-                em.merge(maGiamGia);
-            }
-            em.getTransaction().commit();
-            return true;
-        } catch (Exception e) {
-            em.getTransaction().rollback();
-            e.printStackTrace();
-            return false;
-        } finally {
-            em.close();
-        }
+        return incrementUsage(maGG);
     }
 
     // Lấy danh sách mã giảm giá đang hoạt động của cửa hàng
     public List<MaGiamGia> getActiveDiscountsByStore(int maCH) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = getEntityManager();
         try {
             TypedQuery<MaGiamGia> query = em.createQuery(
                 "SELECT m FROM MaGiamGia m WHERE m.cuaHang.maCH = :maCH " +
@@ -248,6 +240,3 @@ public class MaGiamGiaDAO {
         }
     }
 }
-=======
-}
->>>>>>> origin/main
