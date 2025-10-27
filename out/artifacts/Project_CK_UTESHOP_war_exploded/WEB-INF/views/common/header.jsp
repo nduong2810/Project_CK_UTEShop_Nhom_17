@@ -373,6 +373,11 @@
                                     </a>
                                 </li>
                                 <li>
+                                    <a class="dropdown-item" href="${pageContext.request.contextPath}/user/viewed">
+                                        <i class="fas fa-heart me-2"></i>Sản phẩm đã xem
+                                    </a>
+                                </li>
+                                <li>
                                     <a class="dropdown-item" href="${pageContext.request.contextPath}/user/address-form">
                                         <i class="fas fa-map-marker-alt me-2"></i>Địa chỉ giao hàng
                                     </a>

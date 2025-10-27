@@ -4,6 +4,7 @@ import com.uteshop.dao.DanhGiaSanPhamDAO;
 import com.uteshop.dao.DonHangDAO;
 import com.uteshop.dao.NguoiDungDAO;
 import com.uteshop.dao.SanPhamDAO;
+import com.uteshop.dao.SanPhamDaXemDAO;
 import com.uteshop.entity.DanhGiaSanPham;
 import com.uteshop.entity.DonHang;
 import com.uteshop.entity.NguoiDung;
@@ -25,6 +26,7 @@ public class ProductController extends HttpServlet {
     private final DanhGiaSanPhamDAO danhGiaSanPhamDAO = new DanhGiaSanPhamDAO();
     private final NguoiDungDAO nguoiDungDAO = new NguoiDungDAO();
     private final DonHangDAO donHangDAO = new DonHangDAO();
+    private final SanPhamDaXemDAO sanPhamDaXemDAO = new SanPhamDaXemDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -42,6 +44,11 @@ public class ProductController extends HttpServlet {
             SanPham product = sanPhamDAO.findById(productId);
 
             if (product != null) {
+                NguoiDung loggedInUser = (NguoiDung) request.getSession().getAttribute("user");
+                if (loggedInUser != null) {
+                    sanPhamDaXemDAO.recordView(loggedInUser.getMaND(), productId);
+                }
+                
                 request.setAttribute("product", product);
                 
                 List<DanhGiaSanPham> reviews = danhGiaSanPhamDAO.getReviewsByProduct(productId, 0, 10);
@@ -54,7 +61,6 @@ public class ProductController extends HttpServlet {
                     request.setAttribute("productsOfStore", productsOfStore);
                 }
 
-                NguoiDung loggedInUser = (NguoiDung) request.getSession().getAttribute("user");
                 if (loggedInUser != null) {
                     DonHang userOrderForProduct = donHangDAO.findCompletedOrderByUserAndProduct(loggedInUser.getMaND(), productId);
                     if (userOrderForProduct != null) {
