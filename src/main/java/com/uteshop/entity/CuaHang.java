@@ -9,153 +9,164 @@ import java.util.List;
 @Entity
 @Table(name = "CuaHang")
 public class CuaHang implements Serializable {
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "MaCH")
-    private Integer maCH;
-    
-    @Column(name = "TenCH", nullable = false, length = 255)
-    private String tenCH;
-    
-    @Column(name = "MoTa", length = 1000)
-    private String moTa;
-    
-    @Column(name = "DiaChi", nullable = false, length = 500)
-    private String diaChi;
-    
-    @Column(name = "SoDienThoai", length = 15)
-    private String soDienThoai;
-    
-    @Column(name = "Email", length = 100)
-    private String email;
-    
-    @Column(name = "MaND", nullable = false)
-    private Integer maND;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "MaND", insertable = false, updatable = false)
-    private NguoiDung nguoiDung;
-    
-    @Column(name = "TrangThai", nullable = false)
-    private Boolean trangThai; // Changed to Boolean
-    
-    @Column(name = "NgayTao", nullable = false)
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date ngayTao; // Changed to Date
-    
-    @Column(name = "NgayCapNhat")
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date ngayCapNhat; // Changed to Date
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "MaCH")
+	private Integer maCH;
 
-    @OneToMany(mappedBy = "cuaHang", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<SanPham> sanPhams = new ArrayList<>();
+	@Column(name = "TenCH", nullable = false, length = 255)
+	private String tenCH;
 
-    public CuaHang() {
-        this.ngayTao = new Date();
-        this.trangThai = true; // Use Boolean
-    }
+	@Column(name = "MoTa", length = 1000)
+	private String moTa;
 
-    // Getters and Setters
-    public Integer getMaCH() { 
-        return maCH; 
-    }
-    
-    public void setMaCH(Integer maCH) { 
-        this.maCH = maCH; 
-    }
+	@Column(name = "DiaChi", nullable = false, length = 500)
+	private String diaChi;
 
-    public String getTenCH() { 
-        return tenCH; 
-    }
-    
-    public void setTenCH(String tenCH) { 
-        this.tenCH = tenCH; 
-    }
+	@Column(name = "SoDienThoai", length = 15)
+	private String soDienThoai;
 
-    public String getMoTa() { 
-        return moTa; 
-    }
-    
-    public void setMoTa(String moTa) { 
-        this.moTa = moTa; 
-    }
+	@Column(name = "Email", length = 100)
+	private String email;
 
-    public String getDiaChi() { 
-        return diaChi; 
-    }
-    
-    public void setDiaChi(String diaChi) { 
-        this.diaChi = diaChi; 
-    }
+	@Column(name = "MaND", nullable = false)
+	private Integer maND;
 
-    public String getSoDienThoai() { 
-        return soDienThoai; 
-    }
-    
-    public void setSoDienThoai(String soDienThoai) { 
-        this.soDienThoai = soDienThoai; 
-    }
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "MaND", insertable = false, updatable = false)
+	private NguoiDung nguoiDung;
 
-    public String getEmail() { 
-        return email; 
-    }
-    
-    public void setEmail(String email) { 
-        this.email = email; 
-    }
+	@Column(name = "TrangThai", nullable = false)
+	private Boolean trangThai; // Changed to Boolean
 
-    public Integer getMaND() {
-        return maND;
-    }
+	@Column(name = "NgayTao", nullable = false)
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date ngayTao; // Changed to Date
 
-    public void setMaND(Integer maND) {
-        this.maND = maND;
-    }
+	@Column(name = "NgayCapNhat")
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date ngayCapNhat; // Changed to Date
 
-    public NguoiDung getNguoiDung() { 
-        return nguoiDung; 
-    }
-    
-    public void setNguoiDung(NguoiDung nguoiDung) { 
-        this.nguoiDung = nguoiDung;
-    }
+	@Column(name = "TyLeChietKhau", precision = 5, scale = 2)
+	private java.math.BigDecimal tyLeChietKhau;
 
-    public Boolean getTrangThai() { 
-        return trangThai; 
-    }
-    
-    public void setTrangThai(Boolean trangThai) { 
-        this.trangThai = trangThai; 
-    }
+	@OneToMany(mappedBy = "cuaHang", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private List<SanPham> sanPhams = new ArrayList<>();
 
-    public Date getNgayTao() { 
-        return ngayTao; 
-    }
-    
-    public void setNgayTao(Date ngayTao) { 
-        this.ngayTao = ngayTao; 
-    }
+	public CuaHang() {
+		this.ngayTao = new Date();
+		this.trangThai = true; // Use Boolean
+	}
 
-    public Date getNgayCapNhat() { 
-        return ngayCapNhat; 
-    }
-    
-    public void setNgayCapNhat(Date ngayCapNhat) { 
-        this.ngayCapNhat = ngayCapNhat; 
-    }
+	// Getters and Setters
+	public Integer getMaCH() {
+		return maCH;
+	}
 
-    public List<SanPham> getSanPhams() {
-        return sanPhams;
-    }
+	public void setMaCH(Integer maCH) {
+		this.maCH = maCH;
+	}
 
-    public void setSanPhams(List<SanPham> sanPhams) {
-        this.sanPhams = sanPhams;
-    }
+	public String getTenCH() {
+		return tenCH;
+	}
 
-    @PreUpdate
-    public void preUpdate() {
-        this.ngayCapNhat = new Date();
-    }
+	public void setTenCH(String tenCH) {
+		this.tenCH = tenCH;
+	}
+
+	public String getMoTa() {
+		return moTa;
+	}
+
+	public void setMoTa(String moTa) {
+		this.moTa = moTa;
+	}
+
+	public String getDiaChi() {
+		return diaChi;
+	}
+
+	public void setDiaChi(String diaChi) {
+		this.diaChi = diaChi;
+	}
+
+	public String getSoDienThoai() {
+		return soDienThoai;
+	}
+
+	public void setSoDienThoai(String soDienThoai) {
+		this.soDienThoai = soDienThoai;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public Integer getMaND() {
+		return maND;
+	}
+
+	public void setMaND(Integer maND) {
+		this.maND = maND;
+	}
+
+	public NguoiDung getNguoiDung() {
+		return nguoiDung;
+	}
+
+	public void setNguoiDung(NguoiDung nguoiDung) {
+		this.nguoiDung = nguoiDung;
+	}
+
+	public Boolean getTrangThai() {
+		return trangThai;
+	}
+
+	public void setTrangThai(Boolean trangThai) {
+		this.trangThai = trangThai;
+	}
+
+	public Date getNgayTao() {
+		return ngayTao;
+	}
+
+	public void setNgayTao(Date ngayTao) {
+		this.ngayTao = ngayTao;
+	}
+
+	public Date getNgayCapNhat() {
+		return ngayCapNhat;
+	}
+
+	public void setNgayCapNhat(Date ngayCapNhat) {
+		this.ngayCapNhat = ngayCapNhat;
+	}
+
+	public List<SanPham> getSanPhams() {
+		return sanPhams;
+	}
+
+	public void setSanPhams(List<SanPham> sanPhams) {
+		this.sanPhams = sanPhams;
+	}
+
+	@PreUpdate
+	public void preUpdate() {
+		this.ngayCapNhat = new Date();
+	}
+
+	public java.math.BigDecimal getTyLeChietKhau() {
+		return tyLeChietKhau;
+	}
+
+	public void setTyLeChietKhau(java.math.BigDecimal v) {
+		this.tyLeChietKhau = v;
+	}
 }
