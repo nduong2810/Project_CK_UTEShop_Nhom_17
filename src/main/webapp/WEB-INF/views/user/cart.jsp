@@ -44,6 +44,13 @@
             background: #f8f9fa;
             font-weight: bold;
         }
+        .cart-table th:nth-child(1) { width: 5%; } /* Checkbox */
+        .cart-table th:nth-child(2) { width: 10%; } /* Hình ảnh */
+        .cart-table th:nth-child(3) { width: 30%; } /* Tên sản phẩm */
+        .cart-table th:nth-child(4) { width: 15%; } /* Giá */
+        .cart-table th:nth-child(5) { width: 20%; } /* Số lượng */
+        .cart-table th:nth-child(6) { width: 15%; } /* Tổng */
+        .cart-table th:nth-child(7) { width: 10%; } /* Hành động */
         .cart-item img {
             width: 80px;
             height: 80px;
@@ -100,6 +107,10 @@
         .checkout-btn:hover {
             background: #27ae60;
         }
+        .select-all {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -111,9 +122,13 @@
         </c:if>
         
         <c:if test="${not empty cartItems}">
+            <div class="select-all">
+                <input type="checkbox" id="select-all" checked onchange="toggleSelectAll()"> Chọn tất cả
+            </div>
             <table class="cart-table">
                 <thead>
                     <tr>
+                        <th><input type="checkbox" id="header-checkbox" checked onchange="updateTotal()"></th>
                         <th>Sản Phẩm</th>
                         <th>Tên</th>
                         <th>Giá</th>
@@ -125,6 +140,7 @@
                 <tbody>
                     <c:forEach var="item" items="${cartItems}">
                         <tr class="cart-item">
+                            <td><input type="checkbox" class="item-checkbox" data-total="${item.thanhTien}" checked onchange="updateTotal()"></td>
                             <td>
                                 <img src="${pageContext.request.contextPath}/assets/img/${item.sanPham.hinhAnh}" alt="${item.sanPham.tenSP}">
                             </td>
@@ -137,7 +153,7 @@
                                     <button type="button" onclick="changeQuantity(${item.sanPham.maSP}, 1, this)">+</button>
                                 </div>
                             </td>
-                            <td><fmt:formatNumber value="${item.thanhTien}" type="number" groupingUsed="true"/>₫</td>
+                            <td class="item-total"><fmt:formatNumber value="${item.thanhTien}" type="number" groupingUsed="true"/>₫</td>
                             <td>
                                 <button class="remove-btn" onclick="removeItem(${item.sanPham.maSP})">Xóa</button>
                             </td>
@@ -147,18 +163,47 @@
             </table>
 
             <div class="cart-total">
-                Tổng cộng: <fmt:formatNumber value="${totalAmount}" type="number" groupingUsed="true"/>₫
+                Tổng cộng: <span id="total-amount"><fmt:formatNumber value="${totalAmount}" type="number" groupingUsed="true"/>₫</span>
             </div>
-            <button class="checkout-btn" onclick="window.location.href='${pageContext.request.contextPath}/checkout'">Thanh Toán</button>
+            <button class="checkout-btn" onclick="proceedToCheckout()">Thanh Toán</button>
         </c:if>
     </div>
 
     <script>
         const basePath = '${pageContext.request.contextPath}';
 
+        // Format number to VND
+        function formatVND(number) {
+            return new Intl.NumberFormat('vi-VN', { style: 'decimal', minimumFractionDigits: 0 }).format(number) + '₫';
+        }
+
+        // Update total amount based on selected items
+        function updateTotal() {
+            const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+            let total = 0;
+            checkboxes.forEach(checkbox => {
+                total += parseFloat(checkbox.getAttribute('data-total'));
+            });
+            document.getElementById('total-amount').textContent = formatVND(total);
+
+            // Update "select all" checkbox state
+            const allCheckboxes = document.querySelectorAll('.item-checkbox');
+            const selectAll = document.getElementById('select-all');
+            selectAll.checked = allCheckboxes.length === checkboxes.length;
+        }
+
+        // Toggle all checkboxes
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('select-all');
+            const checkboxes = document.querySelectorAll('.item-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+            });
+            updateTotal();
+        }
+
         // Change quantity: sends POST to /user/cart?action=update with productId and quantity
         function changeQuantity(productId, delta, btn) {
-            // find quantity span nearby
             const row = btn.closest('.cart-item');
             const qtySpan = row.querySelector('.qty-value');
             let current = parseInt(qtySpan.textContent) || 0;
@@ -167,7 +212,6 @@
                 if (!confirm('Số lượng = 0 sẽ xóa sản phẩm. Bạn có muốn tiếp tục?')) return;
             }
 
-            // create form and submit as POST
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = basePath + '/user/cart?action=update';
@@ -188,10 +232,41 @@
             form.submit();
         }
 
-        // Remove item by productId via GET (CartController handles delete in doGet)
+        // Remove item by productId via GET
         function removeItem(productId) {
             if (!confirm('Bạn có chắc muốn xóa sản phẩm này?')) return;
             window.location.href = basePath + '/user/cart?action=delete&productId=' + productId;
+        }
+
+        // Proceed to checkout with selected items
+        function proceedToCheckout() {
+            const selectedItems = [];
+            const checkboxes = document.querySelectorAll('.item-checkbox:checked');
+            checkboxes.forEach(checkbox => {
+                const row = checkbox.closest('.cart-item');
+                const productId = row.querySelector('button[onclick*="changeQuantity"]').getAttribute('onclick').match(/\d+/)[0];
+                selectedItems.push(productId);
+            });
+
+            if (selectedItems.length === 0) {
+                alert('Vui lòng chọn ít nhất một sản phẩm để thanh toán!');
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = basePath + '/checkout';
+
+            selectedItems.forEach(productId => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'selectedItems';
+                input.value = productId;
+                form.appendChild(input);
+            });
+
+            document.body.appendChild(form);
+            form.submit();
         }
     </script>
 </body>
