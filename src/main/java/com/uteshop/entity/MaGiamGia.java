@@ -12,7 +12,7 @@ public class MaGiamGia {
     @Column(name = "maGG")
     private int maGG;
     
-    @Column(name = "MaCode", unique = true, nullable = false, length = 20, columnDefinition = "varchar(20) NOT NULL DEFAULT ''")
+    @Column(name = "maCode", unique = true, nullable = false, length = 20, columnDefinition = "varchar(20) NOT NULL DEFAULT ''")
     private String maSo = ""; // Mã code người dùng nhập
     
     @Column(name = "tenChuongTrinh", nullable = false, length = 255, columnDefinition = "nvarchar(255) NOT NULL DEFAULT ''")
@@ -60,7 +60,7 @@ public class MaGiamGia {
     private LocalDateTime ngayTao;
     
     public enum LoaiGiam {
-        PERCENT, FIXED_AMOUNT
+        PERCENT, FIXED_AMOUNT,amount,percent
     }
     
     // Constructors

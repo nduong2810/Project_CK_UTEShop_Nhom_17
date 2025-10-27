@@ -23,20 +23,21 @@ public class AdminController extends HttpServlet {
 		// Lấy số liệu hiển thị trên dashboard
 		DashboardDAO dao = new DashboardDAO();
 
-		// Cập nhật kiểu dữ liệu sang long để khớp với các phương thức count() của DashboardDAO
+		// Cập nhật kiểu dữ liệu sang long để khớp với các phương thức count() của
+		// DashboardDAO
 		long totalUsers = dao.countUsers();
 		long ordersToday = dao.countOrdersToday();
 		BigDecimal revenueToday = dao.revenueToday();
 		long activeProducts = dao.countActiveProducts();
 		List<DonHang> recentOrders = dao.getRecentOrders(5);
-		
+
 		// Set Attributes
 		req.setAttribute("totalUsers", totalUsers);
 		req.setAttribute("totalOrders", ordersToday);
 		req.setAttribute("revenueToday", revenueToday);
 		req.setAttribute("totalProducts", activeProducts);
 		req.setAttribute("recentOrders", recentOrders);
-		
+
 		req.getRequestDispatcher("/WEB-INF/views/admin/home.jsp").forward(req, resp);
 	}
 }

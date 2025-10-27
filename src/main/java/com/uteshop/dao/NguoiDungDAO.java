@@ -15,410 +15,480 @@ import java.util.ArrayList;
 
 public class NguoiDungDAO {
 
-    /**
-     * Authenticate user by username/email and password
-     */
-    public NguoiDung authenticate(String usernameOrEmail, String password) {
-        EntityManager em = JPAUtil.getEntityManager();
-        String jpql = "SELECT u FROM NguoiDung u WHERE (u.tenDangNhap = :userOrEmail OR u.email = :userOrEmail) AND u.trangThai = true";
+	/**
+	 * Authenticate user by username/email and password
+	 */
+	public NguoiDung authenticate(String usernameOrEmail, String password) {
+		EntityManager em = JPAUtil.getEntityManager();
+		String jpql = "SELECT u FROM NguoiDung u WHERE (u.tenDangNhap = :userOrEmail OR u.email = :userOrEmail) AND u.trangThai = true";
 
-        try {
-            // Use TypedQuery for automatic object mapping
-            TypedQuery<NguoiDung> query = em.createQuery(jpql, NguoiDung.class);
-            query.setParameter("userOrEmail", usernameOrEmail);
-            
-            // Limit to one result
-            NguoiDung user = query.getSingleResult();
+		try {
+			// Use TypedQuery for automatic object mapping
+			TypedQuery<NguoiDung> query = em.createQuery(jpql, NguoiDung.class);
+			query.setParameter("userOrEmail", usernameOrEmail);
 
-            System.out.println("🔍 Attempting authentication for: " + usernameOrEmail);
-            System.out.println("🔐 Stored password hash: " + user.getMatKhau());
-            System.out.println("🔑 Input password: " + password);
+			// Limit to one result
+			NguoiDung user = query.getSingleResult();
 
-            // Use PasswordUtil.verifyPassword
-            boolean passwordMatches = PasswordUtil.verifyPassword(password, user.getMatKhau());
-            System.out.println("✅ Password match result: " + passwordMatches);
+			System.out.println("🔍 Attempting authentication for: " + usernameOrEmail);
+			System.out.println("🔐 Stored password hash: " + user.getMatKhau());
+			System.out.println("🔑 Input password: " + password);
 
-            if (passwordMatches) {
-                System.out.println("🎉 Authentication successful for user: " + usernameOrEmail);
-                return user;
-            } else {
-                System.out.println("❌ Password verification failed for user: " + usernameOrEmail);
-                return null;
-            }
+			// Use PasswordUtil.verifyPassword
+			boolean passwordMatches = PasswordUtil.verifyPassword(password, user.getMatKhau());
+			System.out.println("✅ Password match result: " + passwordMatches);
 
-        } catch (NoResultException e) {
-            System.out.println("❌ User not found: " + usernameOrEmail);
-            return null;
-        } catch (Exception e) {
-            System.err.println("💥 Authentication error: " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        } finally {
-            em.close();
-        }
-    }
+			if (passwordMatches) {
+				System.out.println("🎉 Authentication successful for user: " + usernameOrEmail);
+				return user;
+			} else {
+				System.out.println("❌ Password verification failed for user: " + usernameOrEmail);
+				return null;
+			}
 
-    // -------------------------------------------------------------------------
-    // FIND OPERATIONS
-    // -------------------------------------------------------------------------
+		} catch (NoResultException e) {
+			System.out.println("❌ User not found: " + usernameOrEmail);
+			return null;
+		} catch (Exception e) {
+			System.err.println("💥 Authentication error: " + e.getMessage());
+			e.printStackTrace();
+			return null;
+		} finally {
+			em.close();
+		}
+	}
 
-    /**
-     * Find user by ID
-     */
-    public NguoiDung findById(int id) {
-        EntityManager em = JPAUtil.getEntityManager();
-        try {
-            // EntityManager.find is the simplest way to retrieve an entity by its primary key
-            return em.find(NguoiDung.class, id);
-        } finally {
-            em.close();
-        }
-    }
+	// -------------------------------------------------------------------------
+	// FIND OPERATIONS
+	// -------------------------------------------------------------------------
 
-    /**
-     * Find user by username
-     */
-    public NguoiDung findByUsername(String username) {
-        EntityManager em = JPAUtil.getEntityManager();
-        String jpql = "SELECT u FROM NguoiDung u WHERE u.tenDangNhap = :username";
+	/**
+	 * Find user by ID
+	 */
+	public NguoiDung findById(int id) {
+		EntityManager em = JPAUtil.getEntityManager();
+		try {
+			// EntityManager.find is the simplest way to retrieve an entity by its primary
+			// key
+			return em.find(NguoiDung.class, id);
+		} finally {
+			em.close();
+		}
+	}
 
-        try {
-            return em.createQuery(jpql, NguoiDung.class)
-                     .setParameter("username", username)
-                     .getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        } finally {
-            em.close();
-        }
-    }
+	/**
+	 * Find user by username
+	 */
+	public NguoiDung findByUsername(String username) {
+		EntityManager em = JPAUtil.getEntityManager();
+		String jpql = "SELECT u FROM NguoiDung u WHERE u.tenDangNhap = :username";
 
-    /**
-     * Find user by email
-     */
-    public NguoiDung findByEmail(String email) {
-        EntityManager em = JPAUtil.getEntityManager();
-        String jpql = "SELECT u FROM NguoiDung u WHERE u.email = :email";
+		try {
+			return em.createQuery(jpql, NguoiDung.class).setParameter("username", username).getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		} finally {
+			em.close();
+		}
+	}
 
-        try {
-            return em.createQuery(jpql, NguoiDung.class)
-                     .setParameter("email", email)
-                     .getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        } finally {
-            em.close();
-        }
-    }
+	/**
+	 * Find user by email
+	 */
+	public NguoiDung findByEmail(String email) {
+		EntityManager em = JPAUtil.getEntityManager();
+		String jpql = "SELECT u FROM NguoiDung u WHERE u.email = :email";
 
-    /**
-     * Get all users (for admin management)
-     */
-    public List<NguoiDung> getAllUsers() {
-        EntityManager em = JPAUtil.getEntityManager();
-        String jpql = "SELECT u FROM NguoiDung u ORDER BY u.ngayTao DESC";
+		try {
+			return em.createQuery(jpql, NguoiDung.class).setParameter("email", email).getSingleResult();
+		} catch (NoResultException e) {
+			return null;
+		} finally {
+			em.close();
+		}
+	}
 
-        try {
-            return em.createQuery(jpql, NguoiDung.class).getResultList();
-        } finally {
-            em.close();
-        }
-    }
+	/**
+	 * Get all users (for admin management)
+	 */
+	public List<NguoiDung> getAllUsers() {
+		EntityManager em = JPAUtil.getEntityManager();
+		String jpql = "SELECT u FROM NguoiDung u ORDER BY u.ngayTao DESC";
 
-    /**
-     * Get users by role
-     */
-    public List<NguoiDung> getUsersByRole(NguoiDung.VaiTro vaiTro) {
-        EntityManager em = JPAUtil.getEntityManager();
-        String jpql = "SELECT u FROM NguoiDung u WHERE u.vaiTro = :role ORDER BY u.ngayTao DESC";
+		try {
+			return em.createQuery(jpql, NguoiDung.class).getResultList();
+		} finally {
+			em.close();
+		}
+	}
 
-        try {
-            return em.createQuery(jpql, NguoiDung.class)
-                     .setParameter("role", vaiTro)
-                     .getResultList();
-        } finally {
-            em.close();
-        }
-    }
-    
-    // -------------------------------------------------------------------------
-    // SAVE / UPDATE OPERATIONS
-    // -------------------------------------------------------------------------
+	/**
+	 * Get users by role
+	 */
+	public List<NguoiDung> getUsersByRole(NguoiDung.VaiTro vaiTro) {
+		EntityManager em = JPAUtil.getEntityManager();
+		String jpql = "SELECT u FROM NguoiDung u WHERE u.vaiTro = :role ORDER BY u.ngayTao DESC";
 
-    /**
-     * Save new user
-     */
-    public boolean save(NguoiDung user) {
-        EntityManager em = JPAUtil.getEntityManager();
-        EntityTransaction trans = em.getTransaction();
-        try {
-            trans.begin();
-            // Assuming the NguoiDung entity handles 'NgayTao' automatically or it's set before calling save.
-            em.persist(user); // Persist the new entity
-            trans.commit();
-            return true;
-        } catch (Exception e) {
-            if (trans.isActive()) {
-                trans.rollback();
-            }
-            e.printStackTrace();
-            return false;
-        } finally {
-            em.close();
-        }
-    }
+		try {
+			return em.createQuery(jpql, NguoiDung.class).setParameter("role", vaiTro).getResultList();
+		} finally {
+			em.close();
+		}
+	}
 
-    /**
-     * Update user information
-     */
-    public boolean update(NguoiDung user) {
-        EntityManager em = JPAUtil.getEntityManager();
-        EntityTransaction trans = em.getTransaction();
-        try {
-            trans.begin();
-            user.setNgayCapNhat(new Date()); // Update the timestamp manually
-            em.merge(user); // Merge the detached entity
-            trans.commit();
-            return true;
-        } catch (Exception e) {
-            if (trans.isActive()) {
-                trans.rollback();
-            }
-            e.printStackTrace();
-            return false;
-        } finally {
-            em.close();
-        }
-    }
+	// -------------------------------------------------------------------------
+	// SAVE / UPDATE OPERATIONS
+	// -------------------------------------------------------------------------
 
-    /**
-     * Update user status (activate/deactivate account)
-     */
-    public boolean updateUserStatus(int userId, boolean status) {
-        EntityManager em = JPAUtil.getEntityManager();
-        EntityTransaction trans = em.getTransaction();
-        try {
-            NguoiDung user = em.find(NguoiDung.class, userId);
-            if (user == null) return false;
+	/**
+	 * Save new user
+	 */
+	public boolean save(NguoiDung user) {
+		EntityManager em = JPAUtil.getEntityManager();
+		EntityTransaction trans = em.getTransaction();
+		try {
+			trans.begin();
+			// Assuming the NguoiDung entity handles 'NgayTao' automatically or it's set
+			// before calling save.
+			em.persist(user); // Persist the new entity
+			trans.commit();
+			return true;
+		} catch (Exception e) {
+			if (trans.isActive()) {
+				trans.rollback();
+			}
+			e.printStackTrace();
+			return false;
+		} finally {
+			em.close();
+		}
+	}
 
-            trans.begin();
-            user.setTrangThai(status);
-            user.setNgayCapNhat(new Date());
-            em.merge(user);
-            trans.commit();
-            return true;
-        } catch (Exception e) {
-            if (trans.isActive()) {
-                trans.rollback();
-            }
-            e.printStackTrace();
-            return false;
-        } finally {
-            em.close();
-        }
-    }
+	/**
+	 * Update user information
+	 */
+	public boolean update(NguoiDung user) {
+		EntityManager em = JPAUtil.getEntityManager();
+		EntityTransaction trans = em.getTransaction();
+		try {
+			trans.begin();
+			user.setNgayCapNhat(new Date()); // Update the timestamp manually
+			em.merge(user); // Merge the detached entity
+			trans.commit();
+			return true;
+		} catch (Exception e) {
+			if (trans.isActive()) {
+				trans.rollback();
+			}
+			e.printStackTrace();
+			return false;
+		} finally {
+			em.close();
+		}
+	}
 
-    /**
-     * Update user password with proper hashing
-     */
-    public boolean updatePassword(int userId, String newPassword) {
-        EntityManager em = JPAUtil.getEntityManager();
-        EntityTransaction trans = em.getTransaction();
-        try {
-            NguoiDung user = em.find(NguoiDung.class, userId);
-            if (user == null) return false;
+	/**
+	 * Update user status (activate/deactivate account)
+	 */
+	public boolean updateUserStatus(int userId, boolean status) {
+		EntityManager em = JPAUtil.getEntityManager();
+		EntityTransaction trans = em.getTransaction();
+		try {
+			NguoiDung user = em.find(NguoiDung.class, userId);
+			if (user == null)
+				return false;
 
-            // Hash the new password before storing
-            String hashedPassword = PasswordUtil.hashPassword(newPassword);
-            System.out.println("🔐 Updating password for user ID: " + userId);
-            System.out.println("🔑 New hashed password: " + hashedPassword);
+			trans.begin();
+			user.setTrangThai(status);
+			user.setNgayCapNhat(new Date());
+			em.merge(user);
+			trans.commit();
+			return true;
+		} catch (Exception e) {
+			if (trans.isActive()) {
+				trans.rollback();
+			}
+			e.printStackTrace();
+			return false;
+		} finally {
+			em.close();
+		}
+	}
 
-            trans.begin();
-            user.setMatKhau(hashedPassword);
-            user.setNgayCapNhat(new Date());
-            em.merge(user);
-            trans.commit();
+	/**
+	 * Update user password with proper hashing
+	 */
+	public boolean updatePassword(int userId, String newPassword) {
+		EntityManager em = JPAUtil.getEntityManager();
+		EntityTransaction trans = em.getTransaction();
+		try {
+			NguoiDung user = em.find(NguoiDung.class, userId);
+			if (user == null)
+				return false;
 
-            System.out.println("✅ Password update result: SUCCESS");
-            return true;
-        } catch (Exception e) {
-            if (trans.isActive()) {
-                trans.rollback();
-            }
-            System.err.println("💥 Password update error: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        } finally {
-            em.close();
-        }
-    }
-    
-    /**
-     * Update user password by email (for forgot password feature)
-     */
-    public boolean updatePasswordByEmail(String email, String newPassword) {
-        EntityManager em = JPAUtil.getEntityManager();
-        EntityTransaction trans = em.getTransaction();
-        
-        // Find the user by email first
-        NguoiDung user = findByEmail(email);
-        if (user == null) return false;
-        
-        try {
-            // Hash the new password before storing
-            String hashedPassword = PasswordUtil.hashPassword(newPassword);
-            System.out.println("🔐 Updating password for email: " + email);
-            System.out.println("🔑 New hashed password: " + hashedPassword);
+			// Hash the new password before storing
+			String hashedPassword = PasswordUtil.hashPassword(newPassword);
+			System.out.println("🔐 Updating password for user ID: " + userId);
+			System.out.println("🔑 New hashed password: " + hashedPassword);
 
-            trans.begin();
-            user.setMatKhau(hashedPassword);
-            user.setNgayCapNhat(new Date());
-            em.merge(user);
-            trans.commit();
+			trans.begin();
+			user.setMatKhau(hashedPassword);
+			user.setNgayCapNhat(new Date());
+			em.merge(user);
+			trans.commit();
 
-            System.out.println("✅ Password update result: SUCCESS");
-            return true;
-        } catch (Exception e) {
-            if (trans.isActive()) {
-                trans.rollback();
-            }
-            System.err.println("💥 Password update error: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        } finally {
-            em.close();
-        }
-    }
+			System.out.println("✅ Password update result: SUCCESS");
+			return true;
+		} catch (Exception e) {
+			if (trans.isActive()) {
+				trans.rollback();
+			}
+			System.err.println("💥 Password update error: " + e.getMessage());
+			e.printStackTrace();
+			return false;
+		} finally {
+			em.close();
+		}
+	}
 
-    // -------------------------------------------------------------------------
-    // EXISTENCE / COUNT OPERATIONS
-    // -------------------------------------------------------------------------
+	/**
+	 * Update user password by email (for forgot password feature)
+	 */
+	public boolean updatePasswordByEmail(String email, String newPassword) {
+		EntityManager em = JPAUtil.getEntityManager();
+		EntityTransaction trans = em.getTransaction();
 
-    /**
-     * Check if username exists
-     */
-    public boolean isUsernameExists(String username) {
-        EntityManager em = JPAUtil.getEntityManager();
-        String jpql = "SELECT COUNT(u) FROM NguoiDung u WHERE u.tenDangNhap = :username";
-        try {
-            Long count = em.createQuery(jpql, Long.class)
-                           .setParameter("username", username)
-                           .getSingleResult();
-            return count > 0;
-        } finally {
-            em.close();
-        }
-    }
+		// Find the user by email first
+		NguoiDung user = findByEmail(email);
+		if (user == null)
+			return false;
 
-    /**
-     * Check if email exists
-     */
-    public boolean isEmailExists(String email) {
-        EntityManager em = JPAUtil.getEntityManager();
-        String jpql = "SELECT COUNT(u) FROM NguoiDung u WHERE u.email = :email";
-        try {
-            Long count = em.createQuery(jpql, Long.class)
-                           .setParameter("email", email)
-                           .getSingleResult();
-            return count > 0;
-        } finally {
-            em.close();
-        }
-    }
+		try {
+			// Hash the new password before storing
+			String hashedPassword = PasswordUtil.hashPassword(newPassword);
+			System.out.println("🔐 Updating password for email: " + email);
+			System.out.println("🔑 New hashed password: " + hashedPassword);
 
-    /**
-     * Check if phone number exists
-     */
-    public boolean isPhoneExists(String phone) {
-        EntityManager em = JPAUtil.getEntityManager();
-        String jpql = "SELECT COUNT(u) FROM NguoiDung u WHERE u.soDienThoai = :phone";
-        try {
-            Long count = em.createQuery(jpql, Long.class)
-                           .setParameter("phone", phone)
-                           .getSingleResult();
-            return count > 0;
-        } finally {
-            em.close();
-        }
-    }
-    
-    /**
-     * Count all active users
-     */
-    public int countAllActive() {
-        EntityManager em = JPAUtil.getEntityManager();
-        String jpql = "SELECT COUNT(u) FROM NguoiDung u WHERE u.trangThai = true";
-        try {
-            Long count = em.createQuery(jpql, Long.class).getSingleResult();
-            return count.intValue();
-        } finally {
-            em.close();
-        }
-    }
+			trans.begin();
+			user.setMatKhau(hashedPassword);
+			user.setNgayCapNhat(new Date());
+			em.merge(user);
+			trans.commit();
 
-    /**
-     * Count users by role and search query
-     * This uses a dynamic JPQL query structure similar to the original JDBC.
-     */
-    public int countByRole(String vaiTro, String q) {
-        EntityManager em = JPAUtil.getEntityManager();
-        StringBuilder jpql = new StringBuilder("SELECT COUNT(u) FROM NguoiDung u WHERE 1=1");
-        List<String> params = new ArrayList<>();
-        
-        if (vaiTro != null && !vaiTro.isBlank()) {
-            jpql.append(" AND u.vaiTro = :vaiTro");
-        }
-        
-        if (q != null && !q.isBlank()) {
-            jpql.append(" AND (u.hoTen LIKE :query OR u.email LIKE :query OR u.tenDangNhap LIKE :query OR u.soDienThoai LIKE :query)");
-        }
-        
-        try {
-            TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
-            
-            if (vaiTro != null && !vaiTro.isBlank()) {
-                 // Assuming VaiTro is an Enum or String that can be set directly
-                query.setParameter("vaiTro", NguoiDung.VaiTro.valueOf(vaiTro)); 
-            }
-            if (q != null && !q.isBlank()) {
-                query.setParameter("query", "%" + q.trim() + "%");
-            }
-            
-            return query.getSingleResult().intValue();
-        } catch (Exception e) {
-            throw new RuntimeException("Error counting users by role/query: " + e.getMessage(), e);
-        } finally {
-            em.close();
-        }
-    }
-    /**
-     * Update user's avatar (store only file name in DB)
-     */
-    public boolean updateAvatar(int userId, String fileName) {
-        EntityManager em = JPAUtil.getEntityManager();
-        EntityTransaction trans = em.getTransaction();
-        try {
-            NguoiDung user = em.find(NguoiDung.class, userId);
-            if (user == null) {
-                System.err.println("⚠️ User not found for avatar update: " + userId);
-                return false;
-            }
+			System.out.println("✅ Password update result: SUCCESS");
+			return true;
+		} catch (Exception e) {
+			if (trans.isActive()) {
+				trans.rollback();
+			}
+			System.err.println("💥 Password update error: " + e.getMessage());
+			e.printStackTrace();
+			return false;
+		} finally {
+			em.close();
+		}
+	}
 
-            trans.begin();
-            user.setAvatar(fileName);
-            user.setNgayCapNhat(new Date());
-            em.merge(user);
-            trans.commit();
+	// -------------------------------------------------------------------------
+	// EXISTENCE / COUNT OPERATIONS
+	// -------------------------------------------------------------------------
 
-            System.out.println("✅ Avatar updated successfully for user ID " + userId + ": " + fileName);
-            return true;
-        } catch (Exception e) {
-            if (trans.isActive()) trans.rollback();
-            System.err.println("💥 Error updating avatar: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        } finally {
-            em.close();
-        }
-    }
+	/**
+	 * Check if username exists
+	 */
+	public boolean isUsernameExists(String username) {
+		EntityManager em = JPAUtil.getEntityManager();
+		String jpql = "SELECT COUNT(u) FROM NguoiDung u WHERE u.tenDangNhap = :username";
+		try {
+			Long count = em.createQuery(jpql, Long.class).setParameter("username", username).getSingleResult();
+			return count > 0;
+		} finally {
+			em.close();
+		}
+	}
+
+	/**
+	 * Check if email exists
+	 */
+	public boolean isEmailExists(String email) {
+		EntityManager em = JPAUtil.getEntityManager();
+		String jpql = "SELECT COUNT(u) FROM NguoiDung u WHERE u.email = :email";
+		try {
+			Long count = em.createQuery(jpql, Long.class).setParameter("email", email).getSingleResult();
+			return count > 0;
+		} finally {
+			em.close();
+		}
+	}
+
+	/**
+	 * Check if phone number exists
+	 */
+	public boolean isPhoneExists(String phone) {
+		EntityManager em = JPAUtil.getEntityManager();
+		String jpql = "SELECT COUNT(u) FROM NguoiDung u WHERE u.soDienThoai = :phone";
+		try {
+			Long count = em.createQuery(jpql, Long.class).setParameter("phone", phone).getSingleResult();
+			return count > 0;
+		} finally {
+			em.close();
+		}
+	}
+
+	/**
+	 * Count all active users
+	 */
+	public int countAllActive() {
+		EntityManager em = JPAUtil.getEntityManager();
+		String jpql = "SELECT COUNT(u) FROM NguoiDung u WHERE u.trangThai = true";
+		try {
+			Long count = em.createQuery(jpql, Long.class).getSingleResult();
+			return count.intValue();
+		} finally {
+			em.close();
+		}
+	}
+
+	/**
+	 * Count users by role and search query This uses a dynamic JPQL query structure
+	 * similar to the original JDBC.
+	 */
+	public int countByRole(String vaiTro, String q) {
+		EntityManager em = JPAUtil.getEntityManager();
+		StringBuilder jpql = new StringBuilder("SELECT COUNT(u) FROM NguoiDung u WHERE 1=1");
+		List<String> params = new ArrayList<>();
+
+		if (vaiTro != null && !vaiTro.isBlank()) {
+			jpql.append(" AND u.vaiTro = :vaiTro");
+		}
+
+		if (q != null && !q.isBlank()) {
+			jpql.append(
+					" AND (u.hoTen LIKE :query OR u.email LIKE :query OR u.tenDangNhap LIKE :query OR u.soDienThoai LIKE :query)");
+		}
+
+		try {
+			TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
+
+			if (vaiTro != null && !vaiTro.isBlank()) {
+				// Assuming VaiTro is an Enum or String that can be set directly
+				query.setParameter("vaiTro", NguoiDung.VaiTro.valueOf(vaiTro));
+			}
+			if (q != null && !q.isBlank()) {
+				query.setParameter("query", "%" + q.trim() + "%");
+			}
+
+			return query.getSingleResult().intValue();
+		} catch (Exception e) {
+			throw new RuntimeException("Error counting users by role/query: " + e.getMessage(), e);
+		} finally {
+			em.close();
+		}
+	}
+
+	/**
+	 * Update user's avatar (store only file name in DB)
+	 */
+	public boolean updateAvatar(int userId, String fileName) {
+		EntityManager em = JPAUtil.getEntityManager();
+		EntityTransaction trans = em.getTransaction();
+		try {
+			NguoiDung user = em.find(NguoiDung.class, userId);
+			if (user == null) {
+				System.err.println("⚠️ User not found for avatar update: " + userId);
+				return false;
+			}
+
+			trans.begin();
+			user.setAvatar(fileName);
+			user.setNgayCapNhat(new Date());
+			em.merge(user);
+			trans.commit();
+
+			System.out.println("✅ Avatar updated successfully for user ID " + userId + ": " + fileName);
+			return true;
+		} catch (Exception e) {
+			if (trans.isActive())
+				trans.rollback();
+			System.err.println("💥 Error updating avatar: " + e.getMessage());
+			e.printStackTrace();
+			return false;
+		} finally {
+			em.close();
+		}
+	}
+
+	public List<NguoiDung> findPaged(int page, int pageSize, String q, NguoiDung.VaiTro role, String sort) {
+		EntityManager em = JPAUtil.getEntityManager();
+		try {
+			StringBuilder jpql = new StringBuilder("SELECT u FROM NguoiDung u WHERE 1=1 ");
+			if (notBlank(q)) {
+				jpql.append(
+						" AND (LOWER(u.hoTen) LIKE :kw OR LOWER(u.tenDangNhap) LIKE :kw OR LOWER(u.email) LIKE :kw) ");
+			}
+			if (role != null) {
+				jpql.append(" AND u.vaiTro = :role ");
+			}
+
+// sort an toàn (whitelist)
+			jpql.append(" ORDER BY ");
+			switch (safeSort(sort)) {
+			case "name_asc" -> jpql.append(" u.hoTen ASC ");
+			case "name_desc" -> jpql.append(" u.hoTen DESC ");
+			case "date_desc" -> jpql.append(" u.ngayTao DESC ");
+			default -> jpql.append(" u.ngayTao DESC ");
+			}
+
+			TypedQuery<NguoiDung> query = em.createQuery(jpql.toString(), NguoiDung.class);
+			if (notBlank(q))
+				query.setParameter("kw", "%" + q.toLowerCase().trim() + "%");
+			if (role != null)
+				query.setParameter("role", role);
+
+			int first = Math.max(0, (page - 1) * pageSize);
+			return query.setFirstResult(first).setMaxResults(pageSize).getResultList();
+		} finally {
+			em.close();
+		}
+	}
+
+	public int countAll(String q, NguoiDung.VaiTro role) {
+		EntityManager em = JPAUtil.getEntityManager();
+		try {
+			StringBuilder jpql = new StringBuilder("SELECT COUNT(u) FROM NguoiDung u WHERE 1=1 ");
+			if (notBlank(q)) {
+				jpql.append(
+						" AND (LOWER(u.hoTen) LIKE :kw OR LOWER(u.tenDangNhap) LIKE :kw OR LOWER(u.email) LIKE :kw) ");
+			}
+			if (role != null) {
+				jpql.append(" AND u.vaiTro = :role ");
+			}
+
+			TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
+			if (notBlank(q))
+				query.setParameter("kw", "%" + q.toLowerCase().trim() + "%");
+			if (role != null)
+				query.setParameter("role", role);
+
+			Long count = query.getSingleResult();
+			return count == null ? 0 : count.intValue();
+		} finally {
+			em.close();
+		}
+	}
+
+	/* ===== Helpers (private) ===== */
+	private boolean notBlank(String s) {
+		return s != null && !s.trim().isEmpty();
+	}
+
+	/** Chỉ cho phép các giá trị sort hợp lệ để tránh JPQL injection */
+	private String safeSort(String sort) {
+		if (sort == null)
+			return "";
+		return switch (sort) {
+		case "name_asc", "name_desc", "date_desc" -> sort;
+		default -> "";
+		};
+	}
 }

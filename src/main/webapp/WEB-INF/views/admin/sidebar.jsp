@@ -11,7 +11,6 @@ boolean aSuppliers = uri.contains("/admin/suppliers");
 boolean aCats = uri.contains("/admin/categories");
 boolean aShip = uri.contains("/admin/shipping");
 boolean aCoupons = uri.contains("/admin/coupons");
-boolean aSettings = uri.contains("/admin/settings");
 %>
 
 <!-- ======= CSS chỉ cho khu vực admin (scoped bằng prefix .admin-) ======= -->
@@ -215,9 +214,7 @@ boolean aSettings = uri.contains("/admin/settings");
 		<li><a class="<%=aCoupons ? "active" : ""%>"
 			href="<%=ctx%>/admin/coupons"><span class="admin-ico">🏷</span><span
 				class="admin-lbl">Mã giảm giá</span></a></li>
-		<li><a class="<%=aSettings ? "active" : ""%>"
-			href="<%=ctx%>/admin/settings"><span class="admin-ico">⚙️</span><span
-				class="admin-lbl">Cài đặt</span></a></li>
+		
 	</ul>
 </aside>
 
