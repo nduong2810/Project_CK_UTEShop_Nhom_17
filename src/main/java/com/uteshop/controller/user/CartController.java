@@ -92,6 +92,9 @@ public class CartController extends HttpServlet {
         
         List<ChiTietGioHang> cartItems = gioHangDAO.getCartItems(user.getMaND());
         
+        // DEBUG: log cart size
+        System.out.println("[DEBUG] CartController.viewCart - userId=" + user.getMaND() + " cartItems=" + (cartItems != null ? cartItems.size() : 0));
+        
         // Tính tổng tiền
         BigDecimal totalAmount = cartItems.stream()
             .map(item -> item.getThanhTien())
@@ -100,6 +103,10 @@ public class CartController extends HttpServlet {
         request.setAttribute("cartItems", cartItems);
         request.setAttribute("totalAmount", totalAmount);
         request.setAttribute("cartCount", cartItems.size());
+
+        // Also keep cart count in session so header.jsp can access it everywhere
+        HttpSession session = request.getSession();
+        session.setAttribute("cartCount", cartItems.size());
         
         request.getRequestDispatcher("/WEB-INF/views/user/cart.jsp").forward(request, response);
     }
@@ -119,12 +126,21 @@ public class CartController extends HttpServlet {
             }
             
             boolean success = gioHangDAO.addToCart(user.getMaND(), productId, quantity);
+
+            // DEBUG: log addToCart result and new count
+            int newCount = gioHangDAO.getCartItems(user.getMaND()).size();
+            System.out.println("[DEBUG] CartController.addToCart - userId=" + user.getMaND() + " productId=" + productId + " qty=" + quantity + " success=" + success + " newCount=" + newCount);
             
             if (success) {
                 request.setAttribute("success", "Đã thêm vào giỏ hàng thành công");
             } else {
                 request.setAttribute("error", "Không thể thêm vào giỏ hàng");
             }
+            
+            // Update session cart count before redirect so header shows updated value
+            HttpSession session = request.getSession();
+            int count = gioHangDAO.getCartItems(user.getMaND()).size();
+            session.setAttribute("cartCount", count);
             
             // Redirect để tránh resubmit form
             response.sendRedirect(request.getContextPath() + "/user/cart");
@@ -150,6 +166,11 @@ public class CartController extends HttpServlet {
                 request.setAttribute("error", "Không thể cập nhật giỏ hàng");
             }
             
+            // Update session cart count
+            HttpSession session = request.getSession();
+            int count = gioHangDAO.getCartItems(user.getMaND()).size();
+            session.setAttribute("cartCount", count);
+
             // Redirect để tránh resubmit form
             response.sendRedirect(request.getContextPath() + "/user/cart");
             
@@ -173,6 +194,11 @@ public class CartController extends HttpServlet {
                 request.setAttribute("error", "Không thể xóa sản phẩm");
             }
             
+            // Update session cart count
+            HttpSession session = request.getSession();
+            int count = gioHangDAO.getCartItems(user.getMaND()).size();
+            session.setAttribute("cartCount", count);
+
             // Redirect để tránh resubmit form
             response.sendRedirect(request.getContextPath() + "/user/cart");
             
@@ -192,6 +218,10 @@ public class CartController extends HttpServlet {
         } else {
             request.setAttribute("error", "Không thể xóa giỏ hàng");
         }
+        
+        // Update session cart count
+        HttpSession session = request.getSession();
+        session.setAttribute("cartCount", 0);
         
         // Redirect để tránh resubmit form
         response.sendRedirect(request.getContextPath() + "/user/cart");

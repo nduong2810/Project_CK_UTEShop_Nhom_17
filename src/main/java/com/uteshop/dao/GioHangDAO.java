@@ -51,33 +51,45 @@ public class GioHangDAO {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
-            
-            // Find or create cart
-            GioHang gioHang = findByUserId(userId);
-            if (gioHang == null) {
+
+            // Find or create cart using the same EntityManager to avoid detached entity problems
+            TypedQuery<GioHang> cartQuery = em.createQuery(
+                "SELECT g FROM GioHang g WHERE g.nguoiDung.maND = :userId", GioHang.class);
+            cartQuery.setParameter("userId", userId);
+            List<GioHang> carts = cartQuery.getResultList();
+
+            GioHang gioHang;
+            if (carts.isEmpty()) {
                 NguoiDung nguoiDung = em.find(NguoiDung.class, userId);
+                if (nguoiDung == null) {
+                    em.getTransaction().rollback();
+                    return false;
+                }
                 gioHang = new GioHang(nguoiDung);
                 em.persist(gioHang);
+                // make sure managed
+                em.flush();
             } else {
+                gioHang = carts.get(0);
                 gioHang = em.merge(gioHang);
             }
-            
+
             // Find product
             SanPham sanPham = em.find(SanPham.class, productId);
             if (sanPham == null) {
                 em.getTransaction().rollback();
                 return false;
             }
-            
-            // Check if product already in cart
+
+            // Check if product already in cart using entity references
             TypedQuery<ChiTietGioHang> query = em.createQuery(
-                "SELECT ct FROM ChiTietGioHang ct WHERE ct.gioHang.maGH = :cartId AND ct.sanPham.maSP = :productId", 
+                "SELECT ct FROM ChiTietGioHang ct WHERE ct.gioHang = :gioHang AND ct.sanPham = :sanPham", 
                 ChiTietGioHang.class);
-            query.setParameter("cartId", gioHang.getMaGH());
-            query.setParameter("productId", productId);
-            
+            query.setParameter("gioHang", gioHang);
+            query.setParameter("sanPham", sanPham);
+
             List<ChiTietGioHang> existingItems = query.getResultList();
-            
+
             if (!existingItems.isEmpty()) {
                 // Update quantity
                 ChiTietGioHang chiTiet = existingItems.get(0);
@@ -88,7 +100,7 @@ public class GioHangDAO {
                 ChiTietGioHang chiTiet = new ChiTietGioHang(gioHang, sanPham, quantity, sanPham.getDonGia());
                 em.persist(chiTiet);
             }
-            
+
             em.getTransaction().commit();
             return true;
         } catch (Exception e) {
@@ -104,18 +116,20 @@ public class GioHangDAO {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
-            
+
             TypedQuery<ChiTietGioHang> query = em.createQuery(
                 "SELECT ct FROM ChiTietGioHang ct WHERE ct.gioHang.nguoiDung.maND = :userId AND ct.sanPham.maSP = :productId", 
                 ChiTietGioHang.class);
             query.setParameter("userId", userId);
             query.setParameter("productId", productId);
-            
+
             List<ChiTietGioHang> items = query.getResultList();
             for (ChiTietGioHang item : items) {
-                em.remove(item);
+                // ensure managed before remove
+                ChiTietGioHang managed = em.contains(item) ? item : em.merge(item);
+                em.remove(managed);
             }
-            
+
             em.getTransaction().commit();
             return true;
         } catch (Exception e) {
@@ -131,24 +145,24 @@ public class GioHangDAO {
         if (newQuantity <= 0) {
             return removeFromCart(userId, productId);
         }
-        
+
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
-            
+
             TypedQuery<ChiTietGioHang> query = em.createQuery(
                 "SELECT ct FROM ChiTietGioHang ct WHERE ct.gioHang.nguoiDung.maND = :userId AND ct.sanPham.maSP = :productId", 
                 ChiTietGioHang.class);
             query.setParameter("userId", userId);
             query.setParameter("productId", productId);
-            
+
             List<ChiTietGioHang> items = query.getResultList();
             if (!items.isEmpty()) {
                 ChiTietGioHang item = items.get(0);
                 item.setSoLuong(newQuantity);
                 em.merge(item);
             }
-            
+
             em.getTransaction().commit();
             return true;
         } catch (Exception e) {
@@ -164,11 +178,11 @@ public class GioHangDAO {
         EntityManager em = emf.createEntityManager();
         try {
             em.getTransaction().begin();
-            
+
             em.createQuery("DELETE FROM ChiTietGioHang ct WHERE ct.gioHang.nguoiDung.maND = :userId")
               .setParameter("userId", userId)
               .executeUpdate();
-            
+
             em.getTransaction().commit();
             return true;
         } catch (Exception e) {
