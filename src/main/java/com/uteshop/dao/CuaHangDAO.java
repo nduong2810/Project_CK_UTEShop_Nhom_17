@@ -70,6 +70,27 @@ public class CuaHangDAO {
             em.close();
         }
     }
+    
+    /**
+     * Cập nhật thông tin cửa hàng
+     */
+    public boolean update(CuaHang cuaHang) {
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            em.merge(cuaHang);
+            em.getTransaction().commit();
+            return true;
+        } catch (Exception e) {
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            e.printStackTrace();
+            return false;
+        } finally {
+            em.close();
+        }
+    }
 
     public List<CuaHang> findAll() {
         EntityManager em = getEntityManager();

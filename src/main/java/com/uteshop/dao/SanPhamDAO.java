@@ -572,4 +572,72 @@ public class SanPhamDAO {
             em.close();
         }
     }
+    
+    /**
+     * Đếm tổng số lượng sản phẩm theo cửa hàng (không filter)
+     */
+    public int countByCuaHangId(Integer maCH) {
+        EntityManager em = getEntityManager();
+        try {
+            String jpql = "SELECT COUNT(s) FROM SanPham s WHERE s.cuaHang.maCH = :maCH";
+            TypedQuery<Long> query = em.createQuery(jpql, Long.class);
+            query.setParameter("maCH", maCH);
+            return query.getSingleResult().intValue();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        } finally {
+            em.close();
+        }
+    }
+    
+    /**
+     * Lấy top sản phẩm bán chạy nhất theo cửa hàng
+     */
+    public List<SanPham> findTopSellingByStore(Integer maCH, int limit) {
+        EntityManager em = getEntityManager();
+        try {
+            String jpql = "SELECT s FROM SanPham s " +
+                         "WHERE s.cuaHang.maCH = :maCH AND s.trangThai = true " +
+                         "ORDER BY s.soLuongBan DESC";
+            TypedQuery<SanPham> query = em.createQuery(jpql, SanPham.class);
+            query.setParameter("maCH", maCH);
+            query.setMaxResults(limit);
+            return query.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        } finally {
+            em.close();
+        }
+    }
+    
+    /**
+     * Lấy sản phẩm bán chạy theo cửa hàng với số lượng đã bán
+     * Trả về: [SanPham, soLuongDaBan]
+     */
+    public List<Object[]> findTopSellingWithQuantityByStore(Integer maCH, int limit) {
+        EntityManager em = getEntityManager();
+        try {
+            String jpql = "SELECT s, COALESCE(SUM(ctdh.soLuong), 0) as totalSold " +
+                         "FROM SanPham s " +
+                         "LEFT JOIN s.chiTietDonHangs ctdh " +
+                         "LEFT JOIN ctdh.donHang dh " +
+                         "WHERE s.cuaHang.maCH = :maCH " +
+                         "  AND s.trangThai = true " +
+                         "  AND (dh.trangThai = com.uteshop.entity.DonHang.TrangThaiDonHang.DA_GIAO " +
+                         "       OR dh.trangThai IS NULL) " +
+                         "GROUP BY s " +
+                         "ORDER BY totalSold DESC";
+            TypedQuery<Object[]> query = em.createQuery(jpql, Object[].class);
+            query.setParameter("maCH", maCH);
+            query.setMaxResults(limit);
+            return query.getResultList();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        } finally {
+            em.close();
+        }
+    }
 }

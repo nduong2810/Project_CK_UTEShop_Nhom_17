@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@WebServlet(urlPatterns = {"/vendor/dashboard", "/vendor/products", "/vendor/discounts", "/vendor/discounts/create", "/vendor/discounts/edit", "/vendor/discounts/delete", "/vendor/orders", "/vendor/orders/detail", "/vendor/orders/update-status"})
+@WebServlet(urlPatterns = {"/vendor/dashboard", "/vendor/products", "/vendor/discounts", "/vendor/discounts/create", "/vendor/discounts/edit", "/vendor/discounts/delete", "/vendor/orders", "/vendor/orders/detail", "/vendor/orders/update-status", "/vendor/revenue-report", "/vendor/statistics", "/vendor/settings", "/vendor/settings/update"})
 public class VendorController extends HttpServlet {
     private static final long serialVersionUID = 1L;
     
@@ -106,6 +106,15 @@ public class VendorController extends HttpServlet {
             case "/orders/detail":
                 showOrderDetail(request, response, user, store);
                 break;
+            case "/revenue-report":
+                showRevenueReport(request, response, user, store);
+                break;
+            case "/statistics":
+                showStatistics(request, response, user, store);
+                break;
+            case "/settings":
+                showSettings(request, response, user, store);
+                break;
             default:
                 showDashboard(request, response, user);
                 break;
@@ -118,19 +127,64 @@ public class VendorController extends HttpServlet {
             // CuaHang store đã được đặt trong request ở doGet()
             CuaHang store = (CuaHang) request.getAttribute("store");
             
+            // Lấy ngày tháng năm hiện tại
+            java.time.LocalDate now = java.time.LocalDate.now();
+            int currentDay = now.getDayOfMonth();
+            int currentMonth = now.getMonthValue();
+            int currentYear = now.getYear();
+            
             // Thêm thống kê mã giảm giá cho dashboard
             if (store != null) {
                 try {
+                    // Thống kê mã giảm giá
                     int totalDiscounts = maGiamGiaDAO.countByCuaHangId(store.getMaCH());
                     int activeDiscounts = maGiamGiaDAO.getActiveDiscountsByStore(store.getMaCH()).size();
                     
                     request.setAttribute("totalDiscounts", totalDiscounts);
                     request.setAttribute("activeDiscounts", activeDiscounts);
+                    
+                    // Thống kê sản phẩm
+                    int totalProducts = sanPhamDAO.countByCuaHangId(store.getMaCH());
+                    request.setAttribute("totalProducts", totalProducts);
+                    
+                    // Thống kê đơn hàng
+                    long newOrdersCount = donHangDAO.countNewOrders(store.getMaCH());
+                    long totalOrders = donHangDAO.countByStoreAndStatus(store.getMaCH(), null);
+                    request.setAttribute("newOrdersCount", newOrdersCount);
+                    request.setAttribute("totalOrders", totalOrders);
+                    
+                    // Thống kê doanh thu theo ngày, tháng, năm
+                    BigDecimal dailyRevenue = donHangDAO.getDailyRevenue(store.getMaCH(), currentDay, currentMonth, currentYear);
+                    BigDecimal monthlyRevenue = donHangDAO.getMonthlyRevenue(store.getMaCH(), currentMonth, currentYear);
+                    BigDecimal yearlyRevenue = donHangDAO.getYearlyRevenue(store.getMaCH(), currentYear);
+                    
+                    request.setAttribute("dailyRevenue", dailyRevenue);
+                    request.setAttribute("monthlyRevenue", monthlyRevenue);
+                    request.setAttribute("yearlyRevenue", yearlyRevenue);
+                    
+                    // Dữ liệu cho biểu đồ doanh thu 7 ngày
+                    List<Object[]> last7Days = donHangDAO.getLast7DaysRevenue(store.getMaCH());
+                    request.setAttribute("last7DaysRevenue", last7Days);
+                    
+                    // Dữ liệu cho biểu đồ doanh thu 12 tháng
+                    List<Object[]> last12Months = donHangDAO.getLast12MonthsRevenue(store.getMaCH());
+                    request.setAttribute("last12MonthsRevenue", last12Months);
+                    
+                    // Ngày hiện tại
+                    request.setAttribute("now", new java.util.Date());
+                    
                 } catch (Exception e) {
-                    // Nếu có lỗi với mã giảm giá, chỉ log và tiếp tục
-                    System.err.println("Lỗi khi lấy thống kê mã giảm giá: " + e.getMessage());
+                    // Nếu có lỗi, chỉ log và tiếp tục
+                    System.err.println("Lỗi khi lấy thống kê: " + e.getMessage());
+                    e.printStackTrace();
                     request.setAttribute("totalDiscounts", 0);
                     request.setAttribute("activeDiscounts", 0);
+                    request.setAttribute("totalProducts", 0);
+                    request.setAttribute("newOrdersCount", 0);
+                    request.setAttribute("totalOrders", 0);
+                    request.setAttribute("dailyRevenue", BigDecimal.ZERO);
+                    request.setAttribute("monthlyRevenue", BigDecimal.ZERO);
+                    request.setAttribute("yearlyRevenue", BigDecimal.ZERO);
                 }
             }
             
@@ -267,6 +321,8 @@ public class VendorController extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/vendor/products?error=ID san pham khong hop le.");
                 }
             }
+        } else if ("toggleStatus".equals(action)) {
+            toggleProductStatus(request, response, user, store);
         } else if ("createDiscount".equals(action)) {
             createDiscount(request, response, user, store);
         } else if ("updateDiscount".equals(action)) {
@@ -275,8 +331,43 @@ public class VendorController extends HttpServlet {
             deleteDiscount(request, response, user, store);
         } else if ("updateOrderStatus".equals(action)) {
             updateOrderStatus(request, response, user, store);
+        } else if ("updateStoreSettings".equals(action)) {
+            updateStoreSettings(request, response, user, store);
         } else {
             doGet(request, response); // Xử lý các POST khác bằng doGet
+        }
+    }
+    
+    // Phương thức toggle trạng thái sản phẩm (Ẩn/Hiện)
+    private void toggleProductStatus(HttpServletRequest request, HttpServletResponse response, NguoiDung user, CuaHang store)
+            throws ServletException, IOException {
+        String maSPParam = request.getParameter("id");
+        String statusParam = request.getParameter("status");
+        
+        if (maSPParam == null || maSPParam.isEmpty() || statusParam == null) {
+            response.sendRedirect(request.getContextPath() + "/vendor/products?error=Thong tin khong hop le.");
+            return;
+        }
+        
+        try {
+            Integer maSP = Integer.parseInt(maSPParam);
+            boolean newStatus = Boolean.parseBoolean(statusParam);
+            
+            SanPham product = sanPhamDAO.findById(maSP);
+            if (product != null && product.getCuaHang().getMaCH().equals(store.getMaCH())) {
+                product.setTrangThai(newStatus);
+                sanPhamDAO.update(product);
+                
+                String message = newStatus ? "Hien san pham thanh cong." : "An san pham thanh cong.";
+                response.sendRedirect(request.getContextPath() + "/vendor/products?msg=" + message);
+            } else {
+                response.sendRedirect(request.getContextPath() + "/vendor/products?error=San pham khong ton tai hoac khong co quyen.");
+            }
+        } catch (NumberFormatException e) {
+            response.sendRedirect(request.getContextPath() + "/vendor/products?error=ID san pham khong hop le.");
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/vendor/products?error=Co loi xay ra khi cap nhat trang thai.");
         }
     }
     
@@ -522,14 +613,14 @@ public class VendorController extends HttpServlet {
             // Cập nhật vào database
             boolean success = maGiamGiaDAO.update(discount);
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/vendor/discounts?msg=Cập nhật mã giảm giá thành công.");
+                response.sendRedirect(request.getContextPath() + "/vendor/discounts?msg=UPDATE_SUCCESS");
             } else {
-                response.sendRedirect(request.getContextPath() + "/vendor/discounts/edit?id=" + discountId + "&error=Có lỗi xảy ra khi cập nhật.");
+                response.sendRedirect(request.getContextPath() + "/vendor/discounts/edit?id=" + discountId + "&error=UPDATE_FAILED");
             }
             
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/vendor/discounts?error=Dữ liệu không hợp lệ: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/vendor/discounts?error=INVALID_DATA");
         }
     }
     
@@ -675,6 +766,220 @@ public class VendorController extends HttpServlet {
         } catch (Exception e) {
             e.printStackTrace();
             response.sendRedirect(request.getContextPath() + "/vendor/orders?error=Co loi xay ra khi tai chi tiet don hang.");
+        }
+    }
+    
+    /**
+     * Hiển thị báo cáo doanh thu theo ngày, tháng, năm
+     */
+    private void showRevenueReport(HttpServletRequest request, HttpServletResponse response, NguoiDung user, CuaHang store)
+            throws ServletException, IOException {
+        try {
+            String type = request.getParameter("type");
+            BigDecimal revenue = null;
+            
+            if (type != null && !type.isEmpty()) {
+                switch (type) {
+                    case "daily":
+                        String dateStr = request.getParameter("date");
+                        if (dateStr != null && !dateStr.isEmpty()) {
+                            // Parse date string: yyyy-MM-dd
+                            String[] dateParts = dateStr.split("-");
+                            int year = Integer.parseInt(dateParts[0]);
+                            int month = Integer.parseInt(dateParts[1]);
+                            int day = Integer.parseInt(dateParts[2]);
+                            revenue = donHangDAO.getDailyRevenue(store.getMaCH(), day, month, year);
+                        }
+                        break;
+                        
+                    case "monthly":
+                        String monthStr = request.getParameter("month");
+                        String yearStr = request.getParameter("year");
+                        if (monthStr != null && yearStr != null) {
+                            int month = Integer.parseInt(monthStr);
+                            int year = Integer.parseInt(yearStr);
+                            revenue = donHangDAO.getMonthlyRevenue(store.getMaCH(), month, year);
+                        }
+                        break;
+                        
+                    case "yearly":
+                        String yearOnlyStr = request.getParameter("year");
+                        if (yearOnlyStr != null) {
+                            int year = Integer.parseInt(yearOnlyStr);
+                            revenue = donHangDAO.getYearlyRevenue(store.getMaCH(), year);
+                        }
+                        break;
+                }
+            }
+            
+            // Set attributes
+            if (revenue != null) {
+                request.setAttribute("revenue", revenue);
+            }
+            request.setAttribute("now", new java.util.Date());
+            request.setAttribute("pageTitle", "Báo cáo Doanh thu");
+            
+            // Forward to JSP
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/vendor/revenue-report.jsp");
+            dispatcher.forward(request, response);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Có lỗi xảy ra khi tải báo cáo doanh thu: " + e.getMessage());
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/vendor/revenue-report.jsp");
+            dispatcher.forward(request, response);
+        }
+    }
+    
+    /**
+     * Hiển thị trang thống kê và báo cáo chi tiết
+     */
+    private void showStatistics(HttpServletRequest request, HttpServletResponse response, NguoiDung user, CuaHang store)
+            throws ServletException, IOException {
+        try {
+            // Lấy ngày tháng năm hiện tại
+            java.time.LocalDate now = java.time.LocalDate.now();
+            int currentDay = now.getDayOfMonth();
+            int currentMonth = now.getMonthValue();
+            int currentYear = now.getYear();
+            
+            // Thống kê doanh thu
+            BigDecimal dailyRevenue = donHangDAO.getDailyRevenue(store.getMaCH(), currentDay, currentMonth, currentYear);
+            BigDecimal monthlyRevenue = donHangDAO.getMonthlyRevenue(store.getMaCH(), currentMonth, currentYear);
+            BigDecimal yearlyRevenue = donHangDAO.getYearlyRevenue(store.getMaCH(), currentYear);
+            
+            // Doanh thu 7 ngày gần nhất
+            List<Object[]> last7DaysRevenue = donHangDAO.getLast7DaysRevenue(store.getMaCH());
+            
+            // Doanh thu 12 tháng gần nhất
+            List<Object[]> last12MonthsRevenue = donHangDAO.getLast12MonthsRevenue(store.getMaCH());
+            
+            // Thống kê đơn hàng
+            long newOrdersCount = donHangDAO.countNewOrders(store.getMaCH());
+            long totalOrders = donHangDAO.countByStoreAndStatus(store.getMaCH(), null);
+            java.util.Map<DonHang.TrangThaiDonHang, Long> orderStats = donHangDAO.getOrderStatsByStore(store.getMaCH());
+            
+            // Thống kê sản phẩm
+            int totalProducts = sanPhamDAO.countByCuaHangId(store.getMaCH());
+            int activeProducts = sanPhamDAO.countByCuaHangIdWithFilter(store.getMaCH(), null, "true");
+            int inactiveProducts = sanPhamDAO.countByCuaHangIdWithFilter(store.getMaCH(), null, "false");
+            
+            // Top 10 sản phẩm bán chạy nhất
+            List<Object[]> topSellingProducts = sanPhamDAO.findTopSellingWithQuantityByStore(store.getMaCH(), 10);
+            
+            // Thống kê mã giảm giá
+            int totalDiscounts = maGiamGiaDAO.countByCuaHangId(store.getMaCH());
+            int activeDiscounts = maGiamGiaDAO.getActiveDiscountsByStore(store.getMaCH()).size();
+            
+            // Set attributes
+            request.setAttribute("dailyRevenue", dailyRevenue);
+            request.setAttribute("monthlyRevenue", monthlyRevenue);
+            request.setAttribute("yearlyRevenue", yearlyRevenue);
+            request.setAttribute("last7DaysRevenue", last7DaysRevenue);
+            request.setAttribute("last12MonthsRevenue", last12MonthsRevenue);
+            
+            request.setAttribute("newOrdersCount", newOrdersCount);
+            request.setAttribute("totalOrders", totalOrders);
+            request.setAttribute("orderStats", orderStats);
+            
+            request.setAttribute("totalProducts", totalProducts);
+            request.setAttribute("activeProducts", activeProducts);
+            request.setAttribute("inactiveProducts", inactiveProducts);
+            request.setAttribute("topSellingProducts", topSellingProducts);
+            
+            request.setAttribute("totalDiscounts", totalDiscounts);
+            request.setAttribute("activeDiscounts", activeDiscounts);
+            
+            request.setAttribute("currentDay", currentDay);
+            request.setAttribute("currentMonth", currentMonth);
+            request.setAttribute("currentYear", currentYear);
+            request.setAttribute("now", new java.util.Date());
+            
+            request.setAttribute("pageTitle", "Thống kê & Báo cáo");
+            
+            // Forward to JSP
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/vendor/statistics.jsp");
+            dispatcher.forward(request, response);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Có lỗi xảy ra khi tải thống kê: " + e.getMessage());
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/vendor/statistics.jsp");
+            dispatcher.forward(request, response);
+        }
+    }
+    
+    /**
+     * Hiển thị trang cài đặt cửa hàng
+     */
+    private void showSettings(HttpServletRequest request, HttpServletResponse response, NguoiDung user, CuaHang store)
+            throws ServletException, IOException {
+        try {
+            // Set attributes
+            request.setAttribute("pageTitle", "Cài đặt Cửa hàng");
+            
+            // Forward to JSP
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/vendor/settings.jsp");
+            dispatcher.forward(request, response);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Có lỗi xảy ra khi tải cài đặt: " + e.getMessage());
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/vendor/settings.jsp");
+            dispatcher.forward(request, response);
+        }
+    }
+    
+    /**
+     * Cập nhật thông tin cửa hàng
+     */
+    private void updateStoreSettings(HttpServletRequest request, HttpServletResponse response, NguoiDung user, CuaHang store)
+            throws ServletException, IOException {
+        try {
+            // Lấy dữ liệu từ form
+            String tenCH = request.getParameter("tenCH");
+            String diaChi = request.getParameter("diaChi");
+            String soDienThoai = request.getParameter("soDienThoai");
+            String email = request.getParameter("email");
+            String moTa = request.getParameter("moTa");
+            
+            // Validation
+            if (tenCH == null || tenCH.trim().isEmpty()) {
+                response.sendRedirect(request.getContextPath() + "/vendor/settings?error=Tên cửa hàng không được để trống");
+                return;
+            }
+            
+            // Cập nhật thông tin
+            store.setTenCH(tenCH.trim());
+            
+            if (diaChi != null && !diaChi.trim().isEmpty()) {
+                store.setDiaChi(diaChi.trim());
+            }
+            
+            if (soDienThoai != null && !soDienThoai.trim().isEmpty()) {
+                store.setSoDienThoai(soDienThoai.trim());
+            }
+            
+            if (email != null && !email.trim().isEmpty()) {
+                store.setEmail(email.trim());
+            }
+            
+            if (moTa != null) {
+                store.setMoTa(moTa.trim());
+            }
+            
+            // Cập nhật vào database
+            boolean success = cuaHangDAO.update(store);
+            
+            if (success) {
+                response.sendRedirect(request.getContextPath() + "/vendor/settings?success=Cập nhật thông tin cửa hàng thành công");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/vendor/settings?error=Có lỗi xảy ra khi cập nhật");
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/vendor/settings?error=Dữ liệu không hợp lệ: " + e.getMessage());
         }
     }
     

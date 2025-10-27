@@ -4,22 +4,7 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <fmt:setLocale value="vi_VN" scope="session"/>
 
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${pageTitle} - UTESHOP Vendor</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts for Vietnamese -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <style>
+<style>
         /* Base font styling for Vietnamese */
         * {
             font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -131,18 +116,14 @@
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
             color: white;
         }
-    </style>
-</head>
-<body>
-    <!-- Include Header -->
-    <jsp:include page="../common/header.jsp" />
-    
-    <div class="container-fluid py-4">
+</style>
+
+<div class="container-fluid py-4">
         <div class="row">
             <!-- Sidebar Navigation -->
             <div class="col-md-3 col-lg-2">
                 <div class="bg-white rounded-3 shadow-sm p-3 mb-4">
-                    <h6 class="text-muted mb-3">VENDOR MENU</h6>
+                    <h6 class="text-muted mb-3">MENU</h6>
                     <div class="list-group list-group-flush">
                         <a href="${pageContext.request.contextPath}/vendor/dashboard" class="list-group-item list-group-item-action border-0">
                             <i class="fas fa-tachometer-alt me-2"></i> Dashboard
@@ -155,6 +136,12 @@
                         </a>
                         <a href="${pageContext.request.contextPath}/vendor/orders" class="list-group-item list-group-item-action border-0 active">
                             <i class="fas fa-shopping-cart me-2"></i> Đơn hàng
+                        </a>
+                        <a href="${pageContext.request.contextPath}/vendor/statistics" class="list-group-item list-group-item-action border-0">
+                            <i class="fas fa-chart-pie me-2"></i> Thống kê
+                        </a>
+                        <a href="${pageContext.request.contextPath}/vendor/settings" class="list-group-item list-group-item-action border-0">
+                            <i class="fas fa-cog me-2"></i> Cài đặt
                         </a>
                     </div>
                 </div>
@@ -381,79 +368,13 @@
             </div>
         </div>
     </div>
-    
-    <!-- Include Footer -->
-    <jsp:include page="../common/footer.jsp" />
-    
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <script>
-        function filterByStatus(status) {
-            let url = '${pageContext.request.contextPath}/vendor/orders';
-            if (status && status.trim() !== '') {
-                url += '?status=' + status;
-            }
-            window.location.href = url;
+
+<script>
+    function filterByStatus(status) {
+        let url = '${pageContext.request.contextPath}/vendor/orders';
+        if (status && status.trim() !== '') {
+            url += '?status=' + status;
         }
-    </script>
-</body>
-</html> 
-                   href="?status=DA_XAC_NHAN">Đã xác nhận</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link <c:if test="${currentStatus == 'DA_GIAO'}">active</c:if>" 
-                   href="?status=DA_GIAO">Đã giao (Hoàn thành)</a>
-            </li>
-            </ul>
-
-        <c:if test="${not empty param.msg}"><div class="alert alert-success">${param.msg}</div></c:if>
-        <c:if test="${not empty param.error}"><div class="alert alert-danger">${param.error}</div></c:if>
-
-        <table class="table table-bordered table-striped">
-            <thead>
-                <tr>
-                    <th>Mã DH</th>
-                    <th>Ngày đặt</th>
-                    <th>Khách hàng</th>
-                    <th>Tổng tiền</th>
-                    <th>Trạng thái</th>
-                    <th>Hành động</th>
-                </tr>
-            </thead>
-            <tbody>
-                <c:forEach var="order" items="${orders}">
-                    <tr>
-                        <td>${order.maDH}</td>
-                        <td><fmt:formatDate value="${order.ngayDat}" pattern="dd/MM/yyyy HH:mm"/></td>
-                        <td>${order.nguoiDung.hoTen}</td>
-                        <td><fmt:formatNumber value="${order.tongThanhToan}" type="currency" currencyCode="VND" /></td>
-                        <td>
-                            <span class="badge bg-primary">${order.trangThai}</span>
-                        </td>
-                        <td>
-                            <c:choose>
-                                <c:when test="${order.trangThai == 'CHUA_XAC_NHAN'}">
-                                    <form method="POST" action="${pageContext.request.contextPath}/vendor/order-action" style="display:inline;">
-                                        <input type="hidden" name="action" value="updateOrderStatus">
-                                        <input type="hidden" name="maDH" value="${order.maDH}">
-                                        <input type="hidden" name="newStatus" value="DA_XAC_NHAN">
-                                        <button type="submit" class="btn btn-sm btn-success">Xác nhận đơn</button>
-                                    </form>
-                                </c:when>
-                                <c:otherwise>
-                                    <a href="#" class="btn btn-sm btn-secondary">Xem chi tiết</a>
-                                </c:otherwise>
-                            </c:choose>
-                        </td>
-                    </tr>
-                </c:forEach>
-            </tbody>
-        </table>
-        
-        <c:if test="${empty orders}">
-            <p>Không có đơn hàng nào với trạng thái ${currentStatus}.</p>
-        </c:if>
-    </div>
-</body>
-</html>
+        window.location.href = url;
+    }
+</script> 
