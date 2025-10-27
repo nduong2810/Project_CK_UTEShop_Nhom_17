@@ -12,10 +12,10 @@ public class MaGiamGia {
     @Column(name = "maGG")
     private int maGG;
     
-    @Column(name = "maSo", unique = true, nullable = false, length = 20, columnDefinition = "varchar(20) NOT NULL DEFAULT ''")
+    @Column(name = "MaCode", unique = true, nullable = false, length = 20, columnDefinition = "varchar(20) NOT NULL DEFAULT ''")
     private String maSo = ""; // Mã code người dùng nhập
     
-    @Column(name = "tenChuongTrinh", nullable = false, length = 255, columnDefinition = "varchar(255) NOT NULL DEFAULT ''")
+    @Column(name = "tenChuongTrinh", nullable = false, length = 255, columnDefinition = "nvarchar(255) NOT NULL DEFAULT ''")
     private String tenChuongTrinh = "";
     
     @Column(name = "moTa", columnDefinition = "NTEXT")
@@ -39,6 +39,9 @@ public class MaGiamGia {
     
     @Column(name = "ngayKetThuc", nullable = false, columnDefinition = "datetime2(6) NOT NULL DEFAULT GETDATE()")
     private LocalDateTime ngayKetThuc = LocalDateTime.now().plusDays(30);
+    
+    @Column(name = "HanSuDung", nullable = false, columnDefinition = "datetime2(6) NOT NULL DEFAULT GETDATE()")
+    private LocalDateTime hanSuDung = LocalDateTime.now().plusDays(30); // Hạn sử dụng mã giảm giá
     
     @Column(name = "soLuongToiDa")
     private Integer soLuongToiDa; // Số lượng mã có thể sử dụng tối đa
@@ -96,6 +99,9 @@ public class MaGiamGia {
     public LocalDateTime getNgayKetThuc() { return ngayKetThuc; }
     public void setNgayKetThuc(LocalDateTime ngayKetThuc) { this.ngayKetThuc = ngayKetThuc; }
     
+    public LocalDateTime getHanSuDung() { return hanSuDung; }
+    public void setHanSuDung(LocalDateTime hanSuDung) { this.hanSuDung = hanSuDung; }
+    
     public Integer getSoLuongToiDa() { return soLuongToiDa; }
     public void setSoLuongToiDa(Integer soLuongToiDa) { this.soLuongToiDa = soLuongToiDa; }
     
@@ -110,6 +116,71 @@ public class MaGiamGia {
     
     public LocalDateTime getNgayTao() { return ngayTao; }
     public void setNgayTao(LocalDateTime ngayTao) { this.ngayTao = ngayTao; }
+    
+    // Business logic methods for deletion validation
+    public boolean canBeDeleted() {
+        LocalDateTime now = LocalDateTime.now();
+        
+        // Kiểm tra hết hạn (ngày kết thúc hoặc hạn sử dụng)
+        boolean isExpired = now.isAfter(ngayKetThuc) || now.isAfter(hanSuDung);
+        
+        // Kiểm tra hết lượt sử dụng
+        boolean isOutOfUses = soLuongToiDa != null && soLuongDaSuDung >= soLuongToiDa;
+        
+        return isExpired || isOutOfUses;
+    }
+    
+    public String getDeleteRestrictionReason() {
+        if (canBeDeleted()) {
+            return null;
+        }
+        
+        LocalDateTime now = LocalDateTime.now();
+        
+        // Kiểm tra các điều kiện chưa đạt
+        boolean isActive = now.isAfter(ngayBatDau) && now.isBefore(ngayKetThuc) && now.isBefore(hanSuDung);
+        boolean hasRemainingUses = soLuongToiDa == null || soLuongDaSuDung < soLuongToiDa;
+        
+        if (isActive && hasRemainingUses) {
+            return "Mã giảm giá vẫn còn hiệu lực và còn lượt sử dụng";
+        } else if (isActive) {
+            return "Mã giảm giá vẫn còn hiệu lực";
+        } else if (hasRemainingUses) {
+            return "Mã giảm giá vẫn còn lượt sử dụng";
+        }
+        
+        return "Chưa đủ điều kiện để xóa";
+    }
+    
+    // Helper method to check if discount is currently active
+    public boolean isActive() {
+        LocalDateTime now = LocalDateTime.now();
+        
+        // Kiểm tra trạng thái
+        if (!trangThai) {
+            return false;
+        }
+        
+        // Kiểm tra thời gian
+        if (ngayBatDau != null && now.isBefore(ngayBatDau)) {
+            return false; // Chưa đến thời gian bắt đầu
+        }
+        
+        if (ngayKetThuc != null && now.isAfter(ngayKetThuc)) {
+            return false; // Đã hết thời gian
+        }
+        
+        if (hanSuDung != null && now.isAfter(hanSuDung)) {
+            return false; // Đã hết hạn sử dụng
+        }
+        
+        // Kiểm tra số lượng
+        if (soLuongToiDa != null && soLuongDaSuDung >= soLuongToiDa) {
+            return false; // Đã hết lượt sử dụng
+        }
+        
+        return true;
+    }
     
     // Utility methods
     public boolean isValid() {
