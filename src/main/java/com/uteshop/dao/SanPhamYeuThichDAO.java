@@ -3,18 +3,17 @@ package com.uteshop.dao;
 import com.uteshop.entity.SanPhamYeuThich;
 import com.uteshop.entity.NguoiDung;
 import com.uteshop.entity.SanPham;
+import com.uteshop.util.JPAUtil;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import jakarta.persistence.TypedQuery;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class SanPhamYeuThichDAO {
-    private EntityManagerFactory emf = Persistence.createEntityManagerFactory("uteshop-pu");
-
     public boolean addToFavorites(int userId, int productId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = JPAUtil.getEntityManager();
         try {
             em.getTransaction().begin();
             
@@ -51,7 +50,7 @@ public class SanPhamYeuThichDAO {
     }
 
     public boolean removeFromFavorites(int userId, int productId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = JPAUtil.getEntityManager();
         try {
             em.getTransaction().begin();
             
@@ -68,9 +67,12 @@ public class SanPhamYeuThichDAO {
                 
                 // Update product favorite count
                 SanPham sanPham = em.find(SanPham.class, productId);
-                if (sanPham != null && sanPham.getLuotYeuThich() > 0) {
-                    sanPham.setLuotYeuThich(sanPham.getLuotYeuThich() - 1);
-                    em.merge(sanPham);
+                if (sanPham != null) {
+                    int currentLikes = sanPham.getLuotYeuThich() != null ? sanPham.getLuotYeuThich() : 0;
+                    if (currentLikes > 0) {
+                        sanPham.setLuotYeuThich(currentLikes - 1);
+                        em.merge(sanPham);
+                    }
                 }
             }
             
@@ -86,7 +88,7 @@ public class SanPhamYeuThichDAO {
     }
 
     public boolean isFavorite(int userId, int productId) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = JPAUtil.getEntityManager();
         try {
             TypedQuery<Long> query = em.createQuery(
                 "SELECT COUNT(s) FROM SanPhamYeuThich s WHERE s.nguoiDung.maND = :userId AND s.sanPham.maSP = :productId", 
@@ -100,10 +102,10 @@ public class SanPhamYeuThichDAO {
     }
 
     public List<SanPhamYeuThich> getFavoritesByUser(int userId, int page, int pageSize) {
-        EntityManager em = emf.createEntityManager();
+        EntityManager em = JPAUtil.getEntityManager();
         try {
             TypedQuery<SanPhamYeuThich> query = em.createQuery(
-                "SELECT s FROM SanPhamYeuThich s JOIN FETCH s.sanPham WHERE s.nguoiDung.maND = :userId ORDER BY s.ngayYeuThich DESC", 
+                "SELECT s FROM SanPhamYeuThich s JOIN FETCH s.sanPham WHERE s.nguoiDung.maND = :userId ORDER BY s.id DESC",
                 SanPhamYeuThich.class);
             query.setParameter("userId", userId);
             query.setFirstResult(page * pageSize);
@@ -114,14 +116,41 @@ public class SanPhamYeuThichDAO {
         }
     }
 
-    public List<SanPham> getMostFavoriteProducts(int limit) {
-        EntityManager em = emf.createEntityManager();
+    public long countFavoritesByUser(int userId) {
+        EntityManager em = JPAUtil.getEntityManager();
         try {
-            TypedQuery<SanPham> query = em.createQuery(
-                "SELECT s FROM SanPham s WHERE s.trangThai = true ORDER BY s.luotYeuThich DESC", 
-                SanPham.class);
-            query.setMaxResults(limit);
-            return query.getResultList();
+            TypedQuery<Long> query = em.createQuery(
+                "SELECT COUNT(s) FROM SanPhamYeuThich s WHERE s.nguoiDung.maND = :userId",
+                Long.class);
+            query.setParameter("userId", userId);
+            return query.getSingleResult();
+        } finally {
+            em.close();
+        }
+    }
+
+    public boolean existsByUserAndProduct(int userId, int productId) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            TypedQuery<Long> query = em.createQuery(
+                "SELECT COUNT(s) FROM SanPhamYeuThich s WHERE s.nguoiDung.maND = :userId AND s.sanPham.maSP = :productId",
+                Long.class);
+            query.setParameter("userId", userId);
+            query.setParameter("productId", productId);
+            return query.getSingleResult() > 0;
+        } finally {
+            em.close();
+        }
+    }
+
+    public Set<Integer> getFavoriteProductIds(int userId) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            TypedQuery<Integer> query = em.createQuery(
+                "SELECT s.sanPham.maSP FROM SanPhamYeuThich s WHERE s.nguoiDung.maND = :userId", 
+                Integer.class);
+            query.setParameter("userId", userId);
+            return query.getResultList().stream().collect(Collectors.toSet());
         } finally {
             em.close();
         }

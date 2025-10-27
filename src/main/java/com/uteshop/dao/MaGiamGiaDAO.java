@@ -1,6 +1,7 @@
 package com.uteshop.dao;
 
 import com.uteshop.entity.MaGiamGia;
+<<<<<<< HEAD
 import com.uteshop.entity.CuaHang;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -23,11 +24,35 @@ public class MaGiamGiaDAO {
             );
             query.setParameter("maCH", maCH);
             return query.getResultList();
+=======
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.Persistence;
+import jakarta.persistence.TypedQuery;
+
+public class MaGiamGiaDAO {
+    private EntityManagerFactory emf = Persistence.createEntityManagerFactory("uteshop-pu");
+
+    private EntityManager getEntityManager() {
+        return emf.createEntityManager();
+    }
+
+    public MaGiamGia findByCode(String code) {
+        EntityManager em = getEntityManager();
+        try {
+            TypedQuery<MaGiamGia> q = em.createQuery("SELECT m FROM MaGiamGia m WHERE m.maSo = :code", MaGiamGia.class);
+            q.setParameter("code", code);
+            return q.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
+>>>>>>> origin/main
         } finally {
             em.close();
         }
     }
 
+<<<<<<< HEAD
     // Lấy danh sách mã giảm giá theo cửa hàng với phân trang
     public List<MaGiamGia> findByCuaHangIdWithPaging(int maCH, int offset, int limit) {
         EntityManager em = emf.createEntityManager();
@@ -101,11 +126,30 @@ public class MaGiamGiaDAO {
         } catch (Exception e) {
             em.getTransaction().rollback();
             e.printStackTrace();
+=======
+    public boolean incrementUsage(int maGG) {
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            MaGiamGia m = em.find(MaGiamGia.class, maGG);
+            if (m == null) {
+                em.getTransaction().rollback();
+                return false;
+            }
+            m.setSoLuongDaSuDung(m.getSoLuongDaSuDung() + 1);
+            em.merge(m);
+            em.getTransaction().commit();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            try { if (em.getTransaction().isActive()) em.getTransaction().rollback(); } catch (Exception ex) {}
+>>>>>>> origin/main
             return false;
         } finally {
             em.close();
         }
     }
+<<<<<<< HEAD
 
     // Cập nhật mã giảm giá
     public boolean update(MaGiamGia maGiamGia) {
@@ -204,3 +248,6 @@ public class MaGiamGiaDAO {
         }
     }
 }
+=======
+}
+>>>>>>> origin/main

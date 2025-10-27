@@ -13,11 +13,14 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet("/user/favorites")
+@WebServlet({"/user/favorites/*", "/user/wishlist"})
 public class FavoriteController extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    
-    private SanPhamYeuThichDAO sanPhamYeuThichDAO = new SanPhamYeuThichDAO();
+    private SanPhamYeuThichDAO sanPhamYeuThichDAO;
+
+    public void init() {
+        sanPhamYeuThichDAO = new SanPhamYeuThichDAO();
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
@@ -30,26 +33,20 @@ public class FavoriteController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return;
         }
-        
-        String action = request.getParameter("action");
-        
-        try {
-            if (action == null || action.equals("list")) {
-                // Hiển thị danh sách sản phẩm yêu thích
-                viewFavorites(request, response, user);
-            } else if (action.equals("remove")) {
-                // Xóa sản phẩm khỏi danh sách yêu thích
+
+        String pathInfo = request.getPathInfo();
+        String action = (pathInfo != null && pathInfo.length() > 1) ? pathInfo.substring(1) : "list";
+
+        switch (action) {
+            case "remove":
                 removeFromFavorites(request, response, user);
-            } else {
+                break;
+            default:
                 viewFavorites(request, response, user);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("error", "Đã xảy ra lỗi: " + e.getMessage());
-            viewFavorites(request, response, user);
+                break;
         }
     }
-    
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
@@ -58,141 +55,132 @@ public class FavoriteController extends HttpServlet {
         NguoiDung user = (NguoiDung) session.getAttribute("user");
         
         if (user == null) {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write("{\"status\":\"error\",\"message\":\"Vui lòng đăng nhập\"}");
+            return;
+        }
+
+        String pathInfo = request.getPathInfo();
+        String action = (pathInfo != null && pathInfo.length() > 1) ? pathInfo.substring(1) : "add";
+
+        switch (action) {
+            case "add":
+                addToFavorites(request, response, user);
+                break;
+            case "toggle":
+                toggleFavorite(request, response, user);
+                break;
+            default:
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                break;
+        }
+    }
+
+    private void viewFavorites(HttpServletRequest request, HttpServletResponse response, NguoiDung user) 
+            throws ServletException, IOException {
+        
+        if (user == null) {
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return;
         }
         
-        String action = request.getParameter("action");
+        int page = 0;
+        int pageSize = 12;
         
         try {
-            if (action.equals("add")) {
-                // Thêm sản phẩm vào danh sách yêu thích
-                addToFavorites(request, response, user);
-            } else if (action.equals("toggle")) {
-                // Toggle trạng thái yêu thích
-                toggleFavorite(request, response, user);
-            } else {
-                viewFavorites(request, response, user);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            request.setAttribute("error", "Đã xảy ra lỗi: " + e.getMessage());
-            viewFavorites(request, response, user);
-        }
-    }
-    
-    private void viewFavorites(HttpServletRequest request, HttpServletResponse response, NguoiDung user) 
-            throws ServletException, IOException {
-        
-        // Phân trang
-        int page = 0;
-        int pageSize = 20;
-        
-        String pageParam = request.getParameter("page");
-        if (pageParam != null) {
-            try {
+            String pageParam = request.getParameter("page");
+            if (pageParam != null && !pageParam.isEmpty()) {
                 page = Integer.parseInt(pageParam);
                 if (page < 0) page = 0;
-            } catch (NumberFormatException e) {
-                page = 0;
             }
+        } catch (NumberFormatException e) {
+            page = 0;
         }
-        
+
         List<SanPhamYeuThich> favorites = sanPhamYeuThichDAO.getFavoritesByUser(user.getMaND(), page, pageSize);
-        
+        long totalItems = sanPhamYeuThichDAO.countFavoritesByUser(user.getMaND());
+        int totalPages = (int) Math.ceil((double) totalItems / pageSize);
+
         request.setAttribute("favorites", favorites);
         request.setAttribute("currentPage", page);
         request.setAttribute("pageSize", pageSize);
-        
-        request.getRequestDispatcher("/WEB-INF/views/user/favorites.jsp").forward(request, response);
+        request.setAttribute("totalPages", totalPages);
+
+        request.getRequestDispatcher("/WEB-INF/views/user/wishlist.jsp").forward(request, response);
     }
-    
+
     private void addToFavorites(HttpServletRequest request, HttpServletResponse response, NguoiDung user) 
             throws ServletException, IOException {
         
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
         try {
-            int productId = Integer.parseInt(request.getParameter("productId"));
+            int productId = Integer.parseInt(request.getParameter("maSP"));
             
+            if (sanPhamYeuThichDAO.isFavorite(user.getMaND(), productId)) {
+                response.getWriter().write("{\"status\":\"error\",\"message\":\"Sản phẩm đã có trong danh sách yêu thích\"}");
+                return;
+            }
+
             boolean success = sanPhamYeuThichDAO.addToFavorites(user.getMaND(), productId);
             
             if (success) {
-                request.setAttribute("success", "Đã thêm vào danh sách yêu thích");
+                response.getWriter().write("{\"status\":\"success\",\"message\":\"Đã thêm vào danh sách yêu thích\"}");
             } else {
-                request.setAttribute("error", "Sản phẩm đã có trong danh sách yêu thích");
+                response.getWriter().write("{\"status\":\"error\",\"message\":\"Không thể thêm sản phẩm vào danh sách yêu thích\"}");
             }
-            
-            // Redirect về trang trước đó hoặc danh sách yêu thích
-            String referer = request.getHeader("Referer");
-            if (referer != null && !referer.contains("/user/favorites")) {
-                response.sendRedirect(referer);
-            } else {
-                response.sendRedirect(request.getContextPath() + "/user/favorites");
-            }
-            
         } catch (NumberFormatException e) {
-            request.setAttribute("error", "Dữ liệu không hợp lệ");
-            viewFavorites(request, response, user);
+            response.getWriter().write("{\"status\":\"error\",\"message\":\"Mã sản phẩm không hợp lệ\"}");
         }
     }
-    
+
     private void removeFromFavorites(HttpServletRequest request, HttpServletResponse response, NguoiDung user) 
             throws ServletException, IOException {
         
         try {
-            int productId = Integer.parseInt(request.getParameter("productId"));
-            
+            int productId = Integer.parseInt(request.getParameter("maSP"));
             boolean success = sanPhamYeuThichDAO.removeFromFavorites(user.getMaND(), productId);
             
             if (success) {
-                request.setAttribute("success", "Đã xóa khỏi danh sách yêu thích");
+                response.sendRedirect(request.getContextPath() + "/user/favorites");
             } else {
-                request.setAttribute("error", "Không thể xóa sản phẩm");
+                request.setAttribute("error", "Không thể xóa sản phẩm khỏi danh sách yêu thích");
+                viewFavorites(request, response, user);
             }
-            
-            // Redirect để tránh resubmit form
-            response.sendRedirect(request.getContextPath() + "/user/favorites");
-            
         } catch (NumberFormatException e) {
-            request.setAttribute("error", "Dữ liệu không hợp lệ");
+            request.setAttribute("error", "Mã sản phẩm không hợp lệ");
             viewFavorites(request, response, user);
         }
     }
-    
+
     private void toggleFavorite(HttpServletRequest request, HttpServletResponse response, NguoiDung user) 
             throws ServletException, IOException {
         
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+
         try {
-            int productId = Integer.parseInt(request.getParameter("productId"));
+            int productId = Integer.parseInt(request.getParameter("maSP"));
             
-            boolean isFavorite = sanPhamYeuThichDAO.isFavorite(user.getMaND(), productId);
-            boolean success;
-            String message;
-            
-            if (isFavorite) {
-                success = sanPhamYeuThichDAO.removeFromFavorites(user.getMaND(), productId);
-                message = success ? "Đã xóa khỏi danh sách yêu thích" : "Không thể xóa sản phẩm";
+            if (sanPhamYeuThichDAO.isFavorite(user.getMaND(), productId)) {
+                boolean success = sanPhamYeuThichDAO.removeFromFavorites(user.getMaND(), productId);
+                if (success) {
+                    response.getWriter().write("{\"status\":\"success\",\"message\":\"Đã xóa khỏi danh sách yêu thích\",\"action\":\"removed\"}");
+                } else {
+                    response.getWriter().write("{\"status\":\"error\",\"message\":\"Không thể xóa sản phẩm khỏi danh sách yêu thích\"}");
+                }
             } else {
-                success = sanPhamYeuThichDAO.addToFavorites(user.getMaND(), productId);
-                message = success ? "Đã thêm vào danh sách yêu thích" : "Không thể thêm sản phẩm";
+                boolean success = sanPhamYeuThichDAO.addToFavorites(user.getMaND(), productId);
+                if (success) {
+                    response.getWriter().write("{\"status\":\"success\",\"message\":\"Đã thêm vào danh sách yêu thích\",\"action\":\"added\"}");
+                } else {
+                    response.getWriter().write("{\"status\":\"error\",\"message\":\"Không thể thêm sản phẩm vào danh sách yêu thích\"}");
+                }
             }
-            
-            if (success) {
-                request.setAttribute("success", message);
-            } else {
-                request.setAttribute("error", message);
-            }
-            
-            // Redirect về trang trước đó
-            String referer = request.getHeader("Referer");
-            if (referer != null) {
-                response.sendRedirect(referer);
-            } else {
-                response.sendRedirect(request.getContextPath() + "/user/favorites");
-            }
-            
         } catch (NumberFormatException e) {
-            request.setAttribute("error", "Dữ liệu không hợp lệ");
-            viewFavorites(request, response, user);
+            response.getWriter().write("{\"status\":\"error\",\"message\":\"Mã sản phẩm không hợp lệ\"}");
         }
     }
 }
