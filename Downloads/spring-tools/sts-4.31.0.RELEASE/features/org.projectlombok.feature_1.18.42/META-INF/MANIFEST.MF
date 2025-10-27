@@ -1,7 +1,0 @@
-Manifest-Version: 1.0
-Created-By: 23 (Eclipse Adoptium)
-
-Name: feature.xml
-SHA-384-Digest: ZmpCsCNKeH3FtAy2iRP2GKrQ6q1jUic7hx1mIvOcDbDcL4nhJI8Q0T5m
- PRDge9rq
-
