@@ -1,255 +1,201 @@
 <%@page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
-<%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
 
 <style>
-:root {
-	--bg: #f5f7fb;
-	--border: #e5e7eb;
-	--card: #fff;
-	--muted: #6b7280;
-	--primary: #1a73e8
-}
-
-.admin-shell {
-	display: flex;
-	min-height: 100vh;
-	background: var(--bg)
-}
-
-.admin-content {
-	flex: 1;
-	min-width: 0
-}
-
-.admin-container {
-	padding: 16px
-}
-
-.title {
-	font-size: 20px;
-	font-weight: 800;
-	margin: 8px 0 12px;
-	color: #111827
+.form-grid {
+	display: grid;
+	grid-template-columns: repeat(12, 1fr);
+	gap: 16px
 }
 
 .card {
 	background: #fff;
-	border: 1px solid var(--border);
-	border-radius: 16px;
-	padding: 16px;
-	max-width: 960px
+	border: 1px solid #e5e7eb;
+	border-radius: 12px;
+	padding: 16px
 }
 
-.grid {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 14px
-}
-
-@media ( max-width :900px) {
-	.grid {
-		grid-template-columns: 1fr
-	}
-}
-
-.field {
+.form-row {
 	display: flex;
 	flex-direction: column;
 	gap: 6px
 }
 
 label {
-	font-weight: 700
+	font-size: 13px;
+	color: #374151;
+	font-weight: 600
 }
 
-.input {
-	border: 1px solid var(--border);
-	border-radius: 10px;
-	padding: 10px;
-	background: #fff;
-	height: 40px
-}
-
-textarea {
-	border: 1px solid var(--border);
-	border-radius: 10px;
-	padding: 10px;
-	background: #fff;
-	min-height: 100px
-}
-
-.actions {
-	display: flex;
-	gap: 10px;
-	justify-content: space-between;
-	margin-top: 14px;
-	flex-wrap: wrap
+input[type=text], input[type=number], input[type=date], select, textarea
+	{
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	padding: 10px 12px;
+	font-size: 14px
 }
 
 .btn {
-	height: 40px;
-	border-radius: 10px;
-	border: 1px solid var(--border);
-	background: #fff;
-	cursor: pointer;
+	height: 36px;
 	padding: 0 14px;
-	font-weight: 800
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	background: #fff;
+	cursor: pointer
 }
 
 .btn-primary {
-	background: #1a73e8;
+	background: #0b57d0;
 	color: #fff;
 	border-color: transparent
 }
 
-.alert {
-	margin-bottom: 12px;
-	padding: 10px;
-	border-radius: 8px;
-	font-size: 14px
-}
-
-.alert-ok {
-	background: #ecfdf5;
-	border: 1px solid #a7f3d0;
-	color: #065f46
-}
-
-.alert-err {
-	background: #fef2f2;
-	border: 1px solid #fecaca;
+.btn-danger {
+	border-color: #fecaca;
 	color: #991b1b
 }
 
-.helper {
-	font-size: 12px;
-	color: #6b7280
+.row-actions {
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end
+}
+
+.help {
+	color: #6b7280;
+	font-size: 12px
+}
+
+.badge {
+	display: inline-block;
+	border-radius: 9999px;
+	padding: 3px 8px;
+	font-size: 12px
+}
+
+.badge-gray {
+	background: #f3f4f6;
+	color: #374151;
+	border: 1px solid #e5e7eb
 }
 </style>
 
-<div class="admin-shell">
-	<%@ include file="/WEB-INF/views/admin/sidebar.jsp"%>
+<div class="admin-container">
+	<h2 style="margin: 8px 0 16px">Mã giảm giá</h2>
 
-	<main class="admin-content">
-		<div class="admin-container">
-			<div class="title">
-				<c:choose>
-					<c:when test="${c.maGG == null}">Thêm mã giảm giá</c:when>
-					<c:otherwise>Sửa mã giảm giá #${c.maGG}</c:otherwise>
-				</c:choose>
+	<c:set var="isNew" value="${empty c.maGG}" />
+
+	<form method="post"
+		action="${pageContext.request.contextPath}/admin/coupons/edit">
+		<input type="hidden" name="maGG" value="${c.maGG}" />
+
+		<div class="form-grid">
+			<!-- Cột trái -->
+			<div class="card" style="grid-column: span 8">
+				<div class="form-grid">
+					<div class="form-row" style="grid-column: span 6">
+						<label>Mã code (unique)</label>
+						<!-- Controller map name=maCode -> entity.setMaSo(...) -->
+						<input type="text" name="maCode" value="${c.maSo}" maxlength="50"
+							required />
+					</div>
+
+					<div class="form-row" style="grid-column: span 6">
+						<label>Tên chương trình</label> <input type="text"
+							name="tenChuongTrinh" value="${c.tenChuongTrinh}" maxlength="255"
+							required />
+					</div>
+
+					<div class="form-row" style="grid-column: span 4">
+						<label>Loại giảm</label> <select name="loaiGiam">
+							<option value="percent"
+								<c:if test="${c.loaiGiam == 'PERCENT'}">selected</c:if>>Giảm
+								%</option>
+							<option value="amount"
+								<c:if test="${c.loaiGiam == 'FIXED_AMOUNT'}">selected</c:if>>Giảm
+								tiền cố định</option>
+						</select>
+					</div>
+
+					<div class="form-row" style="grid-column: span 4">
+						<label>Giá trị giảm</label> <input type="number" step="0.01"
+							name="giaTriGiam" value="${c.giaTriGiam}" required />
+						<div class="help">Nếu là % → nhập 5, 10… | Nếu là tiền →
+							nhập số tiền</div>
+					</div>
+
+					<div class="form-row" style="grid-column: span 4">
+						<label>Giảm tối đa (khi giảm %)</label> <input type="number"
+							step="0.01" name="giaTriGiamToiDa" value="${c.giaTriGiamToiDa}" />
+					</div>
+
+					<div class="form-row" style="grid-column: span 6">
+						<label>Giá trị đơn tối thiểu</label> <input type="number"
+							step="0.01" name="giaTriDonHangToiThieu"
+							value="${c.giaTriDonHangToiThieu}" />
+					</div>
+
+					<div class="form-row" style="grid-column: span 6">
+						<label>Số lượt dùng tối đa</label> <input type="number"
+							name="soLuongToiDa" value="${c.soLuongToiDa}" />
+						<div class="help">Để trống/0 = không giới hạn</div>
+					</div>
+
+					<!-- NGÀY: entity là LocalDateTime => dùng toLocalDate() -->
+					<div class="form-row" style="grid-column: span 4">
+						<label>Ngày bắt đầu</label> <input type="date" name="ngayBatDau"
+							value="${c.ngayBatDau != null ? c.ngayBatDau.toLocalDate() : ''}" />
+					</div>
+
+					<div class="form-row" style="grid-column: span 4">
+						<label>Ngày kết thúc</label> <input type="date" name="ngayKetThuc"
+							value="${c.ngayKetThuc != null ? c.ngayKetThuc.toLocalDate() : ''}" />
+					</div>
+
+					<div class="form-row" style="grid-column: span 4">
+						<label>Hạn sử dụng</label> <input type="date" name="hanSuDung"
+							value="${c.hanSuDung != null ? c.hanSuDung.toLocalDate() : ''}" />
+					</div>
+
+					<div class="form-row" style="grid-column: span 12">
+						<label>Mô tả</label>
+						<textarea name="moTa" rows="4"><c:out value="${c.moTa}" /></textarea>
+					</div>
+				</div>
 			</div>
 
-			<c:if test="${param.msg=='saved'}">
-				<div class="alert alert-ok">Đã lưu thay đổi.</div>
-			</c:if>
-			<c:if test="${param.msg=='code_exists'}">
-				<div class="alert alert-err">Mã code đã tồn tại.</div>
-			</c:if>
-			<c:if test="${param.msg=='error'}">
-				<div class="alert alert-err">Có lỗi xảy ra, vui lòng thử lại.</div>
-			</c:if>
+			<!-- Cột phải -->
+			<div class="card" style="grid-column: span 4">
+				<div class="form-row">
+					<label>Trạng thái kích hoạt</label> <label
+						style="display: flex; gap: 8px; align-items: center"> <input
+						type="checkbox" name="trangThai"
+						<c:if test="${c.trangThai}">checked</c:if> /> <span>${c.trangThai ? 'Đang bật' : 'Đang tắt'}</span>
+					</label>
+				</div>
 
-			<div class="actions"
-				style="justify-content: flex-start; margin-top: 0">
-				<button class="btn"
-					onclick="location.href='${pageContext.request.contextPath}/admin/coupons'">←
-					Danh sách</button>
+				<div class="form-row">
+					<label>Lượt đã dùng</label>
+					<div class="badge badge-gray">${c.soLuongDaSuDung}</div>
+				</div>
 
-				<c:if test="${c.maGG != null}">
+				<div class="row-actions" style="margin-top: 16px">
+					<button class="btn" type="button" onclick="history.back()">Huỷ</button>
+					<button class="btn btn-primary" type="submit">Lưu</button>
+				</div>
+
+				<c:if test="${not isNew}">
+					<hr
+						style="margin: 16px 0; border: none; border-top: 1px solid #e5e7eb" />
 					<form method="post"
 						action="${pageContext.request.contextPath}/admin/coupons/delete"
 						style="display: inline"
-						onsubmit="return confirm('Xoá mã #${c.maGG} (${c.maCode})?');">
+						onsubmit="return confirm('Xoá mã #${c.maGG} (${c.maSo})?');">
 						<input type="hidden" name="id" value="${c.maGG}">
-						<button class="btn" style="border-color: #fecaca; color: #991b1b">Xoá</button>
+						<button class="btn btn-danger" type="submit">Xoá</button>
 					</form>
 				</c:if>
 			</div>
-
-			<form method="post"
-				action="${pageContext.request.contextPath}/admin/coupons/edit">
-				<c:if test="${c.maGG != null}">
-					<input type="hidden" name="maGG" value="${c.maGG}" />
-				</c:if>
-
-				<div class="card">
-					<div class="grid">
-						<div class="field">
-							<label>Mã code</label> <input class="input" name="maCode"
-								value="${c.maCode}" required />
-						</div>
-
-						<div class="field">
-							<label>Mã số (tuỳ chọn)</label> <input class="input" name="maSo"
-								value="${c.maSo}" />
-						</div>
-
-						<div class="field" style="grid-column: 1/-1">
-							<label>Tên chương trình</label> <input class="input"
-								name="tenChuongTrinh" value="${c.tenChuongTrinh}" required />
-						</div>
-
-						<div class="field">
-							<label>Loại giảm</label> <select class="input" name="loaiGiam"
-								id="loaiGiam" onchange="toggleType()" required>
-								<option value="amount" ${c.loaiGiam=='amount'?'selected':''}>Giảm
-									tiền</option>
-								<option value="percent" ${c.loaiGiam=='percent'?'selected':''}>Giảm
-									%</option>
-							</select>
-						</div>
-
-						<div class="field" id="boxAmount">
-							<label>Số tiền giảm (VNĐ)</label> <input class="input"
-								name="giaTriGiam" value="${c.giaTriGiam}" />
-						</div>
-
-						<div class="field" id="boxPercent">
-							<label>Phần trăm giảm (%)</label> <input class="input"
-								name="phanTramGiam" value="${c.phanTramGiam}" />
-						</div>
-
-						<div class="field">
-							<label>Đơn hàng tối thiểu (VNĐ)</label> <input class="input"
-								name="giaTriToiThieu" value="${c.giaTriToiThieu}" />
-							<div class="helper">Áp dụng khi loại giảm là %, để giới hạn
-								mức tối thiểu.</div>
-						</div>
-
-						<div class="field">
-							<label>Ngày bắt đầu</label> <input class="input" type="date"
-								name="ngayBatDau"
-								value="<fmt:formatDate value='${c.ngayBatDau}' pattern='yyyy-MM-dd'/>"
-								required />
-						</div>
-
-						<div class="field">
-							<label>Ngày kết thúc</label> <input class="input" type="date"
-								name="ngayKetThuc"
-								value="<fmt:formatDate value='${c.ngayKetThuc}' pattern='yyyy-MM-dd'/>"
-								required />
-						</div>
-					</div>
-
-					<div class="actions">
-						<a class="btn"
-							href="${pageContext.request.contextPath}/admin/coupons">Hủy</a>
-						<button class="btn btn-primary" type="submit">Lưu</button>
-					</div>
-				</div>
-			</form>
 		</div>
-	</main>
+	</form>
 </div>
-
-<script>
-	function toggleType() {
-		var t = document.getElementById('loaiGiam').value;
-		document.getElementById('boxAmount').style.display = (t === 'amount') ? 'block'
-				: 'none';
-		document.getElementById('boxPercent').style.display = (t === 'percent') ? 'block'
-				: 'none';
-	}
-	toggleType();
-</script>

@@ -5,6 +5,7 @@ import com.uteshop.util.JPAUtil;
 import com.uteshop.entity.CuaHang;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.Persistence;
 import jakarta.persistence.TypedQuery;
@@ -336,4 +337,23 @@ public class MaGiamGiaDAO {
 			em.close();
 		}
 	}
+	public boolean create(MaGiamGia e) {
+		EntityManager em = JPAUtil.getEntityManager();
+		EntityTransaction tx = em.getTransaction();
+		try {
+			tx.begin();
+			em.persist(e);
+			tx.commit();
+			return true;
+		} catch (Exception ex) {
+			if (tx.isActive())
+				tx.rollback();
+			ex.printStackTrace();
+			return false;
+		} finally {
+			em.close();
+		}
+	}
+
+	
 }
