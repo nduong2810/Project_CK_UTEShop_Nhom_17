@@ -15,6 +15,7 @@ import jakarta.servlet.http.*;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -32,7 +33,7 @@ public class ProductCrudController extends HttpServlet {
     private final CuaHangDAO cuaHangDAO = new CuaHangDAO();
     private final DanhMucDAO dmDAO = new DanhMucDAO();
 
-    private static final String UPLOAD_DIR = "uploads" + File.separator + "products";
+    private static final String UPLOAD_DIR = "assets" + File.separator + "img";
 
     private NguoiDung checkAuth(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
@@ -160,22 +161,121 @@ public class ProductCrudController extends HttpServlet {
 
             product.setNgayCapNhat(new Date());
 
+            // Xử lý upload ảnh
             Part filePart = request.getPart("anhMinhHoa");
-            String fileName = filePart.getSubmittedFileName();
+            String fileName = (filePart != null) ? filePart.getSubmittedFileName() : null;
             
+            // Chỉ xử lý upload ảnh khi có file mới được chọn
             if (fileName != null && !fileName.isEmpty()) {
-                String applicationPath = request.getServletContext().getRealPath("");
-                String uploadPath = applicationPath + File.separator + UPLOAD_DIR;
+                // Lấy đường dẫn thực tế của webapp deployed
+                String webappPath = request.getServletContext().getRealPath("/");
+                System.out.println("Original webapp path: " + webappPath);
                 
-                File uploadDir = new File(uploadPath);
-                if (!uploadDir.exists()) uploadDir.mkdirs();
+                // Xác định đường dẫn source webapp bằng nhiều cách
+                String sourceWebappPath = null;
+                
+                // Cách 1: Thử thay thế target path
+                if (webappPath.contains("target")) {
+                    String projectRoot = webappPath.substring(0, webappPath.indexOf("target"));
+                    sourceWebappPath = projectRoot + "src" + File.separator + "main" + File.separator + "webapp" + File.separator;
+                    System.out.println("Method 1 - Source webapp path: " + sourceWebappPath);
+                }
+                
+                // Cách 2: Thử đường dẫn cố định dựa trên cấu trúc project
+                if (sourceWebappPath == null || !new File(sourceWebappPath).exists()) {
+                    // Sử dụng đường dẫn cố định dựa trên thông tin từ workspace
+                    sourceWebappPath = "D:" + File.separator + "HK I Year 3(first)" + File.separator + "LTWeb" + File.separator + "Project_CK_UTEShop_Nhom_17" + File.separator + "src" + File.separator + "main" + File.separator + "webapp" + File.separator;
+                    System.out.println("Method 2 - Fixed source webapp path: " + sourceWebappPath);
+                }
+                
+                // Cách 3: Fallback sử dụng working directory
+                if (sourceWebappPath == null || !new File(sourceWebappPath).exists()) {
+                    String userDir = System.getProperty("user.dir");
+                    if (userDir.contains("Project_CK_UTEShop_Nhom_17")) {
+                        sourceWebappPath = userDir + File.separator + "src" + File.separator + "main" + File.separator + "webapp" + File.separator;
+                    } else {
+                        sourceWebappPath = webappPath; // Fallback to deployed path
+                    }
+                    System.out.println("Method 3 - Working dir source webapp path: " + sourceWebappPath);
+                }
+                
+                String sourceUploadPath = sourceWebappPath + "assets" + File.separator + "img";
+                String deployedUploadPath = webappPath + "assets" + File.separator + "img";
+                
+                System.out.println("Final source upload path: " + sourceUploadPath);
+                System.out.println("Final deployed upload path: " + deployedUploadPath);
+                
+                // Tạo cả 2 thư mục nếu chưa tồn tại
+                File sourceUploadDir = new File(sourceUploadPath);
+                File deployedUploadDir = new File(deployedUploadPath);
+                
+                if (!sourceUploadDir.exists()) {
+                    boolean created = sourceUploadDir.mkdirs();
+                    System.out.println("Created source directory: " + created + " at " + sourceUploadPath);
+                }
+                if (!deployedUploadDir.exists()) {
+                    boolean created = deployedUploadDir.mkdirs();
+                    System.out.println("Created deployed directory: " + created + " at " + deployedUploadPath);
+                }
 
                 String savedFileName = System.currentTimeMillis() + "_" + fileName;
-                filePart.write(uploadPath + File.separator + savedFileName);
                 
-                product.setHinhAnh(UPLOAD_DIR + File.separator + savedFileName);
+                try {
+                    // Xóa ảnh cũ nếu đang update và có ảnh cũ
+                    if (isUpdate && product.getHinhAnh() != null && !product.getHinhAnh().isEmpty()) {
+                        String oldSourceFilePath = sourceUploadPath + File.separator + product.getHinhAnh();
+                        String oldDeployedFilePath = deployedUploadPath + File.separator + product.getHinhAnh();
+                        
+                        File oldSourceFile = new File(oldSourceFilePath);
+                        File oldDeployedFile = new File(oldDeployedFilePath);
+                        
+                        if (oldSourceFile.exists()) {
+                            boolean deleted = oldSourceFile.delete();
+                            System.out.println("Deleted old source image: " + deleted + " at " + oldSourceFilePath);
+                        }
+                        if (oldDeployedFile.exists()) {
+                            boolean deleted = oldDeployedFile.delete();
+                            System.out.println("Deleted old deployed image: " + deleted + " at " + oldDeployedFilePath);
+                        }
+                    }
+                    
+                    // Lưu ảnh mới vào deployed (bắt buộc để hiển thị)
+                    String deployedFilePath = deployedUploadPath + File.separator + savedFileName;
+                    filePart.write(deployedFilePath);
+                    File deployedFile = new File(deployedFilePath);
+                    System.out.println("Saved new image to deployed: " + deployedFile.exists() + " at " + deployedFilePath);
+                    
+                    // Lưu vào source (nếu thư mục tồn tại)
+                    if (sourceUploadDir.exists() && sourceUploadDir.canWrite()) {
+                        String sourceFilePath = sourceUploadPath + File.separator + savedFileName;
+                        // Copy file từ deployed sang source
+                        java.nio.file.Files.copy(
+                            deployedFile.toPath(), 
+                            new File(sourceFilePath).toPath(), 
+                            java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                        );
+                        File sourceFile = new File(sourceFilePath);
+                        System.out.println("Copied new image to source: " + sourceFile.exists() + " at " + sourceFilePath);
+                    } else {
+                        System.out.println("Cannot write to source directory: " + sourceUploadPath);
+                    }
+                    
+                } catch (IOException e) {
+                    System.err.println("Error saving files: " + e.getMessage());
+                    e.printStackTrace();
+                    throw e;
+                }
+                
+                // Cập nhật tên file ảnh mới vào database
+                product.setHinhAnh(savedFileName);
+                System.out.println("Updated product image to: " + savedFileName);
+                
             } else if (!isUpdate && (product.getHinhAnh() == null || product.getHinhAnh().isEmpty())) {
+                // Chỉ bắt buộc upload ảnh khi thêm mới sản phẩm
                 throw new IllegalArgumentException("Vui lòng chọn ảnh minh họa cho sản phẩm mới.");
+            } else if (isUpdate) {
+                // Nếu đang update và không có file mới, giữ nguyên ảnh cũ
+                System.out.println("No new image uploaded, keeping existing image: " + product.getHinhAnh());
             }
 
             System.out.println("Product MaCH before insert: " + (product.getCuaHang() != null ? product.getCuaHang().getMaCH() : "NULL"));

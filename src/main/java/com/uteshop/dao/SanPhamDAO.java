@@ -282,20 +282,54 @@ public class SanPhamDAO {
         EntityTransaction tx = em.getTransaction();
         try {
             tx.begin();
+            
+            // Tìm sản phẩm hiện tại trong database
             SanPham managed = em.find(SanPham.class, sp.getMaSP());
-            if (managed != null) {
-                managed.setTenSP(sp.getTenSP());
-                managed.setMoTa(sp.getMoTa());
-                managed.setDonGia(sp.getDonGia());
-                managed.setSoLuongTon(sp.getSoLuongTon());
-                if (sp.getHinhAnh() != null) managed.setHinhAnh(sp.getHinhAnh());
-                managed.setTrangThai(sp.getTrangThai());
-                em.merge(managed);
+            if (managed == null) {
+                System.err.println("Không tìm thấy sản phẩm với MaSP: " + sp.getMaSP());
+                tx.rollback();
+                return false;
             }
+            
+            // Cập nhật các trường cơ bản
+            managed.setTenSP(sp.getTenSP());
+            managed.setMoTa(sp.getMoTa());
+            managed.setDonGia(sp.getDonGia());
+            managed.setSoLuongTon(sp.getSoLuongTon());
+            managed.setTrangThai(sp.getTrangThai());
+            managed.setNgayCapNhat(new java.util.Date());
+            
+            // Cập nhật ảnh nếu có ảnh mới
+            if (sp.getHinhAnh() != null && !sp.getHinhAnh().trim().isEmpty()) {
+                managed.setHinhAnh(sp.getHinhAnh());
+                System.out.println("Updated product image to: " + sp.getHinhAnh());
+            }
+            
+            // Cập nhật danh mục nếu có thay đổi
+            if (sp.getMaDM() != null) {
+                DanhMuc dm = em.find(DanhMuc.class, sp.getMaDM());
+                if (dm == null) {
+                    System.err.println("Danh mục không tồn tại: " + sp.getMaDM());
+                    tx.rollback();
+                    return false;
+                }
+                managed.setDanhMuc(dm);
+                managed.setMaDM(sp.getMaDM());
+                System.out.println("Updated product category to: " + dm.getTenDM());
+            }
+            
+            // Merge để lưu thay đổi
+            em.merge(managed);
+            System.out.println("Successfully updated product with MaSP: " + sp.getMaSP());
+            
             tx.commit();
             return true;
+            
         } catch (Exception e) {
-            if (tx.isActive()) tx.rollback();
+            if (tx.isActive()) {
+                tx.rollback();
+            }
+            System.err.println("Error updating product: " + e.getMessage());
             e.printStackTrace();
             return false;
         } finally {
@@ -429,6 +463,111 @@ public class SanPhamDAO {
                 "SELECT s FROM SanPham s JOIN FETCH s.danhMuc WHERE s.cuaHang.maCH = :maCH", SanPham.class);
             query.setParameter("maCH", maCH);
             return query.getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Tìm sản phẩm theo cửa hàng với filter, search và pagination
+     */
+    public List<SanPham> findByCuaHangIdWithFilter(Integer maCH, String searchKeyword, String sortBy, 
+                                                   String statusFilter, int offset, int limit) {
+        EntityManager em = getEntityManager();
+        try {
+            StringBuilder jpql = new StringBuilder(
+                "SELECT s FROM SanPham s LEFT JOIN FETCH s.danhMuc WHERE s.cuaHang.maCH = :maCH");
+            
+            // Bộ lọc từ khóa tìm kiếm
+            if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+                jpql.append(" AND (LOWER(s.tenSP) LIKE :keyword OR LOWER(s.moTa) LIKE :keyword)");
+            }
+            
+            // Bộ lọc trạng thái
+            if (statusFilter != null && !statusFilter.trim().isEmpty()) {
+                if ("true".equals(statusFilter)) {
+                    jpql.append(" AND s.trangThai = true");
+                } else if ("false".equals(statusFilter)) {
+                    jpql.append(" AND s.trangThai = false");
+                }
+            }
+            
+            // Sắp xếp
+            if ("name-asc".equals(sortBy)) {
+                jpql.append(" ORDER BY s.tenSP ASC");
+            } else if ("name-desc".equals(sortBy)) {
+                jpql.append(" ORDER BY s.tenSP DESC");
+            } else if ("price-asc".equals(sortBy)) {
+                jpql.append(" ORDER BY s.donGia ASC");
+            } else if ("price-desc".equals(sortBy)) {
+                jpql.append(" ORDER BY s.donGia DESC");
+            } else if ("stock-asc".equals(sortBy)) {
+                jpql.append(" ORDER BY s.soLuongTon ASC");
+            } else if ("stock-desc".equals(sortBy)) {
+                jpql.append(" ORDER BY s.soLuongTon DESC");
+            } else if ("status".equals(sortBy)) {
+                jpql.append(" ORDER BY s.trangThai DESC");
+            } else {
+                jpql.append(" ORDER BY s.ngayTao DESC");
+            }
+            
+            TypedQuery<SanPham> query = em.createQuery(jpql.toString(), SanPham.class);
+            query.setParameter("maCH", maCH);
+            
+            if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+                String keyword = "%" + searchKeyword.toLowerCase().trim() + "%";
+                query.setParameter("keyword", keyword);
+            }
+            
+            query.setFirstResult(offset);
+            query.setMaxResults(limit);
+            
+            return query.getResultList();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        } finally {
+            em.close();
+        }
+    }
+
+    /**
+     * Đếm số lượng sản phẩm theo cửa hàng với filter
+     */
+    public int countByCuaHangIdWithFilter(Integer maCH, String searchKeyword, String statusFilter) {
+        EntityManager em = getEntityManager();
+        try {
+            StringBuilder jpql = new StringBuilder(
+                "SELECT COUNT(s) FROM SanPham s WHERE s.cuaHang.maCH = :maCH");
+            
+            // Bộ lọc từ khóa tìm kiếm
+            if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+                jpql.append(" AND (LOWER(s.tenSP) LIKE :keyword OR LOWER(s.moTa) LIKE :keyword)");
+            }
+            
+            // Bộ lọc trạng thái
+            if (statusFilter != null && !statusFilter.trim().isEmpty()) {
+                if ("true".equals(statusFilter)) {
+                    jpql.append(" AND s.trangThai = true");
+                } else if ("false".equals(statusFilter)) {
+                    jpql.append(" AND s.trangThai = false");
+                }
+            }
+            
+            TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
+            query.setParameter("maCH", maCH);
+            
+            if (searchKeyword != null && !searchKeyword.trim().isEmpty()) {
+                String keyword = "%" + searchKeyword.toLowerCase().trim() + "%";
+                query.setParameter("keyword", keyword);
+            }
+            
+            return query.getSingleResult().intValue();
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
         } finally {
             em.close();
         }

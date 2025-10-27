@@ -99,10 +99,50 @@ public class VendorController extends HttpServlet {
      */
     private void showProducts(HttpServletRequest request, HttpServletResponse response, NguoiDung user, CuaHang store)
             throws ServletException, IOException {
-        // 1. Lấy danh sách Sản phẩm
-        List<SanPham> products;
+        
+        // 1. Lấy các tham số tìm kiếm và phân trang
+        String searchKeyword = request.getParameter("search");
+        String sortBy = request.getParameter("sort");
+        String statusFilter = request.getParameter("status");
+        
+        // Phân trang
+        int page = 1;
+        int pageSize = 10;
         try {
-            products = sanPhamDAO.findByCuaHangId(store.getMaCH());
+            String pageParam = request.getParameter("page");
+            if (pageParam != null && !pageParam.isEmpty()) {
+                page = Integer.parseInt(pageParam);
+                if (page < 1) page = 1;
+            }
+            String sizeParam = request.getParameter("size");
+            if (sizeParam != null && !sizeParam.isEmpty()) {
+                pageSize = Integer.parseInt(sizeParam);
+                if (pageSize < 5) pageSize = 5;
+                if (pageSize > 50) pageSize = 50;
+            }
+        } catch (NumberFormatException e) {
+            // Sử dụng giá trị mặc định nếu parse lỗi
+        }
+        
+        // 2. Lấy danh sách Sản phẩm với bộ lọc
+        List<SanPham> products;
+        int totalProducts = 0;
+        try {
+            products = sanPhamDAO.findByCuaHangIdWithFilter(
+                store.getMaCH(), 
+                searchKeyword, 
+                sortBy, 
+                statusFilter,
+                (page - 1) * pageSize,
+                pageSize
+            );
+            
+            totalProducts = sanPhamDAO.countByCuaHangIdWithFilter(
+                store.getMaCH(),
+                searchKeyword,
+                statusFilter
+            );
+            
             if (products == null) {
                 products = List.of(); // Gán danh sách rỗng nếu null
             }
@@ -112,10 +152,30 @@ public class VendorController extends HttpServlet {
             e.printStackTrace();
         }
         
-        // 2. Đặt dữ liệu vào Request
-        request.setAttribute("products", products); 
+        // 3. Tính toán thông tin phân trang
+        int totalPages = (int) Math.ceil((double) totalProducts / pageSize);
         
-        // 3. Chuyển tiếp đến JSP
+        // 4. Đặt dữ liệu vào Request
+        request.setAttribute("products", products);
+        request.setAttribute("currentPage", page);
+        request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalProducts", totalProducts);
+        request.setAttribute("pageSize", pageSize);
+        request.setAttribute("searchKeyword", searchKeyword);
+        request.setAttribute("sortBy", sortBy);
+        request.setAttribute("statusFilter", statusFilter);
+        
+        // 5. Thông tin thống kê nhanh
+        try {
+            int activeProducts = sanPhamDAO.countByCuaHangIdWithFilter(store.getMaCH(), null, "true");
+            int inactiveProducts = sanPhamDAO.countByCuaHangIdWithFilter(store.getMaCH(), null, "false");
+            request.setAttribute("activeProductsCount", activeProducts);
+            request.setAttribute("inactiveProductsCount", inactiveProducts);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        // 6. Chuyển tiếp đến JSP
         request.setAttribute("pageTitle", "Quản lý Sản phẩm");
         
         RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/vendor/products.jsp");

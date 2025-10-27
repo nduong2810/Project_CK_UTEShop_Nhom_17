@@ -76,7 +76,7 @@
                 
                 <c:if test="${not empty product.hinhAnh}">
                     <p class="mt-2 text-muted">Ảnh hiện tại:</p>
-                    <img src="${pageContext.request.contextPath}/${product.hinhAnh}" alt="Ảnh sản phẩm" class="img-thumbnail" style="max-width: 150px; height: auto;">
+                    <img src="${pageContext.request.contextPath}/assets/img/${product.hinhAnh}" alt="Ảnh sản phẩm" class="img-thumbnail" style="max-width: 150px; height: auto;">
                     <input type="hidden" name="currentImage" value="${product.hinhAnh}">
                 </c:if>
             </div>
