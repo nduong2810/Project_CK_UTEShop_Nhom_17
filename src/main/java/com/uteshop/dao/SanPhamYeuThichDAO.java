@@ -67,9 +67,12 @@ public class SanPhamYeuThichDAO {
                 
                 // Update product favorite count
                 SanPham sanPham = em.find(SanPham.class, productId);
-                if (sanPham != null && sanPham.getLuotYeuThich() > 0) {
-                    sanPham.setLuotYeuThich(sanPham.getLuotYeuThich() - 1);
-                    em.merge(sanPham);
+                if (sanPham != null) {
+                    int currentLikes = sanPham.getLuotYeuThich() != null ? sanPham.getLuotYeuThich() : 0;
+                    if (currentLikes > 0) {
+                        sanPham.setLuotYeuThich(currentLikes - 1);
+                        em.merge(sanPham);
+                    }
                 }
             }
             

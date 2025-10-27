@@ -121,7 +121,8 @@
                                     <img src="${pageContext.request.contextPath}/assets/img/${favorite.sanPham.hinhAnh}"
                                          alt="${favorite.sanPham.tenSP}"
                                          class="product-image"
-                                         onerror="this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png'">
+                                         onload="this.classList.add('loaded')"
+                                         onerror="this.onerror=null; this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png'; this.classList.add('loaded');">
                                 </a>
                                 <a href="${pageContext.request.contextPath}/user/favorites/remove?maSP=${favorite.sanPham.maSP}" 
                                    class="btn-favorite active"
