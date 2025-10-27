@@ -12,51 +12,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class MaGiamGiaDAO {
-    private EntityManagerFactory emf = Persistence.createEntityManagerFactory("uteshop-pu");
+    private static EntityManagerFactory emf = Persistence.createEntityManagerFactory("uteshop-pu");
 
     private EntityManager getEntityManager() {
         return emf.createEntityManager();
-    }
-
-    // Phương thức từ team (tìm theo code)
-    public MaGiamGia findByCode(String code) {
-        EntityManager em = getEntityManager();
-        try {
-            TypedQuery<MaGiamGia> q = em.createQuery("SELECT m FROM MaGiamGia m WHERE m.maSo = :code", MaGiamGia.class);
-            q.setParameter("code", code);
-            return q.getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        } finally {
-            em.close();
-        }
-    }
-
-    // Phương thức từ team - tăng số lượng sử dụng
-    public boolean incrementUsage(int maGG) {
-        EntityManager em = getEntityManager();
-        try {
-            em.getTransaction().begin();
-            MaGiamGia m = em.find(MaGiamGia.class, maGG);
-            if (m == null) {
-                em.getTransaction().rollback();
-                return false;
-            }
-            m.setSoLuongDaSuDung(m.getSoLuongDaSuDung() + 1);
-            em.merge(m);
-            em.getTransaction().commit();
-            return true;
-        } catch (Exception e) {
-            e.printStackTrace();
-            try { 
-                if (em.getTransaction().isActive()) {
-                    em.getTransaction().rollback();
-                }
-            } catch (Exception ex) {}
-            return false;
-        } finally {
-            em.close();
-        }
     }
 
     // Lấy danh sách mã giảm giá theo cửa hàng
@@ -69,6 +28,19 @@ public class MaGiamGiaDAO {
             );
             query.setParameter("maCH", maCH);
             return query.getResultList();
+        } finally {
+            em.close();
+        }
+    }
+
+    public MaGiamGia findByCode(String code) {
+        EntityManager em = getEntityManager();
+        try {
+            TypedQuery<MaGiamGia> q = em.createQuery("SELECT m FROM MaGiamGia m WHERE m.maSo = :code", MaGiamGia.class);
+            q.setParameter("code", code);
+            return q.getSingleResult();
+        } catch (NoResultException e) {
+            return null;
         } finally {
             em.close();
         }
@@ -145,9 +117,7 @@ public class MaGiamGiaDAO {
             em.getTransaction().commit();
             return true;
         } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
+            em.getTransaction().rollback();
             e.printStackTrace();
             return false;
         } finally {
@@ -164,9 +134,7 @@ public class MaGiamGiaDAO {
             em.getTransaction().commit();
             return true;
         } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
+            em.getTransaction().rollback();
             e.printStackTrace();
             return false;
         } finally {
@@ -186,10 +154,34 @@ public class MaGiamGiaDAO {
             em.getTransaction().commit();
             return true;
         } catch (Exception e) {
-            if (em.getTransaction().isActive()) {
-                em.getTransaction().rollback();
-            }
+            em.getTransaction().rollback();
             e.printStackTrace();
+            return false;
+        } finally {
+            em.close();
+        }
+    }
+
+    public boolean incrementUsage(int maGG) {
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            MaGiamGia m = em.find(MaGiamGia.class, maGG);
+            if (m == null) {
+                em.getTransaction().rollback();
+                return false;
+            }
+            m.setSoLuongDaSuDung(m.getSoLuongDaSuDung() + 1);
+            em.merge(m);
+            em.getTransaction().commit();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            try { 
+                if (em.getTransaction().isActive()) {
+                    em.getTransaction().rollback(); 
+                } 
+            } catch (Exception ex) {}
             return false;
         } finally {
             em.close();
@@ -217,9 +209,25 @@ public class MaGiamGiaDAO {
         }
     }
 
-    // Cập nhật số lượng đã sử dụng (alias cho incrementUsage để tương thích)
+    // Cập nhật số lượng đã sử dụng
     public boolean incrementUsageCount(int maGG) {
-        return incrementUsage(maGG);
+        EntityManager em = getEntityManager();
+        try {
+            em.getTransaction().begin();
+            MaGiamGia maGiamGia = em.find(MaGiamGia.class, maGG);
+            if (maGiamGia != null) {
+                maGiamGia.setSoLuongDaSuDung(maGiamGia.getSoLuongDaSuDung() + 1);
+                em.merge(maGiamGia);
+            }
+            em.getTransaction().commit();
+            return true;
+        } catch (Exception e) {
+            em.getTransaction().rollback();
+            e.printStackTrace();
+            return false;
+        } finally {
+            em.close();
+        }
     }
 
     // Lấy danh sách mã giảm giá đang hoạt động của cửa hàng
