@@ -426,13 +426,32 @@
     }
 
     // Utility functions for product interactions
-    function addToCart(productId, isGuest) {
+    function addToCart(productId, isGuest, quantity) {
         if (isGuest) {
             requireLogin();
             return;
         }
-        console.log('DEBUG JS: 🛒 Adding to cart: ' + productId);
-        showNotification('Sản phẩm đã được thêm vào giỏ hàng!', 'success');
+        quantity = typeof quantity !== 'undefined' ? quantity : 1;
+
+        // Submit a POST to /user/cart?action=add so server persists the cart
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = window.location.origin + '${pageContext.request.contextPath}/user/cart?action=add';
+
+        var inputProduct = document.createElement('input');
+        inputProduct.type = 'hidden';
+        inputProduct.name = 'productId';
+        inputProduct.value = productId;
+        form.appendChild(inputProduct);
+
+        var inputQuantity = document.createElement('input');
+        inputQuantity.type = 'hidden';
+        inputQuantity.name = 'quantity';
+        inputQuantity.value = quantity;
+        form.appendChild(inputQuantity);
+
+        document.body.appendChild(form);
+        form.submit();
     }
 
     function buyNow(productId, isGuest) {
@@ -440,9 +459,25 @@
             requireLogin();
             return;
         }
-        console.log('DEBUG JS: ⚡ Buying now: ' + productId);
-        showNotification('Chuyển đến trang thanh toán...', 'info');
-        // window.location.href = '${pageContext.request.contextPath}/checkout?productId=' + productId;
+        // For now add to cart and redirect user to cart page; checkout flow can be added later
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = window.location.origin + '${pageContext.request.contextPath}/user/cart?action=add';
+
+        var inputProduct = document.createElement('input');
+        inputProduct.type = 'hidden';
+        inputProduct.name = 'productId';
+        inputProduct.value = productId;
+        form.appendChild(inputProduct);
+
+        var inputQuantity = document.createElement('input');
+        inputQuantity.type = 'hidden';
+        inputQuantity.name = 'quantity';
+        inputQuantity.value = 1;
+        form.appendChild(inputQuantity);
+
+        document.body.appendChild(form);
+        form.submit();
     }
 
     function toggleFavorite(event, button, productId, isGuest) {
