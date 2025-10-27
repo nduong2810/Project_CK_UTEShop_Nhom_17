@@ -864,25 +864,42 @@ function addToCart(productId, isGuest, quantity) {
     }
     quantity = typeof quantity !== 'undefined' ? quantity : 1;
 
-    // Create a form and submit as POST to /user/cart?action=add to let the servlet persist and redirect
-    var form = document.createElement('form');
-    form.method = 'POST';
-    form.action = window.location.origin + '${pageContext.request.contextPath}/user/cart?action=add';
-
-    var inputProduct = document.createElement('input');
-    inputProduct.type = 'hidden';
-    inputProduct.name = 'productId';
-    inputProduct.value = productId;
-    form.appendChild(inputProduct);
-
-    var inputQuantity = document.createElement('input');
-    inputQuantity.type = 'hidden';
-    inputQuantity.name = 'quantity';
-    inputQuantity.value = quantity;
-    form.appendChild(inputQuantity);
-
-    document.body.appendChild(form);
-    form.submit();
+    // Use AJAX to add to cart without page reload
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '${pageContext.request.contextPath}/user/cart?action=add', true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest'); // Mark as AJAX request
+    
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            try {
+                var response = JSON.parse(xhr.responseText);
+                if (response.success) {
+                    showNotification(response.message || 'Đã thêm vào giỏ hàng thành công!', 'success');
+                    // Update cart count in header if exists
+                    if (response.cartCount !== undefined) {
+                        var cartCountElements = document.querySelectorAll('.cart-count, #cart-count');
+                        cartCountElements.forEach(function(el) {
+                            el.textContent = response.cartCount;
+                        });
+                    }
+                } else {
+                    showNotification(response.message || 'Không thể thêm vào giỏ hàng!', 'danger');
+                }
+            } catch (e) {
+                showNotification('Đã thêm vào giỏ hàng thành công!', 'success');
+            }
+        } else {
+            showNotification('Có lỗi xảy ra. Vui lòng thử lại!', 'danger');
+        }
+    };
+    
+    xhr.onerror = function() {
+        showNotification('Có lỗi kết nối. Vui lòng thử lại!', 'danger');
+    };
+    
+    var data = 'productId=' + encodeURIComponent(productId) + '&quantity=' + encodeURIComponent(quantity);
+    xhr.send(data);
 }
 
 function buyNow(productId, isGuest) {

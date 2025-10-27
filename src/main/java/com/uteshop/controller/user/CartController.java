@@ -119,7 +119,17 @@ public class CartController extends HttpServlet {
             String quantityStr = request.getParameter("quantity");
             int quantity = quantityStr != null ? Integer.parseInt(quantityStr) : 1;
             
+            // Check if this is an AJAX request
+            String ajaxHeader = request.getHeader("X-Requested-With");
+            boolean isAjax = "XMLHttpRequest".equals(ajaxHeader);
+            
             if (quantity <= 0) {
+                if (isAjax) {
+                    response.setContentType("application/json");
+                    response.setCharacterEncoding("UTF-8");
+                    response.getWriter().write("{\"success\":false,\"message\":\"Số lượng không hợp lệ\"}");
+                    return;
+                }
                 request.setAttribute("error", "Số lượng không hợp lệ");
                 viewCart(request, response, user);
                 return;
@@ -131,21 +141,43 @@ public class CartController extends HttpServlet {
             int newCount = gioHangDAO.getCartItems(user.getMaND()).size();
             System.out.println("[DEBUG] CartController.addToCart - userId=" + user.getMaND() + " productId=" + productId + " qty=" + quantity + " success=" + success + " newCount=" + newCount);
             
+            // Update session cart count
+            HttpSession session = request.getSession();
+            session.setAttribute("cartCount", newCount);
+            
+            // If AJAX request, return JSON response
+            if (isAjax) {
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                if (success) {
+                    response.getWriter().write("{\"success\":true,\"message\":\"Đã thêm vào giỏ hàng thành công\",\"cartCount\":" + newCount + "}");
+                } else {
+                    response.getWriter().write("{\"success\":false,\"message\":\"Không thể thêm vào giỏ hàng\"}");
+                }
+                return;
+            }
+            
+            // Normal request - redirect
             if (success) {
                 request.setAttribute("success", "Đã thêm vào giỏ hàng thành công");
             } else {
                 request.setAttribute("error", "Không thể thêm vào giỏ hàng");
             }
             
-            // Update session cart count before redirect so header shows updated value
-            HttpSession session = request.getSession();
-            int count = gioHangDAO.getCartItems(user.getMaND()).size();
-            session.setAttribute("cartCount", count);
-            
             // Redirect để tránh resubmit form
             response.sendRedirect(request.getContextPath() + "/user/cart");
             
         } catch (NumberFormatException e) {
+            String ajaxHeader = request.getHeader("X-Requested-With");
+            boolean isAjax = "XMLHttpRequest".equals(ajaxHeader);
+            
+            if (isAjax) {
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                response.getWriter().write("{\"success\":false,\"message\":\"Dữ liệu không hợp lệ\"}");
+                return;
+            }
+            
             request.setAttribute("error", "Dữ liệu không hợp lệ");
             viewCart(request, response, user);
         }
