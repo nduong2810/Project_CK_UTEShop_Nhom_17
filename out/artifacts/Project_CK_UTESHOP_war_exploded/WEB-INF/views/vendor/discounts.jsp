@@ -7,22 +7,7 @@
 <%-- Tạo biến now để so sánh thời gian --%>
 <jsp:useBean id="now" class="java.util.Date" />
 
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${pageTitle} - UTESHOP Vendor</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts for Vietnamese -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <style>
+<style>
         /* Base font styling for Vietnamese */
         * {
             font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -154,18 +139,14 @@
             border-radius: 3px;
             transition: width 0.3s ease;
         }
-    </style>
-</head>
-<body>
-    <!-- Include Header -->
-    <jsp:include page="../common/header.jsp" />
-    
-    <div class="container-fluid py-4">
+</style>
+
+<div class="container-fluid py-4">
         <div class="row">
             <!-- Sidebar Navigation -->
             <div class="col-md-3 col-lg-2">
                 <div class="bg-white rounded-3 shadow-sm p-3 mb-4">
-                    <h6 class="text-muted mb-3">VENDOR MENU</h6>
+                    <h6 class="text-muted mb-3">MENU</h6>
                     <div class="list-group list-group-flush">
                         <a href="${pageContext.request.contextPath}/vendor/dashboard" class="list-group-item list-group-item-action border-0">
                             <i class="fas fa-tachometer-alt me-2"></i> Dashboard
@@ -178,6 +159,12 @@
                         </a>
                         <a href="${pageContext.request.contextPath}/vendor/orders" class="list-group-item list-group-item-action border-0">
                             <i class="fas fa-shopping-cart me-2"></i> Đơn hàng
+                        </a>
+                        <a href="${pageContext.request.contextPath}/vendor/statistics" class="list-group-item list-group-item-action border-0">
+                            <i class="fas fa-chart-pie me-2"></i> Thống kê
+                        </a>
+                        <a href="${pageContext.request.contextPath}/vendor/settings" class="list-group-item list-group-item-action border-0">
+                            <i class="fas fa-cog me-2"></i> Cài đặt
                         </a>
                     </div>
                 </div>
@@ -251,6 +238,12 @@
                             <c:when test="${param.error == 'DELETE_FAILED'}">
                                 Có lỗi xảy ra khi xóa mã giảm giá.
                             </c:when>
+                            <c:when test="${param.error == 'UPDATE_FAILED'}">
+                                Có lỗi xảy ra khi cập nhật mã giảm giá.
+                            </c:when>
+                            <c:when test="${param.error == 'INVALID_DATA'}">
+                                Dữ liệu không hợp lệ. Vui lòng kiểm tra lại thông tin.
+                            </c:when>
                             <c:when test="${param.error == 'DELETE_RESTRICTED'}">
                                 <strong>Không thể xóa mã giảm giá!</strong><br>
                                 <c:choose>
@@ -290,59 +283,53 @@
                                         <div class="discount-card">
                                             <div class="d-flex justify-content-between align-items-start mb-3">
                                                 <div class="discount-code">${discount.maSo}</div>
-                                                <div class="dropdown">
-                                                    <button class="btn btn-link text-muted" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                                        <i class="fas fa-ellipsis-v"></i>
-                                                    </button>
-                                                    <ul class="dropdown-menu dropdown-menu-end">
-                                                        <li>
-                                                            <a class="dropdown-item" href="${pageContext.request.contextPath}/vendor/discounts/edit?id=${discount.maGG}">
-                                                                <i class="fas fa-edit me-2"></i>Chỉnh sửa
-                                                            </a>
-                                                        </li>
-                                                        <li><hr class="dropdown-divider"></li>
-                                                        <li>
-                                                            <%-- Kiểm tra điều kiện xóa sử dụng scriptlet --%>
-                                                            <%
-                                                                // Lấy đối tượng discount từ JSTL loop
-                                                                com.uteshop.entity.MaGiamGia currentDiscount = (com.uteshop.entity.MaGiamGia) pageContext.findAttribute("discount");
-                                                                boolean canDelete = false;
-                                                                
-                                                                if (currentDiscount != null) {
-                                                                    java.time.LocalDateTime currentTime = java.time.LocalDateTime.now();
-                                                                    
-                                                                    // Kiểm tra hết hạn
-                                                                    boolean isExpired = false;
-                                                                    if ((currentDiscount.getNgayKetThuc() != null && currentTime.isAfter(currentDiscount.getNgayKetThuc())) ||
-                                                                        (currentDiscount.getHanSuDung() != null && currentTime.isAfter(currentDiscount.getHanSuDung()))) {
-                                                                        isExpired = true;
-                                                                    }
-                                                                    
-                                                                    // Kiểm tra hết lượt sử dụng
-                                                                    boolean isOutOfUses = false;
-                                                                    if (currentDiscount.getSoLuongToiDa() != null && 
-                                                                        currentDiscount.getSoLuongDaSuDung() >= currentDiscount.getSoLuongToiDa()) {
-                                                                        isOutOfUses = true;
-                                                                    }
-                                                                    
-                                                                    // Có thể xóa khi hết hạn HOẶC hết lượt
-                                                                    canDelete = isExpired || isOutOfUses;
-                                                                }
-                                                            %>
+                                                <div class="btn-group" role="group">
+                                                    <!-- Button Chỉnh sửa -->
+                                                    <a href="${pageContext.request.contextPath}/vendor/discounts/edit?id=${discount.maGG}" 
+                                                       class="btn btn-sm btn-outline-primary">
+                                                        <i class="fas fa-edit me-1"></i>Sửa
+                                                    </a>
+                                                    
+                                                    <!-- Button Xóa với logic kiểm tra điều kiện -->
+                                                    <%
+                                                        // Lấy đối tượng discount từ JSTL loop
+                                                        com.uteshop.entity.MaGiamGia currentDiscount = (com.uteshop.entity.MaGiamGia) pageContext.findAttribute("discount");
+                                                        boolean canDelete = false;
+                                                        
+                                                        if (currentDiscount != null) {
+                                                            java.time.LocalDateTime currentTime = java.time.LocalDateTime.now();
                                                             
-                                                            <% if (canDelete) { %>
-                                                                <button type="button" class="dropdown-item text-danger" onclick="deleteDiscount(${discount.maGG}, '${discount.tenChuongTrinh}')">
-                                                                    <i class="fas fa-trash me-2"></i>Xóa
-                                                                </button>
-                                                            <% } else { %>
-                                                                <button type="button" class="dropdown-item text-muted" disabled 
-                                                                        title="Chỉ có thể xóa mã giảm giá khi đã hết hạn hoặc hết lượt sử dụng" 
-                                                                        onclick="showDeleteRestriction()">
-                                                                    <i class="fas fa-trash me-2"></i>Xóa <small>(Không thể xóa)</small>
-                                                                </button>
-                                                            <% } %>
-                                                        </li>
-                                                    </ul>
+                                                            // Kiểm tra hết hạn
+                                                            boolean isExpired = false;
+                                                            if ((currentDiscount.getNgayKetThuc() != null && currentTime.isAfter(currentDiscount.getNgayKetThuc())) ||
+                                                                (currentDiscount.getHanSuDung() != null && currentTime.isAfter(currentDiscount.getHanSuDung()))) {
+                                                                isExpired = true;
+                                                            }
+                                                            
+                                                            // Kiểm tra hết lượt sử dụng
+                                                            boolean isOutOfUses = false;
+                                                            if (currentDiscount.getSoLuongToiDa() != null && 
+                                                                currentDiscount.getSoLuongDaSuDung() >= currentDiscount.getSoLuongToiDa()) {
+                                                                isOutOfUses = true;
+                                                            }
+                                                            
+                                                            // Có thể xóa khi hết hạn HOẶC hết lượt
+                                                            canDelete = isExpired || isOutOfUses;
+                                                        }
+                                                    %>
+                                                    
+                                                    <% if (canDelete) { %>
+                                                        <button type="button" class="btn btn-sm btn-outline-danger" 
+                                                                onclick="deleteDiscount(${discount.maGG}, '${discount.tenChuongTrinh}')">
+                                                            <i class="fas fa-trash me-1"></i>Xóa
+                                                        </button>
+                                                    <% } else { %>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary" disabled 
+                                                                title="Chỉ có thể xóa mã giảm giá khi đã hết hạn hoặc hết lượt sử dụng" 
+                                                                onclick="showDeleteRestriction()">
+                                                            <i class="fas fa-trash me-1"></i>Xóa
+                                                        </button>
+                                                    <% } %>
                                                 </div>
                                             </div>
                                             
@@ -476,27 +463,47 @@
             </div>
         </div>
     </div>
-    
-    <!-- Include Footer -->
-    <jsp:include page="../common/footer.jsp" />
-    
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <script>
-        function deleteDiscount(discountId, tenChuongTrinh) {
-            // Xác nhận xóa với thông tin chi tiết
-            let confirmMessage = 'Bạn có chắc chắn muốn xóa mã giảm giá "' + tenChuongTrinh + '"?\n\n';
-            confirmMessage += 'Hành động này không thể hoàn tác.\n';
-            confirmMessage += 'Chỉ có thể xóa khi mã giảm giá đã hết hạn hoặc hết lượt sử dụng.';
 
-            if (confirm(confirmMessage)) {
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Hàm xóa mã giảm giá với SweetAlert2
+    function deleteDiscount(discountId, tenChuongTrinh) {
+        Swal.fire({
+            title: 'Xác nhận xóa',
+            html: `
+                <p>Bạn có chắc chắn muốn xóa mã giảm giá:</p>
+                <p><strong>"${tenChuongTrinh}"</strong></p>
+                <p class="text-danger mt-3">Hành động này không thể hoàn tác!</p>
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-trash me-2"></i>Xóa ngay',
+            cancelButtonText: '<i class="fas fa-times me-2"></i>Hủy',
+            reverseButtons: true,
+            customClass: {
+                confirmButton: 'btn btn-danger px-4',
+                cancelButton: 'btn btn-secondary px-4'
+            },
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Hiển thị loading
+                Swal.fire({
+                    title: 'Đang xóa...',
+                    text: 'Vui lòng đợi',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
                 // Tạo form và submit
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = '${pageContext.request.contextPath}/vendor/discounts';
                 
-                // Thêm các input hidden
                 const actionInput = document.createElement('input');
                 actionInput.type = 'hidden';
                 actionInput.name = 'action';
@@ -509,72 +516,62 @@
                 idInput.value = discountId;
                 form.appendChild(idInput);
                 
-                // Thêm form vào body và submit
                 document.body.appendChild(form);
                 form.submit();
             }
-        }
-        
-        function showDeleteRestriction() {
-            // Hiển thị thông báo khi không thể xóa
-            alert('Không thể xóa mã giảm giá!\n\n' +
-                  'Điều kiện để xóa:\n' +
-                  '• Mã giảm giá đã hết hạn (qua ngày kết thúc hoặc hạn sử dụng)\n' +
-                  '• HOẶC đã hết lượt sử dụng\n\n' +
-                  'Vui lòng chờ đến khi đủ điều kiện hoặc tạm dừng mã giảm giá thay vì xóa.');
-        }
-        
-        // Hiển thị tooltip cho các nút bị disable
-        document.addEventListener('DOMContentLoaded', function() {
-            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-                return new bootstrap.Tooltip(tooltipTriggerEl);
-            });
         });
-    </script>
-</body>
-</html>
-            
-            if (confirm(confirmMessage)) {
-                // Tạo và submit form để xóa
-                const form = document.createElement('form');
-                form.method = 'post';
-                form.style.display = 'none';
-                
-                const actionInput = document.createElement('input');
-                actionInput.type = 'hidden';
-                actionInput.name = 'action';
-                actionInput.value = 'deleteDiscount';
-                
-                const idInput = document.createElement('input');
-                idInput.type = 'hidden';
-                idInput.name = 'id';
-                idInput.value = discountId;
-                
-                form.appendChild(actionInput);
-                form.appendChild(idInput);
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
-        
-        // Hiển thị thông báo thành công/lỗi tự động ẩn sau 5 giây
-        document.addEventListener('DOMContentLoaded', function() {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function(alert) {
-                setTimeout(function() {
-                    if (alert && alert.parentNode) {
-                        alert.style.transition = 'opacity 0.5s ease-out';
-                        alert.style.opacity = '0';
-                        setTimeout(function() {
-                            if (alert.parentNode) {
-                                alert.parentNode.removeChild(alert);
-                            }
-                        }, 500);
-                    }
-                }, 5000);
-            });
+    }
+    
+    // Hàm hiển thị thông báo khi không thể xóa
+    function showDeleteRestriction() {
+        Swal.fire({
+            title: 'Không thể xóa!',
+            html: `
+                <div class="text-start">
+                    <p class="mb-3">Mã giảm giá này không đủ điều kiện để xóa.</p>
+                    <p class="mb-2"><strong>Điều kiện để xóa:</strong></p>
+                    <ul class="text-start">
+                        <li>Mã giảm giá đã hết hạn (qua ngày kết thúc hoặc hạn sử dụng)</li>
+                        <li><strong>HOẶC</strong> đã hết lượt sử dụng</li>
+                    </ul>
+                    <p class="text-muted mt-3">
+                        <i class="fas fa-lightbulb me-1"></i>
+                        <small>Gợi ý: Bạn có thể tạm dừng mã giảm giá thay vì xóa.</small>
+                    </p>
+                </div>
+            `,
+            icon: 'info',
+            confirmButtonText: 'Đã hiểu',
+            confirmButtonColor: '#0d6efd',
+            customClass: {
+                confirmButton: 'btn btn-primary px-4'
+            },
+            buttonsStyling: false
         });
-    </script>
-</body>
-</html>
+    }
+    
+    // Hiển thị tooltip cho các nút bị disable
+    document.addEventListener('DOMContentLoaded', function() {
+        // Bootstrap tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+        
+        // Auto hide alerts sau 5 giây
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            setTimeout(function() {
+                if (alert && alert.parentNode) {
+                    alert.style.transition = 'opacity 0.5s ease-out';
+                    alert.style.opacity = '0';
+                    setTimeout(function() {
+                        if (alert.parentNode) {
+                            alert.parentNode.removeChild(alert);
+                        }
+                    }, 500);
+                }
+            }, 5000);
+        });
+    });
+</script>

@@ -3,21 +3,7 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <fmt:setLocale value="vi_VN" scope="session"/>
 
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${pageTitle} - UTESHOP Vendor</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <style>
+<style>
         /* Hero Section */
         .hero-section {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -25,7 +11,12 @@
             padding: 60px 0;
             margin-bottom: 40px;
             position: relative;
-            overflow: hidden;
+            overflow: visible; 
+    		z-index: 10; 
+    		display: flex; 
+		    align-items: center; 
+		    justify-content: center; 
+		    min-height: 400px; 
         }
         
         .hero-section::before {
@@ -73,6 +64,9 @@
         .hero-content {
             position: relative;
             z-index: 2;
+            text-align: center; 
+		    width: 100%; 
+		    max-width: 800px;
         }
         
         .hero-section h1 {
@@ -403,22 +397,20 @@
         .welcome-animation {
             animation: welcomeIn 0.8s ease-out;
         }
-    </style>
-</head>
-<body>
+</style>
 
-    <!-- Hero Section -->
+<!-- Hero Section -->
     <section class="hero-section welcome-animation">
         <div class="container">
             <div class="hero-content text-center">
-                <h1><i class="fas fa-tachometer-alt me-3"></i>Dashboard Vendor</h1>
+                <h1><i class="fas fa-tachometer-alt me-3"></i>Bảng Điều Khiển</h1>
                 <p class="lead">Quản lý cửa hàng và theo dõi hiệu suất kinh doanh</p>
                 
                 <div class="store-info">
                     <div class="row align-items-center">
                         <div class="col-md-8">
                             <h4 class="mb-2"><i class="fas fa-store me-2"></i>${store.tenCH}</h4>
-                            <p class="mb-0">Xin chào, <strong>${user.hoTen}</strong> (${user.vaiTro})</p>
+                            <p class="mb-0">Xin chào, Nhà Cung Cấp <strong>${user.hoTen}</strong></p>
                         </div>
                         <div class="col-md-4 text-md-end mt-3 mt-md-0">
                             <div class="d-flex justify-content-center justify-content-md-end gap-2">
@@ -442,18 +434,18 @@
         <!-- Statistics Cards -->
         <section class="stats-section">
             <div class="row g-4">
-                <!-- Doanh thu tháng -->
+                <!-- Thống kê & Báo cáo -->
                 <div class="col-lg-3 col-md-6 fade-in-up">
-                    <div class="stat-card success">
-                        <div class="stat-icon success">
-                            <i class="fas fa-dollar-sign"></i>
+                    <div class="stat-card" style="border-color: #667eea; background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));">
+                        <div class="stat-icon" style="background: linear-gradient(45deg, #667eea, #764ba2);">
+                            <i class="fas fa-chart-pie"></i>
                         </div>
-                        <div class="stat-value">
-                            <fmt:formatNumber value="${monthlyRevenue}" type="currency" currencyCode="VND" />
+                        <div class="stat-value" style="font-size: 20px; color: #667eea;">
+                            Xem chi tiết
                         </div>
-                        <div class="stat-label">Doanh thu tháng này</div>
-                        <a href="${pageContext.request.contextPath}/vendor/orders?status=delivered" class="stat-link">
-                            Xem chi tiết <i class="fas fa-arrow-right"></i>
+                        <div class="stat-label">Thống kê & Báo cáo</div>
+                        <a href="${pageContext.request.contextPath}/vendor/statistics" class="stat-link">
+                            Xem ngay <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
                 </div>
@@ -490,7 +482,7 @@
                 <div class="col-lg-3 col-md-6 fade-in-up">
                     <div class="stat-card primary">
                         <div class="stat-icon primary">
-                            <i class="fas fa-chart-line"></i>
+                            <i class="fas fa-list-alt"></i>
                         </div>
                         <div class="stat-value">${totalOrders != null ? totalOrders : 0}</div>
                         <div class="stat-label">Tổng đơn hàng</div>
@@ -499,6 +491,72 @@
                         </a>
                     </div>
                 </div>
+            </div>
+
+            <!-- Second Row -->
+            <div class="row g-4 mt-2">
+                <!-- Mã giảm giá -->
+                <div class="col-lg-4 col-md-6 fade-in-up">
+                    <div class="stat-card danger">
+                        <div class="stat-icon danger">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="stat-value">${activeDiscounts}/${totalDiscounts}</div>
+                        <div class="stat-label">Mã giảm giá đang hoạt động</div>
+                        <a href="${pageContext.request.contextPath}/vendor/discounts" class="stat-link">
+                            Quản lý mã <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Sản phẩm đang hoạt động -->
+                <div class="col-lg-4 col-md-6 fade-in-up">
+                    <div class="stat-card success">
+                        <div class="stat-icon success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-value">${totalProducts}</div>
+                        <div class="stat-label">Sản phẩm trong kho</div>
+                        <a href="${pageContext.request.contextPath}/vendor/products" class="stat-link">
+                            Xem chi tiết <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Đơn hàng hôm nay -->
+                <div class="col-lg-4 col-md-6 fade-in-up">
+                    <div class="stat-card" style="border-color: #4facfe;">
+                        <div class="stat-icon" style="background: linear-gradient(45deg, #4facfe, #00f2fe);">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-value">${newOrdersCount}</div>
+                        <div class="stat-label">Đơn hàng cần xử lý</div>
+                        <a href="${pageContext.request.contextPath}/vendor/orders" class="stat-link">
+                            Xử lý ngay <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Revenue Charts Section -->
+        <section class="chart-section fade-in-up" id="revenueCharts">
+            <div class="row g-4">
+                <!-- Biểu đồ doanh thu 7 ngày -->
+                <div class="col-lg-8 col-md-12">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">
+                                <i class="fas fa-chart-line me-2"></i>
+                                Doanh thu 7 ngày gần nhất
+                            </h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </section>
 
@@ -509,11 +567,15 @@
                 Thao tác nhanh
             </h3>
             <div class="d-flex flex-wrap gap-2">
+                <a href="${pageContext.request.contextPath}/vendor/statistics" class="action-btn" style="background: linear-gradient(45deg, #667eea, #764ba2);">
+                    <i class="fas fa-chart-pie"></i>
+                    Thống kê & Báo cáo
+                </a>
                 <a href="${pageContext.request.contextPath}/vendor/product-crud" class="action-btn success">
                     <i class="fas fa-plus"></i>
                     Thêm sản phẩm mới
                 </a>
-                <a href="${pageContext.request.contextPath}/vendor/discounts" class="action-btn" style="background: linear-gradient(45deg, #667eea, #764ba2);">
+                <a href="${pageContext.request.contextPath}/vendor/discounts" class="action-btn" style="background: linear-gradient(45deg, #f093fb, #f5576c);">
                     <i class="fas fa-tags"></i>
                     Quản lý Mã giảm giá
                 </a>
@@ -532,38 +594,7 @@
             </div>
         </section>
 
-        <!-- Charts Row -->
-        <div class="row g-4 chart-section">
-            <!-- Revenue Chart -->
-            <div class="col-lg-8 fade-in-up">
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3 class="chart-title">
-                            <i class="fas fa-chart-area me-2"></i>
-                            Biểu đồ doanh thu 7 ngày qua
-                        </h3>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="revenueChart"></canvas>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Order Status Chart -->
-            <div class="col-lg-4 fade-in-up">
-                <div class="chart-card">
-                    <div class="chart-header">
-                        <h3 class="chart-title">
-                            <i class="fas fa-chart-pie me-2"></i>
-                            Trạng thái đơn hàng
-                        </h3>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="orderStatusChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Recent Orders -->
         <section class="orders-section fade-in-up">
@@ -599,6 +630,7 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     
     <script>
         // Current time display
@@ -627,78 +659,186 @@
             });
         });
 
-        // Revenue Chart
-        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
-        const revenueChart = new Chart(revenueCtx, {
-            type: 'line',
-            data: {
-                labels: ['6 ngày trước', '5 ngày trước', '4 ngày trước', '3 ngày trước', '2 ngày trước', 'Hôm qua', 'Hôm nay'],
-                datasets: [{
-                    label: 'Doanh thu (VND)',
-                    data: [1200000, 1500000, 800000, 2000000, 1800000, 2200000, 1600000],
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+        // Prepare data for 7 days revenue chart
+        <c:set var="last7DaysLabels" value=""/>
+        <c:set var="last7DaysData" value=""/>
+        <c:forEach items="${last7DaysRevenue}" var="dayData" varStatus="status">
+            <c:set var="last7DaysLabels" value="${last7DaysLabels}'${dayData[0]}'"/>
+            <c:set var="last7DaysData" value="${last7DaysData}${dayData[1]}"/>
+            <c:if test="${!status.last}">
+                <c:set var="last7DaysLabels" value="${last7DaysLabels}, "/>
+                <c:set var="last7DaysData" value="${last7DaysData}, "/>
+            </c:if>
+        </c:forEach>
+
+        // Revenue Chart (7 days)
+        const revenueCtx = document.getElementById('revenueChart');
+        if (revenueCtx) {
+            const revenueChart = new Chart(revenueCtx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: [${last7DaysLabels}],
+                    datasets: [{
+                        label: 'Doanh thu (VND)',
+                        data: [${last7DaysData}],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#667eea',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return new Intl.NumberFormat('vi-VN', {
-                                    style: 'currency',
-                                    currency: 'VND'
-                                }).format(value);
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Doanh thu: ' + new Intl.NumberFormat('vi-VN', {
+                                        style: 'currency',
+                                        currency: 'VND'
+                                    }).format(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return new Intl.NumberFormat('vi-VN', {
+                                        style: 'currency',
+                                        currency: 'VND',
+                                        notation: 'compact',
+                                        compactDisplay: 'short'
+                                    }).format(value);
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
 
         // Order Status Chart
-        const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
-        const orderStatusChart = new Chart(orderStatusCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Chờ xác nhận', 'Đang giao', 'Đã giao', 'Đã hủy'],
-                datasets: [{
-                    data: [${newOrdersCount}, 5, 20, 2],
-                    backgroundColor: [
-                        '#ff9f00',
-                        '#4facfe',
-                        '#11998e',
-                        '#fa709a'
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            usePointStyle: true
+        const orderStatusCtx = document.getElementById('orderStatusChart');
+        if (orderStatusCtx) {
+            const orderStatusChart = new Chart(orderStatusCtx.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Chờ xác nhận', 'Đang giao', 'Đã giao', 'Đã hủy'],
+                    datasets: [{
+                        data: [${newOrdersCount}, 5, 20, 2],
+                        backgroundColor: [
+                            '#ff9f00',
+                            '#4facfe',
+                            '#11998e',
+                            '#fa709a'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': ' + context.parsed + ' đơn';
+                                }
+                            }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
+
+        // Prepare data for 12 months revenue chart
+        <c:set var="last12MonthsLabels" value=""/>
+        <c:set var="last12MonthsData" value=""/>
+        <c:forEach items="${last12MonthsRevenue}" var="monthData" varStatus="status">
+            <c:set var="monthLabel" value="Tháng ${monthData[1]}/${monthData[0]}"/>
+            <c:set var="last12MonthsLabels" value="${last12MonthsLabels}'${monthLabel}'"/>
+            <c:set var="last12MonthsData" value="${last12MonthsData}${monthData[2]}"/>
+            <c:if test="${!status.last}">
+                <c:set var="last12MonthsLabels" value="${last12MonthsLabels}, "/>
+                <c:set var="last12MonthsData" value="${last12MonthsData}, "/>
+            </c:if>
+        </c:forEach>
+
+        // Monthly Revenue Chart (12 months)
+        const monthlyRevenueCtx = document.getElementById('monthlyRevenueChart');
+        if (monthlyRevenueCtx) {
+            const monthlyRevenueChart = new Chart(monthlyRevenueCtx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: [${last12MonthsLabels}],
+                    datasets: [{
+                        label: 'Doanh thu (VND)',
+                        data: [${last12MonthsData}],
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: '#667eea',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        hoverBackgroundColor: 'rgba(118, 75, 162, 0.9)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Doanh thu: ' + new Intl.NumberFormat('vi-VN', {
+                                        style: 'currency',
+                                        currency: 'VND'
+                                    }).format(context.parsed.y);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return new Intl.NumberFormat('vi-VN', {
+                                        style: 'currency',
+                                        currency: 'VND',
+                                        notation: 'compact',
+                                        compactDisplay: 'short'
+                                    }).format(value);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
         console.log('UTESHOP Vendor Dashboard loaded successfully! 🎉');
     </script>
-</body>
-</html>
