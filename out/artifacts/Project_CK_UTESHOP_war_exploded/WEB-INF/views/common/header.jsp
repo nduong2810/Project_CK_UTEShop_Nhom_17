@@ -319,7 +319,12 @@
                    title="Xem giỏ hàng">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-count position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCount">
-                        0
+                        <c:choose>
+                            <c:when test="${not empty sessionScope.cartCount and sessionScope.cartCount > 0}">
+                                ${sessionScope.cartCount}
+                            </c:when>
+                            <c:otherwise></c:otherwise>
+                        </c:choose>
                     </span>
                 </a>
 
@@ -461,12 +466,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Set default cart count for guest
-    const cartCountElement = document.getElementById('cartCount');
-    if (cartCountElement) {
-        cartCountElement.textContent = '0';
-        cartCountElement.style.display = 'none';
-    }
+    // Remove hardcoded cart count initialization so server-side value is shown
+    // const cartCountElement = document.getElementById('cartCount');
+    // if (cartCountElement) {
+    //     cartCountElement.textContent = '0';
+    //     cartCountElement.style.display = 'none';
+    // }
 });
 
 // Auto-hide dropdown on mobile after selection

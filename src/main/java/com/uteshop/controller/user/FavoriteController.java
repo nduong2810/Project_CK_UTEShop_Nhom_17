@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet({"/user/favorites/*", "/user/wishlist"})
+@WebServlet({"/user/favorites/*"})
 public class FavoriteController extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private SanPhamYeuThichDAO sanPhamYeuThichDAO;
