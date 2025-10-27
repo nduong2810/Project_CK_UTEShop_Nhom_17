@@ -3,14 +3,20 @@ package com.uteshop.filter;
 import com.uteshop.entity.NguoiDung;
 import com.uteshop.util.JwtUtil;
 import io.jsonwebtoken.Claims;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.*;
+
 import java.io.IOException;
 import java.util.*;
 
 @WebFilter(urlPatterns = {"/*"})
 public class AuthFilter implements Filter {
+
+    private EntityManagerFactory emf;
 
     private static final List<String> PUBLIC_URLS = Arrays.asList(
             "/auth/login", "/auth/register", "/auth/logout",
@@ -19,6 +25,12 @@ public class AuthFilter implements Filter {
             "/auth/forgot-send-otp", "/auth/forgot-verify-otp",
             "/guest", "/assets", "/css", "/js", "/images", "/img", "/favicon.ico"
     );
+
+    @Override
+    public void init(FilterConfig filterConfig) {
+        emf = Persistence.createEntityManagerFactory("uteshop-pu"); // ⚠️ Đúng tên persistence-unit của bạn trong persistence.xml
+        System.out.println("✅ AuthFilter initialized (JPA)");
+    }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -30,11 +42,15 @@ public class AuthFilter implements Filter {
         String requestURI = req.getRequestURI();
         String contextPath = req.getContextPath();
         String path = requestURI.substring(contextPath.length());
+        String normalizedPath = path.replaceAll("//+", "/");
 
-        // Debug log
-        System.out.println("AuthFilter: Processing " + path);
+        // ✅ Bỏ qua file tĩnh
+        if (isStaticResource(normalizedPath)) {
+            chain.doFilter(request, response);
+            return;
+        }
 
-        // Cho phép truy cập các URL công khai
+        // ✅ Cho phép URL công khai
         if (isPublicUrl(path)) {
             chain.doFilter(request, response);
             return;
@@ -43,7 +59,7 @@ public class AuthFilter implements Filter {
         HttpSession session = req.getSession(false);
         NguoiDung user = (session != null) ? (NguoiDung) session.getAttribute("user") : null;
 
-        // Nếu chưa có session thì thử đọc JWT từ cookie
+        // ✅ Nếu chưa có session → khôi phục từ JWT
         if (user == null && req.getCookies() != null) {
             for (Cookie cookie : req.getCookies()) {
                 if ("jwt_token".equals(cookie.getName())) {
@@ -52,16 +68,17 @@ public class AuthFilter implements Filter {
                         String username = claims.getSubject();
                         String role = (String) claims.get("role");
 
-                        NguoiDung u = new NguoiDung();
-                        u.setTenDangNhap(username);
-                        u.setVaiTro(NguoiDung.VaiTro.valueOf(role));
-
-                        HttpSession newSession = req.getSession(true);
-                        newSession.setAttribute("user", u);
-                        newSession.setAttribute("userRole", role);
-                        user = u;
-
-                        System.out.println("AuthFilter: Restored session from JWT for " + username);
+                        // 🔹 Lấy user từ DB bằng JPA
+                        NguoiDung u = findUserByUsername(username);
+                        if (u != null) {
+                            HttpSession newSession = req.getSession(true);
+                            newSession.setAttribute("user", u);
+                            newSession.setAttribute("userRole", role);
+                            user = u;
+                            System.out.println("AuthFilter: Restored user from DB → " + username);
+                        } else {
+                            System.out.println("AuthFilter: Không tìm thấy user trong DB → " + username);
+                        }
                     } catch (Exception e) {
                         System.out.println("AuthFilter: Invalid JWT token → " + e.getMessage());
                     }
@@ -70,25 +87,50 @@ public class AuthFilter implements Filter {
             }
         }
 
-        // Nếu chưa đăng nhập (vẫn không có user)
+        // ✅ Nếu vẫn chưa có user → chuyển hướng login
         if (user == null) {
-            System.out.println("AuthFilter: Not logged in, redirecting to login");
             resp.sendRedirect(contextPath + "/auth/login");
             return;
         }
 
-        // Kiểm tra quyền truy cập
+        // ✅ Kiểm tra quyền truy cập
         if (!hasAccess(user, path)) {
-            System.out.println("AuthFilter: Access denied for role " + user.getVaiTro() + " to " + path);
             resp.sendRedirect(contextPath + getDefaultPageForRole(user.getVaiTro()));
             return;
         }
 
-        // Cho phép truy cập
         chain.doFilter(request, response);
     }
 
-    /** Xác định URL public */
+    /** Truy vấn user từ JPA */
+    private NguoiDung findUserByUsername(String username) {
+        EntityManager em = null;
+        try {
+            em = emf.createEntityManager();
+            return em.createQuery(
+                            "SELECT u FROM NguoiDung u WHERE u.tenDangNhap = :username", NguoiDung.class)
+                    .setParameter("username", username)
+                    .getResultStream()
+                    .findFirst()
+                    .orElse(null);
+        } catch (Exception e) {
+            System.out.println("AuthFilter: Lỗi khi truy vấn JPA → " + e.getMessage());
+            return null;
+        } finally {
+            if (em != null) em.close();
+        }
+    }
+
+    private boolean isStaticResource(String path) {
+        return path.startsWith("/assets/")
+                || path.startsWith("/uploads/")
+                || path.endsWith(".css") || path.endsWith(".js")
+                || path.endsWith(".png") || path.endsWith(".jpg")
+                || path.endsWith(".jpeg") || path.endsWith(".gif")
+                || path.endsWith(".svg") || path.endsWith(".webp")
+                || path.endsWith(".ico");
+    }
+
     private boolean isPublicUrl(String path) {
         for (String publicUrl : PUBLIC_URLS) {
             if (path.startsWith(publicUrl)) return true;
@@ -96,10 +138,8 @@ public class AuthFilter implements Filter {
         return false;
     }
 
-    /** Kiểm tra quyền theo vai trò */
     private boolean hasAccess(NguoiDung user, String path) {
         NguoiDung.VaiTro role = user.getVaiTro();
-
         if (path.startsWith("/guest")) return true;
         if (role == NguoiDung.VaiTro.ADMIN) return true;
 
@@ -115,7 +155,6 @@ public class AuthFilter implements Filter {
         }
     }
 
-    /** Trang mặc định theo vai trò */
     private String getDefaultPageForRole(NguoiDung.VaiTro role) {
         switch (role) {
             case ADMIN:
@@ -130,12 +169,8 @@ public class AuthFilter implements Filter {
     }
 
     @Override
-    public void init(FilterConfig filterConfig) {
-        System.out.println("AuthFilter initialized (JWT-compatible)");
-    }
-
-    @Override
     public void destroy() {
+        if (emf != null && emf.isOpen()) emf.close();
         System.out.println("AuthFilter destroyed");
     }
 }

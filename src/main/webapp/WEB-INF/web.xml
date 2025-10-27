@@ -46,14 +46,5 @@
       <taglib-location>/WEB-INF/tlds/sitemesh.tld</taglib-location>
     </taglib>
   </jsp-config>
-  <servlet>
-    <description></description>
-    <display-name>UserProfileServlet</display-name>
-    <servlet-name>UserProfileServlet</servlet-name>
-    <servlet-class>com.uteshop.controller.UserProfileServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>UserProfileServlet</servlet-name>
-    <url-pattern>/UserProfileServlet</url-pattern>
-  </servlet-mapping>
+
 </web-app>
