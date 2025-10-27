@@ -15,7 +15,7 @@ public class SanPhamYeuThich {
     @JoinColumn(name = "maND", nullable = false)
     private NguoiDung nguoiDung;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "maSP", nullable = false)
     private SanPham sanPham;
     
