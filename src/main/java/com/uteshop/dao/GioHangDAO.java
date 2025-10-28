@@ -197,8 +197,13 @@ public class GioHangDAO {
     public List<ChiTietGioHang> getCartItems(int userId) {
         EntityManager em = emf.createEntityManager();
         try {
+            // JOIN FETCH cả sanPham và cuaHang để tránh LazyInitializationException
             TypedQuery<ChiTietGioHang> query = em.createQuery(
-                "SELECT ct FROM ChiTietGioHang ct JOIN FETCH ct.sanPham WHERE ct.gioHang.nguoiDung.maND = :userId ORDER BY ct.ngayThem DESC", 
+                "SELECT ct FROM ChiTietGioHang ct " +
+                "JOIN FETCH ct.sanPham sp " +
+                "JOIN FETCH sp.cuaHang " +
+                "WHERE ct.gioHang.nguoiDung.maND = :userId " +
+                "ORDER BY ct.ngayThem DESC", 
                 ChiTietGioHang.class);
             query.setParameter("userId", userId);
             return query.getResultList();

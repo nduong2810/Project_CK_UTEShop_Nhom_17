@@ -157,17 +157,18 @@ public class MaGiamGiaDAO {
 		}
 	}
 
-	public boolean incrementUsage(int maGG) {
+	// Cập nhật số lượng đã sử dụng
+	public boolean incrementUsageCount(int maGG) {
 		EntityManager em = getEntityManager();
 		try {
 			em.getTransaction().begin();
-			MaGiamGia m = em.find(MaGiamGia.class, maGG);
-			if (m == null) {
+			MaGiamGia maGiamGia = em.find(MaGiamGia.class, maGG);
+			if (maGiamGia == null) {
 				em.getTransaction().rollback();
 				return false;
 			}
-			m.setSoLuongDaSuDung(m.getSoLuongDaSuDung() + 1);
-			em.merge(m);
+			maGiamGia.setSoLuongDaSuDung(maGiamGia.getSoLuongDaSuDung() + 1);
+			em.merge(maGiamGia);
 			em.getTransaction().commit();
 			return true;
 		} catch (Exception e) {
@@ -200,27 +201,6 @@ public class MaGiamGiaDAO {
 
 			List<MaGiamGia> results = query.getResultList();
 			return !results.isEmpty();
-		} finally {
-			em.close();
-		}
-	}
-
-	// Cập nhật số lượng đã sử dụng
-	public boolean incrementUsageCount(int maGG) {
-		EntityManager em = getEntityManager();
-		try {
-			em.getTransaction().begin();
-			MaGiamGia maGiamGia = em.find(MaGiamGia.class, maGG);
-			if (maGiamGia != null) {
-				maGiamGia.setSoLuongDaSuDung(maGiamGia.getSoLuongDaSuDung() + 1);
-				em.merge(maGiamGia);
-			}
-			em.getTransaction().commit();
-			return true;
-		} catch (Exception e) {
-			em.getTransaction().rollback();
-			e.printStackTrace();
-			return false;
 		} finally {
 			em.close();
 		}

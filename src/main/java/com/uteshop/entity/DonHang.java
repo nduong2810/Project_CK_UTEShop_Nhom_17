@@ -87,7 +87,9 @@ public class DonHang implements Serializable {
     }
     
     public enum PhuongThucThanhToan {
-        COD, VNPAY, MOMO
+        COD,           // Tiền mặt khi nhận hàng
+        BANK_TRANSFER, // Chuyển khoản ngân hàng
+        MOMO          // Chuyển khoản MoMo
     }
 
     public DonHang() {

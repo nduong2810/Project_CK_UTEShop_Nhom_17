@@ -261,7 +261,6 @@ public class DonHangDAO {
 	}
 
 	/**
-<<<<<<< HEAD
 	 * Lấy doanh thu theo ngày cụ thể
 	 */
 	public BigDecimal getDailyRevenue(Integer maCH, int day, int month, int year) {
@@ -389,10 +388,6 @@ public class DonHangDAO {
 	
 	/**
 	 * Cập nhật trạng thái đơn hàng (chỉ vendor có quyền cập nhật đơn hàng của cửa hàng mình)
-=======
-	 * Cập nhật trạng thái đơn hàng (chỉ vendor có quyền cập nhật đơn hàng của cửa
-	 * hàng mình)
->>>>>>> c5a8462feb5fd5b11c62b789e9126e76cf989f56
 	 */
 	public boolean updateOrderStatusByStore(Integer maDH, Integer maCH, DonHang.TrangThaiDonHang newStatus) {
 		EntityManager em = getEntityManager();
@@ -607,6 +602,28 @@ public class DonHangDAO {
 			return em.createQuery(jpql, DonHang.class).setParameter("id", id).getSingleResult();
 		} catch (NoResultException e) {
 			return null;
+		} finally {
+			em.close();
+		}
+	}
+	
+	/**
+	 * Insert new order with order details
+	 */
+	public boolean insert(DonHang donHang) {
+		EntityManager em = getEntityManager();
+		EntityTransaction tx = em.getTransaction();
+		try {
+			tx.begin();
+			em.persist(donHang);
+			tx.commit();
+			return true;
+		} catch (Exception e) {
+			if (tx.isActive()) {
+				tx.rollback();
+			}
+			e.printStackTrace();
+			return false;
 		} finally {
 			em.close();
 		}
