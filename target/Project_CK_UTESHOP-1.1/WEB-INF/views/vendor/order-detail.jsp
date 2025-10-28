@@ -333,20 +333,33 @@
                             
                             <div class="d-flex justify-content-between mb-2">
                                 <span>Tạm tính:</span>
-                                <span><fmt:formatNumber value="${order.tongTien}" type="currency" currencySymbol="₫"/></span>
+                                <span><fmt:formatNumber value="${order.tongTien}" type="currency" currencySymbol="₫" groupingUsed="true"/></span>
                             </div>
                             
-                            <c:if test="${order.tienGiam > 0}">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Giảm giá:</span>
-                                    <span class="text-warning">-<fmt:formatNumber value="${order.tienGiam}" type="currency" currencySymbol="₫"/></span>
+                            <!-- ✅ FIX: Show discount with proper formatting -->
+                            <c:if test="${not empty order.tienGiam and order.tienGiam > 0}">
+                                <div class="d-flex justify-content-between mb-2 text-warning">
+                                    <span><i class="fas fa-tag me-1"></i>Giảm giá:</span>
+                                    <span class="fw-bold">-<fmt:formatNumber value="${order.tienGiam}" type="number" groupingUsed="true"/>₫</span>
                                 </div>
                             </c:if>
                             
-                            <c:if test="${order.phiVanChuyen > 0}">
+                            <!-- ✅ FIX: Show shipping fee with proper formatting -->
+                            <c:if test="${not empty order.phiVanChuyen}">
                                 <div class="d-flex justify-content-between mb-2">
-                                    <span>Phí vận chuyển:</span>
-                                    <span><fmt:formatNumber value="${order.phiVanChuyen}" type="currency" currencySymbol="₫"/></span>
+                                    <span><i class="fas fa-shipping-fast me-1"></i>Phí vận chuyển:</span>
+                                    <span><fmt:formatNumber value="${order.phiVanChuyen}" type="number" groupingUsed="true"/>₫</span>
+                                </div>
+                            </c:if>
+                            
+                            <!-- DEBUG: Show all values for troubleshooting -->
+                            <c:if test="${param.debug == 'true'}">
+                                <div class="alert alert-info small mt-2">
+                                    <strong>DEBUG INFO:</strong><br>
+                                    TongTien: ${order.tongTien}<br>
+                                    TienGiam: ${order.tienGiam}<br>
+                                    PhiVanChuyen: ${order.phiVanChuyen}<br>
+                                    TongThanhToan: ${order.tongThanhToan}
                                 </div>
                             </c:if>
                             

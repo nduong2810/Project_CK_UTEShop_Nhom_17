@@ -323,6 +323,12 @@
 													<c:when test="${o.trangThai == 'HOAN_TIEN'}">
 														<span class="badge b-refund">Hoàn tiền</span>
 													</c:when>
+													<c:when test="${o.trangThai == 'CHO_XAC_NHAN'}">
+														<span class="badge b-ship">Chờ xác nhận</span>
+													</c:when>
+													<c:when test="${o.trangThai == 'DANG_XU_LY'}">
+														<span class="badge b-ship">Đang xử lý</span>
+													</c:when>
 													<c:otherwise>
 														<span class="badge">${o.trangThai}</span>
 													</c:otherwise>

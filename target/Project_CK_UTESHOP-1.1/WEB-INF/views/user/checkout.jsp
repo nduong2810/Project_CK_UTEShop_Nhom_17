@@ -1008,20 +1008,89 @@
         function updateOrderTotal() {
             // Tính tổng tất cả cửa hàng (đã trừ discount)
             let grandTotal = 0;
+            let totalDiscount = 0;
             const allStoreGroups = document.querySelectorAll('.store-group');
             
             allStoreGroups.forEach(group => {
                 const subtotalText = group.querySelector('.store-subtotal-amount').textContent;
                 const subtotal = parseFloat(subtotalText.replace(/[^\d]/g, ''));
                 grandTotal += subtotal;
+                
+                // Lấy số tiền giảm của cửa hàng này
+                const storeId = group.getAttribute('data-store-id');
+                const discountInput = document.getElementById('selectedDiscountAmount-' + storeId);
+                if (discountInput && discountInput.value) {
+                    totalDiscount += parseFloat(discountInput.value);
+                }
             });
+            
+            // ✅ FIX: Tính tổng gốc (chưa giảm giá)
+            const originalSubtotal = grandTotal + totalDiscount;
             
             // Thêm phí vận chuyển
             const shippingFee = 30000;
-            grandTotal += shippingFee;
+            const finalTotal = grandTotal + shippingFee;
             
-            // Cập nhật hiển thị (nếu có element tổng tiền)
-            // Phần này sẽ tự động cập nhật khi submit form
+            // ✅ FIX: Cập nhật hiển thị bên phải
+            const summaryRows = document.querySelectorAll('.summary-row');
+            
+            // Cập nhật "Tạm tính" (sau khi đã trừ discount)
+            if (summaryRows[0]) {
+                summaryRows[0].querySelector('strong').textContent = 
+                    grandTotal.toLocaleString('vi-VN') + '₫';
+            }
+            
+            // Cập nhật "Phí vận chuyển" (giữ nguyên)
+            if (summaryRows[1]) {
+                summaryRows[1].querySelector('strong').textContent = 
+                    shippingFee.toLocaleString('vi-VN') + '₫';
+            }
+            
+            // Cập nhật "Giảm giá" nếu có
+            let discountRowIndex = 2;
+            if (totalDiscount > 0) {
+                // Kiểm tra xem đã có dòng giảm giá chưa
+                let discountRow = document.querySelector('.summary-row.text-danger');
+                if (!discountRow) {
+                    // Tạo mới dòng giảm giá
+                    const summaryDiv = document.querySelector('.order-summary .section-card');
+                    const totalRow = summaryRows[summaryRows.length - 1];
+                    
+                    discountRow = document.createElement('div');
+                    discountRow.className = 'summary-row text-danger';
+                    discountRow.innerHTML = `
+                        <span><i class="fas fa-tag me-2"></i>Giảm giá:</span>
+                        <strong>-${totalDiscount.toLocaleString('vi-VN')}₫</strong>
+                    `;
+                    totalRow.parentNode.insertBefore(discountRow, totalRow);
+                } else {
+                    // Cập nhật giá trị
+                    discountRow.querySelector('strong').textContent = 
+                        '-' + totalDiscount.toLocaleString('vi-VN') + '₫';
+                }
+                discountRowIndex = 3;
+            } else {
+                // Xóa dòng giảm giá nếu không có discount
+                const discountRow = document.querySelector('.summary-row.text-danger');
+                if (discountRow) {
+                    discountRow.remove();
+                }
+            }
+            
+            // Cập nhật "Tổng thanh toán"
+            const totalRow = summaryRows[summaryRows.length - 1];
+            if (totalRow) {
+                totalRow.querySelector('strong').textContent = 
+                    finalTotal.toLocaleString('vi-VN') + '₫';
+            }
+            
+            console.log('✅ Updated Order Total:', {
+                originalSubtotal: originalSubtotal,
+                discount: totalDiscount,
+                subtotalAfterDiscount: grandTotal,
+                shipping: shippingFee,
+                finalTotal: finalTotal
+            });
         }
         
         // Auto-show payment details for selected method on load

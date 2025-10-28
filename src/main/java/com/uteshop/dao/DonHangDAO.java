@@ -5,6 +5,7 @@ import com.uteshop.entity.DonHang.TrangThaiDonHang;
 import com.uteshop.util.JPAUtil;
 import com.uteshop.entity.ChiTietDonHang;
 import com.uteshop.entity.ChiTietDonHangPK;
+import com.uteshop.entity.NguoiDung;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -35,10 +36,45 @@ public class DonHangDAO {
 		return emf.createEntityManager();
 	}
 
+	/**
+	 * Lấy đơn hàng theo ID với EAGER loading cho chi tiết đơn hàng
+	 */
 	public DonHang findById(Integer id) {
 		EntityManager em = getEntityManager();
 		try {
-			return em.find(DonHang.class, id);
+			// ✅ FIX: Use JPQL with JOIN FETCH to eagerly load chiTietDonHangs
+			String jpql = "SELECT DISTINCT dh FROM DonHang dh " +
+						  "LEFT JOIN FETCH dh.chiTietDonHangs ctdh " +
+						  "LEFT JOIN FETCH ctdh.sanPham sp " +
+						  "LEFT JOIN FETCH sp.cuaHang ch " +
+						  "LEFT JOIN FETCH dh.nguoiDung nd " +
+						  "WHERE dh.maDH = :id";
+			
+			TypedQuery<DonHang> query = em.createQuery(jpql, DonHang.class);
+			query.setParameter("id", id);
+			
+			List<DonHang> results = query.getResultList();
+			
+			if (results.isEmpty()) {
+				System.out.println("⚠️ Order #" + id + " not found");
+				return null;
+			}
+			
+			DonHang order = results.get(0);
+			
+			// ✅ Force initialization of collections to avoid lazy loading issues
+			if (order.getChiTietDonHangs() != null) {
+				order.getChiTietDonHangs().size();
+			}
+			
+			System.out.println("✅ Loaded order #" + id + " with " + 
+				(order.getChiTietDonHangs() != null ? order.getChiTietDonHangs().size() : 0) + " items");
+			
+			return order;
+		} catch (Exception e) {
+			System.err.println("❌ Error loading order #" + id + ": " + e.getMessage());
+			e.printStackTrace();
+			return null;
 		} finally {
 			em.close();
 		}
@@ -61,6 +97,16 @@ public class DonHangDAO {
 			
 			List<DonHang> orders = query.getResultList();
 			System.out.println("📦 Found " + orders.size() + " orders for user #" + userId);
+			
+			// ✅ DEBUG: Log discount values
+			for (DonHang order : orders) {
+				System.out.println("   Order #" + order.getMaDH() + 
+					" - TongTien: " + order.getTongTien() + 
+					", TienGiam: " + order.getTienGiam() + 
+					", PhiVanChuyen: " + order.getPhiVanChuyen() + 
+					", TongThanhToan: " + order.getTongThanhToan());
+			}
+			
 			return orders;
 		} catch (Exception e) {
 			System.err.println("❌ Error finding orders for user #" + userId + ": " + e.getMessage());
@@ -656,7 +702,14 @@ public class DonHangDAO {
 				order.getChiTietDonHangs().size(); // Force initialization
 			}
 			
+			// ✅ DEBUG: Log order financial details
 			System.out.println("✅ Successfully loaded order #" + maDH + " with " + items.size() + " items");
+			System.out.println("   💰 Financial Details:");
+			System.out.println("      TongTien: " + order.getTongTien());
+			System.out.println("      TienGiam: " + order.getTienGiam());
+			System.out.println("      PhiVanChuyen: " + order.getPhiVanChuyen());
+			System.out.println("      TongThanhToan: " + order.getTongThanhToan());
+			
 			return order;
 			
 		} catch (Exception e) {
@@ -878,19 +931,25 @@ public class DonHangDAO {
 			List<ChiTietDonHang> chiTietList = donHang.getChiTietDonHangs();
 			donHang.setChiTietDonHangs(null); // Tạm thời set null
 			
-			// Merge NguoiDung nếu detached
+			// ✅ FIX: Merge NguoiDung nếu detached
 			if (donHang.getNguoiDung() != null && donHang.getNguoiDung().getMaND() != null) {
-				donHang.setNguoiDung(em.merge(donHang.getNguoiDung()));
+				NguoiDung managedUser = em.find(NguoiDung.class, donHang.getNguoiDung().getMaND());
+				if (managedUser == null) {
+					throw new RuntimeException("Người dùng ID " + donHang.getNguoiDung().getMaND() + " không tồn tại");
+				}
+				donHang.setNguoiDung(managedUser);
 			}
 			
+			// Persist đơn hàng (không có chi tiết)
 			em.persist(donHang);
 			em.flush(); // Flush để có maDH
+			
+			System.out.println("✅ Đã persist đơn hàng, maDH = " + donHang.getMaDH());
 			
 			// Sau khi có maDH, tạo chi tiết đơn hàng
 			if (chiTietList != null && !chiTietList.isEmpty()) {
 				for (ChiTietDonHang detail : chiTietList) {
-					// ✅ FIX: Merge SanPham detached entity
-					// Reload SanPham từ database để có managed entity
+					// ✅ FIX: Load lại SanPham từ database để có managed entity
 					com.uteshop.entity.SanPham managedSanPham = em.find(
 						com.uteshop.entity.SanPham.class, 
 						detail.getSanPham().getMaSP()
@@ -911,6 +970,7 @@ public class DonHangDAO {
 					
 					em.persist(detail);
 				}
+				em.flush(); // Flush các chi tiết đơn hàng
 				donHang.setChiTietDonHangs(chiTietList);
 			}
 			

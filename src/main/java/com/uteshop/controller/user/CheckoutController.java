@@ -255,6 +255,14 @@ public class CheckoutController extends HttpServlet {
         
         List<Integer> orderIds = new ArrayList<>();
         
+        // ✅ FIX: Tính tổng giỏ hàng để phân bổ discount chính xác
+        BigDecimal totalCartValue = cartItems.stream()
+            .map(ChiTietGioHang::getThanhTien)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        System.out.println("📊 Total cart value: " + totalCartValue);
+        System.out.println("💰 Applied discount amount: " + totalDiscountAmount);
+        
         for (Map.Entry<CuaHang, List<ChiTietGioHang>> entry : itemsByStore.entrySet()) {
             CuaHang store = entry.getKey();
             List<ChiTietGioHang> storeItems = entry.getValue();
@@ -266,19 +274,28 @@ public class CheckoutController extends HttpServlet {
             
             BigDecimal storeShipping = BigDecimal.valueOf(30000);
             
-            // Phân bổ discount theo tỷ lệ nếu có
+            // ✅ FIX: Phân bổ discount theo tỷ lệ nếu có
             BigDecimal storeDiscount = BigDecimal.ZERO;
-            if (appliedDiscount != null && totalDiscountAmount != null) {
-                BigDecimal totalCartValue = cartItems.stream()
-                    .map(ChiTietGioHang::getThanhTien)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            if (appliedDiscount != null && totalDiscountAmount != null && 
+                totalDiscountAmount.compareTo(BigDecimal.ZERO) > 0) {
                 
                 // Tính tỷ lệ của cửa hàng này trong tổng giỏ hàng
-                BigDecimal ratio = storeSubtotal.divide(totalCartValue, 4, BigDecimal.ROUND_HALF_UP);
-                storeDiscount = totalDiscountAmount.multiply(ratio).setScale(0, BigDecimal.ROUND_HALF_UP);
+                if (totalCartValue.compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal ratio = storeSubtotal.divide(totalCartValue, 4, BigDecimal.ROUND_HALF_UP);
+                    storeDiscount = totalDiscountAmount.multiply(ratio).setScale(0, BigDecimal.ROUND_HALF_UP);
+                    
+                    System.out.println("🏪 Store: " + store.getTenCH());
+                    System.out.println("   Subtotal: " + storeSubtotal);
+                    System.out.println("   Ratio: " + ratio);
+                    System.out.println("   Discount: " + storeDiscount);
+                }
             }
             
+            // ✅ FIX: Tính tổng thanh toán = subtotal + shipping - discount
             BigDecimal storeTotal = storeSubtotal.add(storeShipping).subtract(storeDiscount);
+            
+            System.out.println("   Total: " + storeTotal + " (Subtotal: " + storeSubtotal + 
+                             " + Shipping: " + storeShipping + " - Discount: " + storeDiscount + ")");
             
             // Tạo đơn hàng
             DonHang order = new DonHang();
@@ -316,11 +333,19 @@ public class CheckoutController extends HttpServlet {
             // Tạo chi tiết đơn hàng
             List<ChiTietDonHang> orderDetails = new ArrayList<>();
             for (ChiTietGioHang cartItem : storeItems) {
+                // ✅ FIX: Load lại SanPham từ DB để tránh detached entity
+                SanPham freshProduct = sanPhamDAO.findById(cartItem.getSanPham().getMaSP());
+                
+                if (freshProduct == null) {
+                    System.err.println("❌ Sản phẩm ID " + cartItem.getSanPham().getMaSP() + " không tồn tại");
+                    continue; // Bỏ qua sản phẩm này
+                }
+                
                 ChiTietDonHang detail = new ChiTietDonHang();
                 detail.setDonHang(order);
-                detail.setSanPham(cartItem.getSanPham());
+                detail.setSanPham(freshProduct); // Sử dụng product vừa load từ DB
                 detail.setSoLuong(cartItem.getSoLuong());
-                detail.setDonGia(cartItem.getSanPham().getDonGia());
+                detail.setDonGia(freshProduct.getDonGia());
                 orderDetails.add(detail);
             }
             order.setChiTietDonHangs(orderDetails);

@@ -1,6 +1,7 @@
 com\uteshop\controller\admin\AdminCategoriesController.class
 com\uteshop\controller\admin\AdminCustomersController.class
 com\uteshop\controller\guest\GuestServlet.class
+com\uteshop\entity\KhieuNaiNguoiDung.class
 com\uteshop\config\DBConnect.class
 com\uteshop\controller\user\ChangePasswordController.class
 com\uteshop\controller\admin\AdminShopProductsController.class
@@ -38,6 +39,7 @@ com\uteshop\dao\DonViVanChuyenDAO.class
 com\uteshop\controller\user\CartServlet.class
 com\uteshop\controller\user\AddresssController.class
 com\uteshop\util\VietnameseEncodingUtil.class
+com\uteshop\entity\KhieuNaiNguoiDung$TrangThai.class
 com\uteshop\entity\OtpXacThuc.class
 com\uteshop\controller\guest\SubmitReviewController.class
 com\uteshop\service\user\UserService.class
@@ -45,10 +47,12 @@ com\uteshop\entity\MaGiamGia.class
 com\uteshop\controller\StaticResourceServlet.class
 com\uteshop\service\common\EmailService.class
 com\uteshop\dao\MaGiamGiaDAO.class
+com\uteshop\controller\admin\AdminCustomersAppealController.class
 com\uteshop\controller\admin\AdminProductsController.class
 com\uteshop\controller\admin\AdminOrdersController.class
 com\uteshop\util\VietnameseDataTemplate.class
 com\uteshop\controller\admin\AdminProductViewController.class
+com\uteshop\controller\admin\AdminAppealsController.class
 com\uteshop\dao\DanhGiaSanPhamDAO.class
 com\uteshop\controller\admin\AdminCouponsController.class
 com\uteshop\controller\user\EditProfileController.class
@@ -67,8 +71,10 @@ com\uteshop\util\JwtUtil.class
 com\uteshop\service\common\OtpService.class
 com\uteshop\controller\admin\AdminCategoryEditController.class
 com\uteshop\entity\NguoiDung$VaiTro.class
+com\uteshop\controller\admin\AdminAppealsUpdateController.class
 com\uteshop\entity\NguoiDung.class
 com\uteshop\controller\vendor\VendorRegisterController.class
+com\uteshop\dao\KhieuNaiNguoiDungDAO.class
 com\uteshop\dao\DashboardDAO.class
 com\uteshop\controller\vendor\VendorController.class
 com\uteshop\entity\DonHang.class
