@@ -194,7 +194,7 @@ textarea {
 							<c:choose>
 								<c:when test="${not empty p.hinhAnh}">
 									<img id="imgPreview"
-										src="${pageContext.request.contextPath}/${p.hinhAnh}"
+										src="${pageContext.request.contextPath}/assets/img/${p.hinhAnh}"
 										alt="${p.tenSP}">
 								</c:when>
 								<c:otherwise>
