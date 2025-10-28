@@ -11,104 +11,111 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
- * Entity ChiTietDonHang đại diện cho chi tiết của một đơn hàng,
- * sử dụng khóa chính composite.
+ * Entity ChiTietDonHang đại diện cho chi tiết của một đơn hàng, sử dụng khóa
+ * chính composite.
  */
 @Entity
 @Table(name = "ChiTietDonHang")
 public class ChiTietDonHang implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = 1L;
 
-    // Sử dụng khóa chính composite
-    @EmbeddedId
-    private ChiTietDonHangPK id;
+	// Sử dụng khóa chính composite
+	@EmbeddedId
+	private ChiTietDonHangPK id;
 
-    // ----------------------------------------------------
-    // MAPPING KHÓA NGOẠI (Foreign Key Mapping)
-    // Sử dụng @MapsId để liên kết các trường trong EmbeddedId với các Entity
-    // ----------------------------------------------------
-    
-    @MapsId("donHang")
-    @ManyToOne
-    @JoinColumn(name = "MaDH", nullable = false)
-    private DonHang donHang;
+	// ----------------------------------------------------
+	// MAPPING KHÓA NGOẠI (Foreign Key Mapping)
+	// Sử dụng @MapsId để liên kết các trường trong EmbeddedId với các Entity
+	// ----------------------------------------------------
 
-    @MapsId("sanPham")
-    @ManyToOne
-    @JoinColumn(name = "MaSP", nullable = false)
-    private SanPham sanPham;
+	@MapsId("donHang")
+	@ManyToOne
+	@JoinColumn(name = "MaDH", nullable = false)
+	private DonHang donHang;
 
-    // ----------------------------------------------------
-    // CÁC THUỘC TÍNH KHÁC
-    // ----------------------------------------------------
-    
-    @Column(name = "SoLuong", nullable = false)
-    private Integer soLuong;
+	@MapsId("sanPham")
+	@ManyToOne
+	@JoinColumn(name = "MaSP", nullable = false)
+	private SanPham sanPham;
 
-    @Column(name = "DonGia", nullable = false, precision = 19, scale = 4)
-    private BigDecimal donGia; // Đơn giá tại thời điểm đặt hàng
+	// ----------------------------------------------------
+	// CÁC THUỘC TÍNH KHÁC
+	// ----------------------------------------------------
 
-    // Constructors
-    public ChiTietDonHang() {
-        this.id = new ChiTietDonHangPK();
-    }
-    
-    public ChiTietDonHang(DonHang donHang, SanPham sanPham, Integer soLuong, BigDecimal donGia) {
-        // Khởi tạo EmbeddedId
-        this.id = new ChiTietDonHangPK(donHang.getMaDH(), sanPham.getMaSP());
-        this.donHang = donHang;
-        this.sanPham = sanPham;
-        this.soLuong = soLuong;
-        this.donGia = donGia;
-    }
+	@Column(name = "SoLuong", nullable = false)
+	private Integer soLuong;
 
-    // Getters and Setters
-    public ChiTietDonHangPK getId() {
-        return id;
-    }
+	@Column(name = "DonGia", nullable = false, precision = 19, scale = 4)
+	private BigDecimal donGia; // Đơn giá tại thời điểm đặt hàng
 
-    public void setId(ChiTietDonHangPK id) {
-        this.id = id;
-    }
+	@Column(name = "ThanhTien", precision = 18, scale = 2, insertable = false, updatable = false)
+	private BigDecimal thanhTien;
 
-    public DonHang getDonHang() {
-        return donHang;
-    }
+	// Constructors
+	public ChiTietDonHang() {
+		this.id = new ChiTietDonHangPK();
+	}
 
-    public void setDonHang(DonHang donHang) {
-        this.donHang = donHang;
-        if (this.id == null) {
-            this.id = new ChiTietDonHangPK();
-        }
-        this.id.setDonHang(donHang != null ? donHang.getMaDH() : null);
-    }
+	public ChiTietDonHang(DonHang donHang, SanPham sanPham, Integer soLuong, BigDecimal donGia) {
+		// Khởi tạo EmbeddedId
+		this.id = new ChiTietDonHangPK(donHang.getMaDH(), sanPham.getMaSP());
+		this.donHang = donHang;
+		this.sanPham = sanPham;
+		this.soLuong = soLuong;
+		this.donGia = donGia;
+	}
 
-    public SanPham getSanPham() {
-        return sanPham;
-    }
+	// Getters and Setters
+	public ChiTietDonHangPK getId() {
+		return id;
+	}
 
-    public void setSanPham(SanPham sanPham) {
-        this.sanPham = sanPham;
-        if (this.id == null) {
-            this.id = new ChiTietDonHangPK();
-        }
-        this.id.setSanPham(sanPham != null ? sanPham.getMaSP() : null);
-    }
+	public void setId(ChiTietDonHangPK id) {
+		this.id = id;
+	}
 
-    public Integer getSoLuong() {
-        return soLuong;
-    }
+	public DonHang getDonHang() {
+		return donHang;
+	}
 
-    public void setSoLuong(Integer soLuong) {
-        this.soLuong = soLuong;
-    }
+	public void setDonHang(DonHang donHang) {
+		this.donHang = donHang;
+		if (this.id == null) {
+			this.id = new ChiTietDonHangPK();
+		}
+		this.id.setDonHang(donHang != null ? donHang.getMaDH() : null);
+	}
 
-    public BigDecimal getDonGia() {
-        return donGia;
-    }
+	public SanPham getSanPham() {
+		return sanPham;
+	}
 
-    public void setDonGia(BigDecimal donGia) {
-        this.donGia = donGia;
-    }
+	public void setSanPham(SanPham sanPham) {
+		this.sanPham = sanPham;
+		if (this.id == null) {
+			this.id = new ChiTietDonHangPK();
+		}
+		this.id.setSanPham(sanPham != null ? sanPham.getMaSP() : null);
+	}
+
+	public Integer getSoLuong() {
+		return soLuong;
+	}
+
+	public void setSoLuong(Integer soLuong) {
+		this.soLuong = soLuong;
+	}
+
+	public BigDecimal getDonGia() {
+		return donGia;
+	}
+
+	public void setDonGia(BigDecimal donGia) {
+		this.donGia = donGia;
+	}
+
+	public BigDecimal getThanhTien() {
+		return thanhTien;
+	}
 }
