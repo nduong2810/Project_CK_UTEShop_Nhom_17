@@ -160,17 +160,23 @@
 			<div class="title">
 				Đơn hàng #${o.maDH}
 				<c:choose>
-					<c:when test="${o.trangThai=='DON_HANG_MOI'}">
-						<span class="badge badge-gray">Mới tạo</span>
+					<c:when test="${o.trangThai=='CHO_XAC_NHAN'}">
+						<span class="badge badge-gray">Chờ xác nhận</span>
 					</c:when>
 					<c:when test="${o.trangThai=='DA_XAC_NHAN'}">
 						<span class="badge badge-blue">Đã xác nhận</span>
+					</c:when>
+					<c:when test="${o.trangThai=='DANG_CHUAN_BI'}">
+						<span class="badge badge-blue">Đang chuẩn bị</span>
 					</c:when>
 					<c:when test="${o.trangThai=='DANG_GIAO'}">
 						<span class="badge badge-amber">Đang giao</span>
 					</c:when>
 					<c:when test="${o.trangThai=='DA_GIAO'}">
 						<span class="badge badge-green">Đã giao</span>
+					</c:when>
+					<c:when test="${o.trangThai=='HOAN_THANH'}">
+						<span class="badge badge-green">Hoàn thành</span>
 					</c:when>
 					<c:when test="${o.trangThai=='DA_HUY'}">
 						<span class="badge badge-red">Đã huỷ</span>

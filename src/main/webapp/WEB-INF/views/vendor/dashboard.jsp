@@ -512,26 +512,7 @@
             </div>
         </section>
 
-        <!-- Revenue Charts Section -->
-        <section class="chart-section fade-in-up" id="revenueCharts">
-            <div class="row g-4">
-                <!-- Biểu đồ doanh thu 7 ngày -->
-                <div class="col-lg-8 col-md-12">
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <h3 class="chart-title">
-                                <i class="fas fa-chart-line me-2"></i>
-                                Doanh thu 7 ngày gần nhất
-                            </h3>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="revenueChart"></canvas>
-                        </div>
-                    </div>
-                </div>
 
-            </div>
-        </section>
 
         <!-- Quick Actions -->
         <section class="quick-actions fade-in-up">

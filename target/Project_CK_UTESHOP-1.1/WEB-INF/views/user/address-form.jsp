@@ -1,204 +1,371 @@
 <%@ page contentType="text/html; charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-<%@ page import="java.util.*" %>
-
-<%
-// Simulate backend data for shipping address
-Map<String, Object> shippingAddress = new HashMap<>();
-shippingAddress.put("fullName", "Nguyễn Văn A");
-shippingAddress.put("phone", "0901234567");
-shippingAddress.put("address", "123 Đường ABC, Quận 1, TP.HCM, Việt Nam");
-shippingAddress.put("isDefault", true);
-
-pageContext.setAttribute("shippingAddress", shippingAddress);
-%>
 
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Địa Chỉ Giao Hàng - UTESHOP</title>
+    <title>${isEdit ? 'Chỉnh Sửa' : 'Thêm'} Địa Chỉ - UTESHOP</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <!-- Giữ nguyên header của bạn -->
-    <header class="header">
-        <div class="header-container">
-            <div class="logo">
-                <a href="<c:url value='/guest/home'/>">UTESHOP</a>
-            </div>
-            <nav class="nav-menu">
-                <a href="<c:url value='/guest/home'/>" class="nav-link">Trang chủ</a>
-                <a href="<c:url value='/user/orders'/>" class="nav-link">Đơn hàng</a>
-                <a href="<c:url value='/user/profile'/>" class="nav-link">Hồ sơ</a>
-            </nav>
-            <div class="user-menu">
-                <span class="user-name">${shippingAddress.fullName}</span>
-                <a href="<c:url value='/logout'/>" class="logout-link"><i class="fas fa-sign-out-alt"></i> Đăng xuất</a>
-            </div>
-        </div>
-    </header>
-
-    <div class="shipping-container">
-        <!-- Breadcrumbs -->
-        <nav aria-label="breadcrumb" class="mb-4" style="margin-top: 80px;">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="<c:url value='/guest/home'/>">Trang chủ</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Địa Chỉ Giao Hàng</li>
-            </ol>
-        </nav>
-
-        <div class="shipping-card">
-            <div class="shipping-header">
-                <h2 class="shipping-title">Địa Chỉ Giao Hàng</h2>
-                <button class="btn btn-primary btn-add" onclick="addNewAddress()">
-                    <i class="fas fa-plus me-2"></i>Thêm Địa Chỉ Mới
-                </button>
-            </div>
-
-            <div class="address-section">
-                <div class="address-card ${shippingAddress.isDefault ? 'default-address' : ''}">
-                    <div class="address-info">
-                        <h5 class="address-name">${shippingAddress.fullName}</h5>
-                        <p class="address-details">
-                            <i class="fas fa-phone me-1"></i> ${shippingAddress.phone}<br>
-                            <i class="fas fa-map-marker-alt me-1"></i> ${shippingAddress.address}
-                        </p>
-                        <c:if test="${shippingAddress.isDefault}">
-                            <span class="badge bg-success">Mặc định</span>
-                        </c:if>
-                    </div>
-                    <div class="address-actions">
-                        <button class="btn btn-outline-primary btn-sm me-2" onclick="editAddress()">
-                            <i class="fas fa-edit"></i> Sửa
-                        </button>
-                        <button class="btn btn-outline-danger btn-sm" onclick="deleteAddress()">
-                            <i class="fas fa-trash"></i> Xóa
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <style>
-        body {
-            background-color: #e9ecef;
-            font-family: 'Inter', sans-serif;
+        * {
             margin: 0;
             padding: 0;
-            color: #333;
+            box-sizing: border-box;
         }
 
-        /* Giữ nguyên header của bạn */
-        .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            background: linear-gradient(45deg, #2874f0, #1a5fce);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            padding: 20px;
         }
-        .header-container {
-            max-width: 1200px;
+
+        .container {
+            max-width: 800px;
             margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px 20px;
-        }
-        .logo a {
-            color: white;
-            font-size: 1.5rem;
-            font-weight: 700;
-            text-decoration: none;
-        }
-        .nav-menu {
-            display: flex;
-            gap: 20px;
-        }
-        .nav-link {
-            color: white;
-            font-size: 1rem;
-            font-weight: 500;
-            text-decoration: none;
-            transition: color 0.3s ease;
-        }
-        .nav-link:hover {
-            color: #ff3f6c;
-        }
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .user-name {
-            color: white;
-            font-size: 0.95rem;
-            font-weight: 500;
-        }
-        .logout-link {
-            color: white;
-            font-size: 0.95rem;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            transition: color 0.3s ease;
-        }
-        .logout-link:hover {
-            color: #ff3f6c;
         }
 
-        .shipping-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        /* Breadcrumb Styles */
+        /* Breadcrumb */
         .breadcrumb {
-            background-color: #f0f4f8;
+            background-color: rgba(255, 255, 255, 0.9);
             padding: 0.75rem 1.5rem;
             border-radius: 8px;
+            margin-bottom: 20px;
         }
         .breadcrumb-item a {
             text-decoration: none;
-            color: #2874f0;
+            color: #667eea;
             font-weight: 500;
         }
-        .breadcrumb-item.active {
-            color: #6c757d;
+
+        /* Form Card */
+        .form-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            padding: 40px;
+            animation: fadeInUp 0.6s ease;
         }
 
-        /* Shipping Card */
-        .shipping-card {
-            background: linear-gradient(135deg, #e6f0fa 0%, #f8f9fa 100%);
-            border-radius: 16px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-            padding: 30px;
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Form Header */
+        .form-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .form-title i {
+            color: #667eea;
+        }
+
+        /* Form Groups */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .form-label .required {
+            color: #e53e3e;
+            margin-left: 3px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
             transition: all 0.3s ease;
         }
-        .shipping-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
-        /* Shipping Header */
-        .shipping-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
+        .form-control.is-invalid {
+            border-color: #e53e3e;
         }
-        .shipping-title {
-            font-size: 1.5rem;
-            font-weight: 700;
+
+        .invalid-feedback {
+            color: #e53e3e;
+            font-size: 0.875rem;
+            margin-top: 5px;
+        }
+
+        /* Checkbox */
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .form-check-input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .form-check-label {
+            font-weight: 500;
+            color: #2d3748;
+            cursor: pointer;
+        }
+
+        /* Buttons */
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px 25px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background-color: #edf2f7;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e2e8f0;
+            color: #2d3748;
+        }
+
+        /* Alert */
+        .alert {
+            border-radius: 10px;
+            border: none;
+            margin-bottom: 20px;
+            padding: 15px 20px;
+        }
+
+        .alert-danger {
+            background-color: #fff5f5;
+            color: #e53e3e;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-card {
+                padding: 25px;
+            }
+
+            .form-title {
+                font-size: 1.5rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/user/profile"><i class="fas fa-user me-1"></i>Hồ sơ</a></li>
+                <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/user/address">Địa chỉ giao hàng</a></li>
+                <li class="breadcrumb-item active" aria-current="page">${isEdit ? 'Chỉnh sửa' : 'Thêm mới'}</li>
+            </ol>
+        </nav>
+
+        <!-- Form Card -->
+        <div class="form-card">
+            <!-- Header -->
+            <div class="form-header">
+                <h1 class="form-title">
+                    <i class="fas fa-map-marker-alt"></i>
+                    ${isEdit ? 'Chỉnh Sửa Địa Chỉ' : 'Thêm Địa Chỉ Mới'}
+                </h1>
+            </div>
+
+            <!-- Error Alert -->
+            <c:if test="${not empty error}">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>${error}
+                </div>
+            </c:if>
+
+            <!-- Form -->
+            <form action="${pageContext.request.contextPath}/user/address" method="post">
+                <input type="hidden" name="action" value="save">
+                <c:if test="${isEdit}">
+                    <input type="hidden" name="id" value="${address.maDC}">
+                </c:if>
+
+                <!-- Tên người nhận -->
+                <div class="form-group">
+                    <label class="form-label">
+                        Tên người nhận<span class="required">*</span>
+                    </label>
+                    <input type="text" 
+                           name="tenNguoiNhan" 
+                           class="form-control ${not empty error and empty tenNguoiNhan ? 'is-invalid' : ''}"
+                           value="${isEdit ? address.tenNguoiNhan : tenNguoiNhan}"
+                           placeholder="Nhập họ tên người nhận"
+                           required>
+                </div>
+
+                <!-- Số điện thoại -->
+                <div class="form-group">
+                    <label class="form-label">
+                        Số điện thoại<span class="required">*</span>
+                    </label>
+                    <input type="tel" 
+                           name="soDienThoai" 
+                           class="form-control ${not empty error and empty soDienThoai ? 'is-invalid' : ''}"
+                           value="${isEdit ? address.soDienThoai : soDienThoai}"
+                           placeholder="Nhập số điện thoại"
+                           pattern="[0-9]{10,11}"
+                           required>
+                </div>
+
+                <!-- Địa chỉ cụ thể -->
+                <div class="form-group">
+                    <label class="form-label">
+                        Địa chỉ cụ thể<span class="required">*</span>
+                    </label>
+                    <input type="text" 
+                           name="diaChiCuThe" 
+                           class="form-control ${not empty error and empty diaChiCuThe ? 'is-invalid' : ''}"
+                           value="${isEdit ? address.diaChiCuThe : diaChiCuThe}"
+                           placeholder="Số nhà, tên đường"
+                           required>
+                </div>
+
+                <!-- Phường/Xã -->
+                <div class="form-group">
+                    <label class="form-label">
+                        Phường/Xã<span class="required">*</span>
+                    </label>
+                    <input type="text" 
+                           name="phuong" 
+                           class="form-control ${not empty error and empty phuong ? 'is-invalid' : ''}"
+                           value="${isEdit ? address.phuong : phuong}"
+                           placeholder="Nhập phường/xã"
+                           required>
+                </div>
+
+                <!-- Quận/Huyện -->
+                <div class="form-group">
+                    <label class="form-label">
+                        Quận/Huyện<span class="required">*</span>
+                    </label>
+                    <input type="text" 
+                           name="quan" 
+                           class="form-control ${not empty error and empty quan ? 'is-invalid' : ''}"
+                           value="${isEdit ? address.quan : quan}"
+                           placeholder="Nhập quận/huyện"
+                           required>
+                </div>
+
+                <!-- Thành phố -->
+                <div class="form-group">
+                    <label class="form-label">
+                        Tỉnh/Thành phố<span class="required">*</span>
+                    </label>
+                    <input type="text" 
+                           name="thanhPho" 
+                           class="form-control ${not empty error and empty thanhPho ? 'is-invalid' : ''}"
+                           value="${isEdit ? address.thanhPho : thanhPho}"
+                           placeholder="Nhập tỉnh/thành phố"
+                           required>
+                </div>
+
+                <!-- Đặt làm mặc định -->
+                <div class="form-check">
+                    <input type="checkbox" 
+                           name="laMacDinh" 
+                           id="laMacDinh" 
+                           class="form-check-input"
+                           ${(isEdit and address.laMacDinh) or laMacDinh ? 'checked' : ''}>
+                    <label class="form-check-label" for="laMacDinh">
+                        <i class="fas fa-star me-1"></i>Đặt làm địa chỉ mặc định
+                    </label>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="form-actions">
+                    <a href="${pageContext.request.contextPath}/user/address" class="btn btn-secondary">
+                        <i class="fas fa-times"></i>
+                        Hủy
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        ${isEdit ? 'Cập Nhật' : 'Lưu Địa Chỉ'}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
             color: #222;
             margin: 0;
         }

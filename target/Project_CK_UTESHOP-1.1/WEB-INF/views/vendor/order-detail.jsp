@@ -4,33 +4,9 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <fmt:setLocale value="vi_VN" scope="session"/>
 
-<!DOCTYPE html>
-<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${pageTitle} - UTESHOP Vendor</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <!-- Google Fonts for Vietnamese -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
     <style>
-        /* Base font styling for Vietnamese */
-        * {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            background-color: #f8f9fa;
-        }
         
         .order-header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -49,13 +25,15 @@
             letter-spacing: 0.5px;
         }
         
-        .status-DON_HANG_MOI { background: #e3f2fd; color: #1976d2; }
-        .status-DA_XAC_NHAN { background: #e0f7fa; color: #0277bd; }
-        .status-DANG_GIAO { background: #fff3e0; color: #f57c00; }
-        .status-DA_GIAO { background: #e8f5e8; color: #2e7d32; }
+        .status-CHO_XAC_NHAN { background: #e3f2fd; color: #1976d2; }
+        .status-DA_XAC_NHAN { background: #fff3e0; color: #f57c00; }
+        .status-DANG_CHUAN_BI { background: #fce4ec; color: #c2185b; }
+        .status-DANG_GIAO { background: #e1f5fe; color: #0277bd; }
+        .status-DA_GIAO { background: #e8f5e9; color: #2e7d32; }
+        .status-HOAN_THANH { background: #c8e6c9; color: #1b5e20; }
         .status-DA_HUY { background: #ffebee; color: #c62828; }
-        .status-TRA_HANG { background: #fff3e0; color: #ef6c00; }
-        .status-HOAN_TIEN { background: #f3e5f5; color: #7b1fa2; }
+        .status-TRA_HANG { background: #fff9c4; color: #f57f17; }
+        .status-HOAN_TIEN { background: #f3e5f5; color: #6a1b9a; }
         
         .info-card {
             background: white;
@@ -135,41 +113,14 @@
         }
     </style>
 </head>
-<body>
-    <!-- Include Header -->
-    <jsp:include page="../common/header.jsp" />
-    
-    <div class="container-fluid py-4">
-        <div class="row">
-            <!-- Sidebar Navigation -->
-            <div class="col-md-3 col-lg-2">
-                <div class="bg-white rounded-3 shadow-sm p-3 mb-4">
-                    <h6 class="text-muted mb-3">VENDOR MENU</h6>
-                    <div class="list-group list-group-flush">
-                        <a href="${pageContext.request.contextPath}/vendor/dashboard" class="list-group-item list-group-item-action border-0">
-                            <i class="fas fa-tachometer-alt me-2"></i> Dashboard
-                        </a>
-                        <a href="${pageContext.request.contextPath}/vendor/products" class="list-group-item list-group-item-action border-0">
-                            <i class="fas fa-box me-2"></i> Sản phẩm
-                        </a>
-                        <a href="${pageContext.request.contextPath}/vendor/discounts" class="list-group-item list-group-item-action border-0">
-                            <i class="fas fa-tags me-2"></i> Mã giảm giá
-                        </a>
-                        <a href="${pageContext.request.contextPath}/vendor/orders" class="list-group-item list-group-item-action border-0 active">
-                            <i class="fas fa-shopping-cart me-2"></i> Đơn hàng
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Main Content -->
-            <div class="col-md-9 col-lg-10">
-                <!-- Back Button -->
-                <div class="mb-3">
-                    <a href="${pageContext.request.contextPath}/vendor/orders" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i>Quay lại danh sách
-                    </a>
-                </div>
+
+<div class="container-fluid py-4">
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a href="${pageContext.request.contextPath}/vendor/orders" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại danh sách
+        </a>
+    </div>
                 
                 <!-- Order Header -->
                 <div class="order-header">
@@ -184,10 +135,12 @@
                         <div class="col-md-6 text-end">
                             <span class="status-badge status-${order.trangThai}">
                                 <c:choose>
-                                    <c:when test="${order.trangThai == 'DON_HANG_MOI'}">Đơn hàng mới</c:when>
+                                    <c:when test="${order.trangThai == 'CHO_XAC_NHAN'}">Chờ xác nhận</c:when>
                                     <c:when test="${order.trangThai == 'DA_XAC_NHAN'}">Đã xác nhận</c:when>
-                                    <c:when test="${order.trangThai == 'DANG_GIAO'}">Đang giao</c:when>
-                                    <c:when test="${order.trangThai == 'DA_GIAO'}">Đã giao</c:when>
+                                    <c:when test="${order.trangThai == 'DANG_CHUAN_BI'}">Đang chuẩn bị</c:when>
+                                    <c:when test="${order.trangThai == 'DANG_GIAO'}">Đang giao hàng</c:when>
+                                    <c:when test="${order.trangThai == 'DA_GIAO'}">Đã giao hàng</c:when>
+                                    <c:when test="${order.trangThai == 'HOAN_THANH'}">Hoàn thành</c:when>
                                     <c:when test="${order.trangThai == 'DA_HUY'}">Đã hủy</c:when>
                                     <c:when test="${order.trangThai == 'TRA_HANG'}">Trả hàng</c:when>
                                     <c:when test="${order.trangThai == 'HOAN_TIEN'}">Hoàn tiền</c:when>
@@ -229,7 +182,7 @@
                                             ${order.tenNguoiNhan}
                                         </c:when>
                                         <c:otherwise>
-                                            ${order.nguoiDung.tenND}
+                                            ${order.nguoiDung.hoTen}
                                         </c:otherwise>
                                     </c:choose>
                                     </p>
@@ -238,8 +191,8 @@
                                 <div class="col-md-6">
                                     <p><strong>Số điện thoại:</strong><br>
                                     <c:choose>
-                                        <c:when test="${not empty order.soDienThoai}">
-                                            ${order.soDienThoai}
+                                        <c:when test="${not empty order.soDienThoaiNhanHang}">
+                                            ${order.soDienThoaiNhanHang}
                                         </c:when>
                                         <c:otherwise>
                                             ${order.nguoiDung.soDienThoai}
@@ -293,7 +246,7 @@
                         </div>
                         
                         <!-- Status Update -->
-                        <c:if test="${order.trangThai != 'DA_GIAO' and order.trangThai != 'DA_HUY' and order.trangThai != 'HOAN_TIEN'}">
+                        <c:if test="${order.trangThai != 'HOAN_THANH' and order.trangThai != 'DA_HUY' and order.trangThai != 'HOAN_TIEN'}">
                             <div class="info-card">
                                 <h5 class="mb-3">
                                     <i class="fas fa-edit me-2 text-primary"></i>Cập nhật trạng thái đơn hàng
@@ -304,7 +257,7 @@
                                     
                                     <div class="row">
                                         <c:choose>
-                                            <c:when test="${order.trangThai == 'DON_HANG_MOI'}">
+                                            <c:when test="${order.trangThai == 'CHO_XAC_NHAN'}">
                                                 <div class="col-auto">
                                                     <button type="submit" name="newStatus" value="DA_XAC_NHAN" 
                                                             class="btn btn-status btn-info">
@@ -321,16 +274,17 @@
                                             </c:when>
                                             <c:when test="${order.trangThai == 'DA_XAC_NHAN'}">
                                                 <div class="col-auto">
-                                                    <button type="submit" name="newStatus" value="DANG_GIAO" 
+                                                    <button type="submit" name="newStatus" value="DANG_CHUAN_BI" 
                                                             class="btn btn-status btn-warning">
-                                                        <i class="fas fa-shipping-fast me-2"></i>Bắt đầu giao hàng
+                                                        <i class="fas fa-box me-2"></i>Đang chuẩn bị
                                                     </button>
                                                 </div>
+                                            </c:when>
+                                            <c:when test="${order.trangThai == 'DANG_CHUAN_BI'}">
                                                 <div class="col-auto">
-                                                    <button type="submit" name="newStatus" value="DA_HUY" 
-                                                            class="btn btn-status btn-danger"
-                                                            onclick="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')">
-                                                        <i class="fas fa-times me-2"></i>Hủy đơn hàng
+                                                    <button type="submit" name="newStatus" value="DANG_GIAO" 
+                                                            class="btn btn-status btn-primary">
+                                                        <i class="fas fa-shipping-fast me-2"></i>Đang giao hàng
                                                     </button>
                                                 </div>
                                             </c:when>
@@ -338,13 +292,15 @@
                                                 <div class="col-auto">
                                                     <button type="submit" name="newStatus" value="DA_GIAO" 
                                                             class="btn btn-status btn-success">
-                                                        <i class="fas fa-check-circle me-2"></i>Đã giao thành công
+                                                        <i class="fas fa-check-circle me-2"></i>Đã giao hàng
                                                     </button>
                                                 </div>
+                                            </c:when>
+                                            <c:when test="${order.trangThai == 'DA_GIAO'}">
                                                 <div class="col-auto">
-                                                    <button type="submit" name="newStatus" value="TRA_HANG" 
-                                                            class="btn btn-status btn-warning">
-                                                        <i class="fas fa-undo me-2"></i>Trả hàng
+                                                    <button type="submit" name="newStatus" value="HOAN_THANH" 
+                                                            class="btn btn-status btn-success">
+                                                        <i class="fas fa-check-double me-2"></i>Hoàn thành
                                                     </button>
                                                 </div>
                                             </c:when>
@@ -356,6 +312,11 @@
                                                     </button>
                                                 </div>
                                             </c:when>
+                                            <c:otherwise>
+                                                <div class="col-12">
+                                                    <p class="text-muted mb-0">Không thể cập nhật trạng thái đơn hàng này</p>
+                                                </div>
+                                            </c:otherwise>
                                         </c:choose>
                                     </div>
                                 </form>
@@ -402,7 +363,7 @@
                                     <strong>
                                         <c:choose>
                                             <c:when test="${order.phuongThucThanhToan == 'COD'}">Thanh toán khi nhận hàng</c:when>
-                                            <c:when test="${order.phuongThucThanhToan == 'VNPAY'}">VNPay</c:when>
+                                            <c:when test="${order.phuongThucThanhToan == 'BANK_TRANSFER'}">Chuyển khoản ngân hàng</c:when>
                                             <c:when test="${order.phuongThucThanhToan == 'MOMO'}">MoMo</c:when>
                                             <c:otherwise>${order.phuongThucThanhToan}</c:otherwise>
                                         </c:choose>
@@ -415,11 +376,4 @@
             </div>
         </div>
     </div>
-    
-    <!-- Include Footer -->
-    <jsp:include page="../common/footer.jsp" />
-    
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+</div>

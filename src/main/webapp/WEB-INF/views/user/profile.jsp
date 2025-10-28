@@ -210,6 +210,9 @@
             <a href="${pageContext.request.contextPath}/user/edit-profile" class="btn-action btn-edit me-2">
                 <i class="bi bi-pencil-square"></i> Chỉnh sửa hồ sơ
             </a>
+            <a href="${pageContext.request.contextPath}/user/address" class="btn-action btn-edit me-2" style="background: linear-gradient(135deg, #20c997, #3dd5a7);">
+                <i class="bi bi-geo-alt-fill"></i> Quản lý địa chỉ
+            </a>
             <a href="${pageContext.request.contextPath}/user/change-password" class="btn-action btn-change">
                 <i class="bi bi-key-fill"></i> Đổi mật khẩu
             </a>

@@ -83,7 +83,15 @@ public class DonHang implements Serializable {
     private List<ChiTietDonHang> chiTietDonHangs;
 
     public enum TrangThaiDonHang {
-        DON_HANG_MOI, DA_XAC_NHAN, DANG_GIAO, DA_GIAO, DA_HUY, TRA_HANG, HOAN_TIEN, DANG_XU_LY,CHO_XAC_NHAN
+        CHO_XAC_NHAN,    // Chờ xác nhận (mới đặt)
+        DA_XAC_NHAN,     // Đã xác nhận
+        DANG_CHUAN_BI,   // Đang chuẩn bị hàng
+        DANG_GIAO,       // Đang giao hàng
+        DA_GIAO,         // Đã giao hàng
+        HOAN_THANH,      // Hoàn thành
+        DA_HUY,          // Đã hủy
+        TRA_HANG,        // Trả hàng
+        HOAN_TIEN        // Hoàn tiền
     }
     
     public enum PhuongThucThanhToan {
@@ -95,7 +103,7 @@ public class DonHang implements Serializable {
     public DonHang() {
         this.ngayDat = new Date();
         this.ngayCapNhat = new Date();
-        this.trangThai = TrangThaiDonHang.DON_HANG_MOI;
+        this.trangThai = TrangThaiDonHang.CHO_XAC_NHAN;
     }
 
     // Getters and Setters

@@ -4,6 +4,7 @@ import com.uteshop.entity.DonHang;
 import com.uteshop.entity.DonHang.TrangThaiDonHang;
 import com.uteshop.util.JPAUtil;
 import com.uteshop.entity.ChiTietDonHang;
+import com.uteshop.entity.ChiTietDonHangPK;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -38,6 +39,33 @@ public class DonHangDAO {
 		EntityManager em = getEntityManager();
 		try {
 			return em.find(DonHang.class, id);
+		} finally {
+			em.close();
+		}
+	}
+
+	/**
+	 * Lấy tất cả đơn hàng của user theo thời gian đặt (mới nhất trước)
+	 */
+	public List<DonHang> findByUser(Integer userId) {
+		EntityManager em = getEntityManager();
+		try {
+			String jpql = "SELECT dh FROM DonHang dh " +
+						  "LEFT JOIN FETCH dh.chiTietDonHangs ctdh " +
+						  "LEFT JOIN FETCH ctdh.sanPham sp " +
+						  "WHERE dh.nguoiDung.maND = :userId " +
+						  "ORDER BY dh.ngayDat DESC";
+			
+			TypedQuery<DonHang> query = em.createQuery(jpql, DonHang.class);
+			query.setParameter("userId", userId);
+			
+			List<DonHang> orders = query.getResultList();
+			System.out.println("📦 Found " + orders.size() + " orders for user #" + userId);
+			return orders;
+		} catch (Exception e) {
+			System.err.println("❌ Error finding orders for user #" + userId + ": " + e.getMessage());
+			e.printStackTrace();
+			return new ArrayList<>();
 		} finally {
 			em.close();
 		}
@@ -85,15 +113,17 @@ public class DonHangDAO {
 
 	public BigDecimal getMonthlyRevenue(Integer maCH, int month, int year) {
 		EntityManager em = getEntityManager();
-		// Dùng tham số :status_done thay vì chuỗi cứng 'DA_GIAO'
+		// Tính doanh thu cho cả đơn hàng DA_GIAO và HOAN_THANH - Fixed for SQL Server
 		String jpql = "SELECT SUM(dh.tongThanhToan) " + "FROM DonHang dh " + "JOIN dh.chiTietDonHangs ctdh "
-				+ "JOIN ctdh.sanPham sp " + "WHERE sp.cuaHang.maCH = :maCH " + "  AND dh.trangThai = :status_done "
-				+ "  AND FUNCTION('MONTH', dh.ngayDat) = :month " + "  AND FUNCTION('YEAR', dh.ngayDat) = :year";
+				+ "JOIN ctdh.sanPham sp " + "WHERE sp.cuaHang.maCH = :maCH "
+				+ "  AND (dh.trangThai = :status_da_giao OR dh.trangThai = :status_hoan_thanh) "
+				+ "  AND MONTH(dh.ngayDat) = :month " + "  AND YEAR(dh.ngayDat) = :year";
 
 		try {
 			TypedQuery<BigDecimal> query = em.createQuery(jpql, BigDecimal.class);
 			query.setParameter("maCH", maCH);
-			query.setParameter("status_done", DonHang.TrangThaiDonHang.DA_GIAO); // SỬA: Truyền Enum
+			query.setParameter("status_da_giao", DonHang.TrangThaiDonHang.DA_GIAO);
+			query.setParameter("status_hoan_thanh", DonHang.TrangThaiDonHang.HOAN_THANH);
 			query.setParameter("month", month);
 			query.setParameter("year", year);
 
@@ -155,12 +185,15 @@ public class DonHangDAO {
 	public long countNewOrders(Integer maCH) {
 		EntityManager em = getEntityManager();
 
-		// Đơn hàng mới thường có trạng thái là CHUA_XAC_NHAN
+		// Đơn hàng mới có trạng thái CHO_XAC_NHAN
 		String jpql = "SELECT COUNT(DISTINCT dh) FROM DonHang dh " + "JOIN dh.chiTietDonHangs ctdh "
-				+ "JOIN ctdh.sanPham sp " + "WHERE sp.cuaHang.maCH = :maCH " + "  AND dh.trangThai = 'CHUA_XAC_NHAN'";
+				+ "JOIN ctdh.sanPham sp " + "WHERE sp.cuaHang.maCH = :maCH " + "  AND dh.trangThai = :status";
 
 		try {
-			Long count = em.createQuery(jpql, Long.class).setParameter("maCH", maCH).getSingleResult();
+			Long count = em.createQuery(jpql, Long.class)
+					.setParameter("maCH", maCH)
+					.setParameter("status", TrangThaiDonHang.CHO_XAC_NHAN)
+					.getSingleResult();
 			return count != null ? count : 0L;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -172,30 +205,71 @@ public class DonHangDAO {
 
 	/**
 	 * Lấy danh sách đơn hàng của cửa hàng với phân trang và lọc theo trạng thái
+	 * Fixed: Avoid HHH90003004 warning and SQL Server DISTINCT + ORDER BY issue
 	 */
 	public List<DonHang> findByStoreWithPagination(Integer maCH, DonHang.TrangThaiDonHang status, int page, int size) {
 		EntityManager em = getEntityManager();
 		try {
-			String jpql = "SELECT DISTINCT dh FROM DonHang dh " + "JOIN FETCH dh.chiTietDonHangs ctdh "
-					+ "JOIN FETCH ctdh.sanPham sp " + "JOIN FETCH sp.cuaHang ch " + "WHERE ch.maCH = :maCH";
+			System.out.println("🔍 Finding orders for store #" + maCH + ", status: " + status + ", page: " + page);
+			
+			// Step 1: Get order IDs with pagination
+			// Fix: Include ngayDat in SELECT when using ORDER BY ngayDat with DISTINCT
+			String idJpql = "SELECT DISTINCT dh.maDH, dh.ngayDat FROM DonHang dh " + 
+							"JOIN dh.chiTietDonHangs ctdh " +
+							"JOIN ctdh.sanPham sp " + 
+							"WHERE sp.cuaHang.maCH = :maCH";
 
 			if (status != null) {
-				jpql += " AND dh.trangThai = :status";
+				idJpql += " AND dh.trangThai = :status";
 			}
 
-			jpql += " ORDER BY dh.ngayDat DESC";
+			idJpql += " ORDER BY dh.ngayDat DESC";
 
-			TypedQuery<DonHang> query = em.createQuery(jpql, DonHang.class);
-			query.setParameter("maCH", maCH);
+			TypedQuery<Object[]> idQuery = em.createQuery(idJpql, Object[].class);
+			idQuery.setParameter("maCH", maCH);
 
 			if (status != null) {
-				query.setParameter("status", status);
+				idQuery.setParameter("status", status);
 			}
 
-			query.setFirstResult((page - 1) * size);
-			query.setMaxResults(size);
+			idQuery.setFirstResult((page - 1) * size);
+			idQuery.setMaxResults(size);
 
-			return query.getResultList();
+			List<Object[]> results = idQuery.getResultList();
+			
+			if (results.isEmpty()) {
+				System.out.println("✅ No orders found");
+				return new ArrayList<>();
+			}
+
+			// Extract order IDs from results
+			List<Integer> orderIds = new ArrayList<>();
+			for (Object[] result : results) {
+				orderIds.add((Integer) result[0]);
+			}
+
+			System.out.println("✅ Found " + orderIds.size() + " order IDs, now fetching details...");
+			
+			// Step 2: Fetch full order details for those IDs (with JOIN FETCH, no pagination)
+			String detailJpql = "SELECT DISTINCT dh FROM DonHang dh " + 
+								"LEFT JOIN FETCH dh.chiTietDonHangs ctdh " +
+								"LEFT JOIN FETCH ctdh.sanPham sp " + 
+								"LEFT JOIN FETCH sp.cuaHang ch " + 
+								"LEFT JOIN FETCH dh.nguoiDung nd " +
+								"WHERE dh.maDH IN :orderIds " +
+								"ORDER BY dh.ngayDat DESC";
+
+			TypedQuery<DonHang> detailQuery = em.createQuery(detailJpql, DonHang.class);
+			detailQuery.setParameter("orderIds", orderIds);
+
+			List<DonHang> orders = detailQuery.getResultList();
+			System.out.println("✅ Loaded " + orders.size() + " orders with full details");
+			return orders;
+			
+		} catch (Exception e) {
+			System.err.println("❌ Error in findByStoreWithPagination: " + e.getMessage());
+			e.printStackTrace();
+			return new ArrayList<>();
 		} finally {
 			em.close();
 		}
@@ -221,7 +295,12 @@ public class DonHangDAO {
 				query.setParameter("status", status);
 			}
 
-			return query.getSingleResult();
+			Long result = query.getSingleResult();
+			return result != null ? result : 0L;
+		} catch (Exception e) {
+			System.err.println("❌ Error in countByStoreAndStatus: " + e.getMessage());
+			e.printStackTrace();
+			return 0L;
 		} finally {
 			em.close();
 		}
@@ -255,6 +334,15 @@ public class DonHangDAO {
 			}
 
 			return stats;
+		} catch (Exception e) {
+			System.err.println("❌ Error in getOrderStatsByStore: " + e.getMessage());
+			e.printStackTrace();
+			// Return empty map with zeros
+			java.util.Map<DonHang.TrangThaiDonHang, Long> stats = new java.util.HashMap<>();
+			for (DonHang.TrangThaiDonHang status : DonHang.TrangThaiDonHang.values()) {
+				stats.put(status, 0L);
+			}
+			return stats;
 		} finally {
 			em.close();
 		}
@@ -262,18 +350,21 @@ public class DonHangDAO {
 
 	/**
 	 * Lấy doanh thu theo ngày cụ thể
+	 * Fixed: Use DAY/MONTH/YEAR functions properly for SQL Server
 	 */
 	public BigDecimal getDailyRevenue(Integer maCH, int day, int month, int year) {
 		EntityManager em = getEntityManager();
 		String jpql = "SELECT SUM(dh.tongThanhToan) " + "FROM DonHang dh " + "JOIN dh.chiTietDonHangs ctdh "
-				+ "JOIN ctdh.sanPham sp " + "WHERE sp.cuaHang.maCH = :maCH " + "  AND dh.trangThai = :status_done "
-				+ "  AND FUNCTION('DAY', dh.ngayDat) = :day " + "  AND FUNCTION('MONTH', dh.ngayDat) = :month "
-				+ "  AND FUNCTION('YEAR', dh.ngayDat) = :year";
+				+ "JOIN ctdh.sanPham sp " + "WHERE sp.cuaHang.maCH = :maCH "
+				+ "  AND (dh.trangThai = :status_da_giao OR dh.trangThai = :status_hoan_thanh) "
+				+ "  AND DAY(dh.ngayDat) = :day " + "  AND MONTH(dh.ngayDat) = :month "
+				+ "  AND YEAR(dh.ngayDat) = :year";
 
 		try {
 			TypedQuery<BigDecimal> query = em.createQuery(jpql, BigDecimal.class);
 			query.setParameter("maCH", maCH);
-			query.setParameter("status_done", DonHang.TrangThaiDonHang.DA_GIAO);
+			query.setParameter("status_da_giao", DonHang.TrangThaiDonHang.DA_GIAO);
+			query.setParameter("status_hoan_thanh", DonHang.TrangThaiDonHang.HOAN_THANH);
 			query.setParameter("day", day);
 			query.setParameter("month", month);
 			query.setParameter("year", year);
@@ -292,18 +383,20 @@ public class DonHangDAO {
 	}
 
 	/**
-	 * Lấy doanh thu theo năm
+	 * Lấy doanh thu theo năm - Fixed for SQL Server
 	 */
 	public BigDecimal getYearlyRevenue(Integer maCH, int year) {
 		EntityManager em = getEntityManager();
 		String jpql = "SELECT SUM(dh.tongThanhToan) " + "FROM DonHang dh " + "JOIN dh.chiTietDonHangs ctdh "
-				+ "JOIN ctdh.sanPham sp " + "WHERE sp.cuaHang.maCH = :maCH " + "  AND dh.trangThai = :status_done "
-				+ "  AND FUNCTION('YEAR', dh.ngayDat) = :year";
+				+ "JOIN ctdh.sanPham sp " + "WHERE sp.cuaHang.maCH = :maCH "
+				+ "  AND (dh.trangThai = :status_da_giao OR dh.trangThai = :status_hoan_thanh) "
+				+ "  AND YEAR(dh.ngayDat) = :year";
 
 		try {
 			TypedQuery<BigDecimal> query = em.createQuery(jpql, BigDecimal.class);
 			query.setParameter("maCH", maCH);
-			query.setParameter("status_done", DonHang.TrangThaiDonHang.DA_GIAO);
+			query.setParameter("status_da_giao", DonHang.TrangThaiDonHang.DA_GIAO);
+			query.setParameter("status_hoan_thanh", DonHang.TrangThaiDonHang.HOAN_THANH);
 			query.setParameter("year", year);
 
 			BigDecimal result = query.getSingleResult();
@@ -321,24 +414,66 @@ public class DonHangDAO {
 
 	/**
 	 * Lấy doanh thu 7 ngày gần nhất
+	 * Fixed: Accept startDate parameter to avoid HQL date arithmetic error
 	 */
 	public List<Object[]> getLast7DaysRevenue(Integer maCH) {
 		EntityManager em = getEntityManager();
-		String jpql = "SELECT FUNCTION('DATE', dh.ngayDat) as orderDate, SUM(dh.tongThanhToan) " + "FROM DonHang dh "
-				+ "JOIN dh.chiTietDonHangs ctdh " + "JOIN ctdh.sanPham sp " + "WHERE sp.cuaHang.maCH = :maCH "
-				+ "  AND dh.trangThai = :status_done "
-				+ "  AND dh.ngayDat >= FUNCTION('DATEADD', DAY, -7, CURRENT_DATE) "
-				+ "GROUP BY FUNCTION('DATE', dh.ngayDat) " + "ORDER BY orderDate ASC";
-
 		try {
+			// Calculate 7 days ago in Java
+			java.time.LocalDate sevenDaysAgo = java.time.LocalDate.now().minusDays(7);
+			java.sql.Date sqlStartDate = java.sql.Date.valueOf(sevenDaysAgo);
+			
+			// Query to get revenue data - Use parameter instead of HQL date arithmetic
+			String jpql = "SELECT CAST(dh.ngayDat AS date) as orderDate, SUM(dh.tongThanhToan) " + "FROM DonHang dh "
+					+ "JOIN dh.chiTietDonHangs ctdh " + "JOIN ctdh.sanPham sp " + "WHERE sp.cuaHang.maCH = :maCH "
+					+ "  AND (dh.trangThai = :status_da_giao OR dh.trangThai = :status_hoan_thanh) "
+					+ "  AND dh.ngayDat >= :startDate "
+					+ "GROUP BY CAST(dh.ngayDat AS date) " + "ORDER BY CAST(dh.ngayDat AS date) ASC";
+
 			TypedQuery<Object[]> query = em.createQuery(jpql, Object[].class);
 			query.setParameter("maCH", maCH);
-			query.setParameter("status_done", DonHang.TrangThaiDonHang.DA_GIAO);
+			query.setParameter("status_da_giao", DonHang.TrangThaiDonHang.DA_GIAO);
+			query.setParameter("status_hoan_thanh", DonHang.TrangThaiDonHang.HOAN_THANH);
+			query.setParameter("startDate", sqlStartDate);
 
-			return query.getResultList();
+			List<Object[]> results = query.getResultList();
+			
+			// Create a map of date -> revenue for easy lookup
+			java.util.Map<String, BigDecimal> revenueMap = new java.util.HashMap<>();
+			for (Object[] result : results) {
+				java.sql.Date date = (java.sql.Date) result[0];
+				BigDecimal revenue = (BigDecimal) result[1];
+				revenueMap.put(date.toString(), revenue);
+			}
+			
+			// Generate all 7 days with revenue (0 if no data)
+			List<Object[]> allDays = new java.util.ArrayList<>();
+			java.time.LocalDate today = java.time.LocalDate.now();
+			
+			for (int i = 6; i >= 0; i--) {
+				java.time.LocalDate date = today.minusDays(i);
+				String dateStr = date.toString();
+				BigDecimal revenue = revenueMap.getOrDefault(dateStr, BigDecimal.ZERO);
+				
+				// Format date as dd/MM
+				String displayDate = String.format("%02d/%02d", date.getDayOfMonth(), date.getMonthValue());
+				allDays.add(new Object[]{displayDate, revenue});
+			}
+			
+			return allDays;
 		} catch (Exception e) {
+			System.err.println("❌ Error in getLast7DaysRevenue: " + e.getMessage());
 			e.printStackTrace();
-			return new java.util.ArrayList<>();
+			
+			// Return 7 days with zero revenue as fallback
+			List<Object[]> fallback = new java.util.ArrayList<>();
+			java.time.LocalDate today = java.time.LocalDate.now();
+			for (int i = 6; i >= 0; i--) {
+				java.time.LocalDate date = today.minusDays(i);
+				String displayDate = String.format("%02d/%02d", date.getDayOfMonth(), date.getMonthValue());
+				fallback.add(new Object[]{displayDate, BigDecimal.ZERO});
+			}
+			return fallback;
 		} finally {
 			em.close();
 		}
@@ -347,24 +482,73 @@ public class DonHangDAO {
 	/**
 	 * Lấy doanh thu 12 tháng gần nhất
 	 */
+	/**
+	 * Lấy doanh thu 12 tháng gần nhất
+	 * Fixed: Accept startDate parameter to avoid HQL date arithmetic error
+	 * Improved: Returns all 12 months with 0 revenue for months without orders
+	 */
 	public List<Object[]> getLast12MonthsRevenue(Integer maCH) {
 		EntityManager em = getEntityManager();
-		String jpql = "SELECT FUNCTION('YEAR', dh.ngayDat), FUNCTION('MONTH', dh.ngayDat), SUM(dh.tongThanhToan) "
-				+ "FROM DonHang dh " + "JOIN dh.chiTietDonHangs ctdh " + "JOIN ctdh.sanPham sp "
-				+ "WHERE sp.cuaHang.maCH = :maCH " + "  AND dh.trangThai = :status_done "
-				+ "  AND dh.ngayDat >= FUNCTION('DATEADD', MONTH, -12, CURRENT_DATE) "
-				+ "GROUP BY FUNCTION('YEAR', dh.ngayDat), FUNCTION('MONTH', dh.ngayDat) "
-				+ "ORDER BY FUNCTION('YEAR', dh.ngayDat) ASC, FUNCTION('MONTH', dh.ngayDat) ASC";
-
 		try {
+			// Calculate 12 months ago in Java
+			java.time.LocalDate twelveMonthsAgo = java.time.LocalDate.now().minusMonths(12);
+			java.sql.Date sqlStartDate = java.sql.Date.valueOf(twelveMonthsAgo);
+			
+			// Query to get revenue data - Use parameter instead of HQL date arithmetic
+			String jpql = "SELECT YEAR(dh.ngayDat), MONTH(dh.ngayDat), SUM(dh.tongThanhToan) "
+					+ "FROM DonHang dh " + "JOIN dh.chiTietDonHangs ctdh " + "JOIN ctdh.sanPham sp "
+					+ "WHERE sp.cuaHang.maCH = :maCH "
+					+ "  AND (dh.trangThai = :status_da_giao OR dh.trangThai = :status_hoan_thanh) "
+					+ "  AND dh.ngayDat >= :startDate "
+					+ "GROUP BY YEAR(dh.ngayDat), MONTH(dh.ngayDat) "
+					+ "ORDER BY YEAR(dh.ngayDat) ASC, MONTH(dh.ngayDat) ASC";
+
 			TypedQuery<Object[]> query = em.createQuery(jpql, Object[].class);
 			query.setParameter("maCH", maCH);
-			query.setParameter("status_done", DonHang.TrangThaiDonHang.DA_GIAO);
+			query.setParameter("status_da_giao", DonHang.TrangThaiDonHang.DA_GIAO);
+			query.setParameter("status_hoan_thanh", DonHang.TrangThaiDonHang.HOAN_THANH);
+			query.setParameter("startDate", sqlStartDate);
 
-			return query.getResultList();
+			List<Object[]> results = query.getResultList();
+			
+			// Create a map of year-month -> revenue for easy lookup
+			java.util.Map<String, BigDecimal> revenueMap = new java.util.HashMap<>();
+			for (Object[] result : results) {
+				Integer year = (Integer) result[0];
+				Integer month = (Integer) result[1];
+				BigDecimal revenue = (BigDecimal) result[2];
+				String key = year + "-" + month;
+				revenueMap.put(key, revenue);
+			}
+			
+			// Generate all 12 months with revenue (0 if no data)
+			List<Object[]> allMonths = new java.util.ArrayList<>();
+			java.time.LocalDate today = java.time.LocalDate.now();
+			
+			for (int i = 11; i >= 0; i--) {
+				java.time.LocalDate date = today.minusMonths(i);
+				int year = date.getYear();
+				int month = date.getMonthValue();
+				String key = year + "-" + month;
+				BigDecimal revenue = revenueMap.getOrDefault(key, BigDecimal.ZERO);
+				
+				allMonths.add(new Object[]{year, month, revenue});
+			}
+			
+			System.out.println("✅ Generated 12 months revenue data for store #" + maCH);
+			return allMonths;
 		} catch (Exception e) {
+			System.err.println("❌ Error in getLast12MonthsRevenue: " + e.getMessage());
 			e.printStackTrace();
-			return new java.util.ArrayList<>();
+			
+			// Return 12 months with zero revenue as fallback
+			List<Object[]> fallback = new java.util.ArrayList<>();
+			java.time.LocalDate today = java.time.LocalDate.now();
+			for (int i = 11; i >= 0; i--) {
+				java.time.LocalDate date = today.minusMonths(i);
+				fallback.add(new Object[]{date.getYear(), date.getMonthValue(), BigDecimal.ZERO});
+			}
+			return fallback;
 		} finally {
 			em.close();
 		}
@@ -414,21 +598,69 @@ public class DonHangDAO {
 
 	/**
 	 * Lấy chi tiết đơn hàng của cửa hàng
+	 * Fixed: Correctly check if order belongs to vendor's store
 	 */
 	public DonHang findByIdAndStore(Integer maDH, Integer maCH) {
 		EntityManager em = getEntityManager();
 		try {
-			String jpql = "SELECT DISTINCT dh FROM DonHang dh " + "JOIN FETCH dh.chiTietDonHangs ctdh "
-					+ "JOIN FETCH ctdh.sanPham sp " + "JOIN FETCH sp.cuaHang ch " + "JOIN FETCH dh.nguoiDung nd "
-					+ "WHERE dh.maDH = :maDH AND ch.maCH = :maCH";
+			System.out.println("🔍 Finding order #" + maDH + " for store #" + maCH);
+			
+			// First, check if this order contains products from this store
+			String checkJpql = "SELECT COUNT(DISTINCT ctdh.sanPham.maSP) FROM ChiTietDonHang ctdh " +
+							   "WHERE ctdh.donHang.maDH = :maDH AND ctdh.sanPham.cuaHang.maCH = :maCH";
+			
+			TypedQuery<Long> checkQuery = em.createQuery(checkJpql, Long.class);
+			checkQuery.setParameter("maDH", maDH);
+			checkQuery.setParameter("maCH", maCH);
+			
+			Long productCount = checkQuery.getSingleResult();
+			
+			// If no products from this store in the order, return null
+			if (productCount == null || productCount == 0) {
+				System.out.println("⚠️ Order #" + maDH + " không có sản phẩm từ cửa hàng #" + maCH);
+				return null;
+			}
+			
+			System.out.println("✅ Order #" + maDH + " has " + productCount + " products from store #" + maCH);
+			
+			// Now fetch the order with all details - using multiple queries to avoid MultipleBagFetchException
+			String jpql = "SELECT DISTINCT dh FROM DonHang dh " +
+						  "LEFT JOIN FETCH dh.nguoiDung nd " +
+						  "WHERE dh.maDH = :maDH";
 
 			TypedQuery<DonHang> query = em.createQuery(jpql, DonHang.class);
 			query.setParameter("maDH", maDH);
-			query.setParameter("maCH", maCH);
 
 			List<DonHang> results = query.getResultList();
-			return results.isEmpty() ? null : results.get(0);
+			
+			if (results.isEmpty()) {
+				System.out.println("⚠️ Order #" + maDH + " not found");
+				return null;
+			}
+			
+			DonHang order = results.get(0);
+			
+			// Fetch order items separately to avoid lazy loading issues
+			String itemsJpql = "SELECT DISTINCT ctdh FROM ChiTietDonHang ctdh " +
+							   "LEFT JOIN FETCH ctdh.sanPham sp " +
+							   "LEFT JOIN FETCH sp.cuaHang ch " +
+							   "WHERE ctdh.donHang.maDH = :maDH";
+			
+			TypedQuery<ChiTietDonHang> itemsQuery = em.createQuery(itemsJpql, ChiTietDonHang.class);
+			itemsQuery.setParameter("maDH", maDH);
+			
+			List<ChiTietDonHang> items = itemsQuery.getResultList();
+			
+			// Manually initialize the collection to avoid lazy loading issues
+			if (order.getChiTietDonHangs() != null) {
+				order.getChiTietDonHangs().size(); // Force initialization
+			}
+			
+			System.out.println("✅ Successfully loaded order #" + maDH + " with " + items.size() + " items");
+			return order;
+			
 		} catch (Exception e) {
+			System.err.println("❌ Error finding order #" + maDH + " for store #" + maCH + ": " + e.getMessage());
 			e.printStackTrace();
 			return null;
 		} finally {
@@ -588,15 +820,21 @@ public class DonHangDAO {
 		String x = s.trim();
 		// Cho phép nhập label tiếng Việt
 		switch (x.toLowerCase()) {
+		case "chờ xác nhận":
 		case "mới tạo":
-			return TrangThaiDonHang.DON_HANG_MOI;
+			return TrangThaiDonHang.CHO_XAC_NHAN;
 		case "đã xác nhận":
 			return TrangThaiDonHang.DA_XAC_NHAN;
+		case "đang chuẩn bị":
+			return TrangThaiDonHang.DANG_CHUAN_BI;
 		case "đang giao":
 			return TrangThaiDonHang.DANG_GIAO;
 		case "đã giao":
 			return TrangThaiDonHang.DA_GIAO;
+		case "hoàn thành":
+			return TrangThaiDonHang.HOAN_THANH;
 		case "đã huỷ":
+		case "đã hủy":
 			return TrangThaiDonHang.DA_HUY;
 		case "trả hàng":
 			return TrangThaiDonHang.TRA_HANG;
@@ -628,19 +866,63 @@ public class DonHangDAO {
 
 	/**
 	 * Insert new order with order details
+	 * Fixed: Handle detached SanPham entities properly
 	 */
 	public boolean insert(DonHang donHang) {
 		EntityManager em = getEntityManager();
 		EntityTransaction tx = em.getTransaction();
 		try {
 			tx.begin();
+			
+			// Lưu đơn hàng trước (không có chi tiết)
+			List<ChiTietDonHang> chiTietList = donHang.getChiTietDonHangs();
+			donHang.setChiTietDonHangs(null); // Tạm thời set null
+			
+			// Merge NguoiDung nếu detached
+			if (donHang.getNguoiDung() != null && donHang.getNguoiDung().getMaND() != null) {
+				donHang.setNguoiDung(em.merge(donHang.getNguoiDung()));
+			}
+			
 			em.persist(donHang);
+			em.flush(); // Flush để có maDH
+			
+			// Sau khi có maDH, tạo chi tiết đơn hàng
+			if (chiTietList != null && !chiTietList.isEmpty()) {
+				for (ChiTietDonHang detail : chiTietList) {
+					// ✅ FIX: Merge SanPham detached entity
+					// Reload SanPham từ database để có managed entity
+					com.uteshop.entity.SanPham managedSanPham = em.find(
+						com.uteshop.entity.SanPham.class, 
+						detail.getSanPham().getMaSP()
+					);
+					
+					if (managedSanPham == null) {
+						throw new RuntimeException("Sản phẩm ID " + detail.getSanPham().getMaSP() + " không tồn tại");
+					}
+					
+					// Khởi tạo lại composite key với maDH đã có
+					ChiTietDonHangPK pk = new ChiTietDonHangPK();
+					pk.setDonHang(donHang.getMaDH());
+					pk.setSanPham(managedSanPham.getMaSP());
+					
+					detail.setId(pk);
+					detail.setDonHang(donHang);
+					detail.setSanPham(managedSanPham); // Sử dụng managed entity
+					
+					em.persist(detail);
+				}
+				donHang.setChiTietDonHangs(chiTietList);
+			}
+			
 			tx.commit();
+			System.out.println("✅ Đơn hàng #" + donHang.getMaDH() + " được tạo thành công với " + 
+							   (chiTietList != null ? chiTietList.size() : 0) + " sản phẩm!");
 			return true;
 		} catch (Exception e) {
 			if (tx.isActive()) {
 				tx.rollback();
 			}
+			System.err.println("❌ Lỗi tạo đơn hàng: " + e.getMessage());
 			e.printStackTrace();
 			return false;
 		} finally {

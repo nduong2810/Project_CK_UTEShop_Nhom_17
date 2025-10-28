@@ -265,17 +265,23 @@
 
 								<!-- Hiển thị trạng thái Enum → nhãn + màu -->
 								<td><c:choose>
-										<c:when test="${o.trangThai == 'DON_HANG_MOI'}">
-											<span class="badge badge-gray">Mới tạo</span>
+										<c:when test="${o.trangThai == 'CHO_XAC_NHAN'}">
+											<span class="badge bg-info">Chờ xác nhận</span>
 										</c:when>
 										<c:when test="${o.trangThai == 'DA_XAC_NHAN'}">
-											<span class="badge badge-blue">Đã xác nhận</span>
+											<span class="badge bg-warning">Đã xác nhận</span>
+										</c:when>
+										<c:when test="${o.trangThai == 'DANG_CHUAN_BI'}">
+											<span class="badge bg-primary">Đang chuẩn bị</span>
 										</c:when>
 										<c:when test="${o.trangThai == 'DANG_GIAO'}">
-											<span class="badge badge-amber">Đang giao</span>
+											<span class="badge bg-primary">Đang giao</span>
 										</c:when>
 										<c:when test="${o.trangThai == 'DA_GIAO'}">
-											<span class="badge badge-green">Đã giao</span>
+											<span class="badge bg-success">Đã giao</span>
+										</c:when>
+										<c:when test="${o.trangThai == 'HOAN_THANH'}">
+											<span class="badge bg-success">Hoàn thành</span>
 										</c:when>
 										<c:when test="${o.trangThai == 'DA_HUY'}">
 											<span class="badge badge-red">Đã huỷ</span>
@@ -305,20 +311,15 @@
 										<input type="hidden" name="op" value="updateStatus" /> <input
 											type="hidden" name="id" value="${o.maDH}" /> <select
 											name="newStatus" class="select" style="height: 34px">
-											<option ${o.trangThai=='DON_HANG_MOI'?'selected':''}>Mới
-												tạo</option>
-											<option ${o.trangThai=='DA_XAC_NHAN'?'selected':''}>Đã
-												xác nhận</option>
-											<option ${o.trangThai=='DANG_GIAO'?'selected':''}>Đang
-												giao</option>
-											<option ${o.trangThai=='DA_GIAO'?'selected':''}>Đã
-												giao</option>
-											<option ${o.trangThai=='DA_HUY'?'selected':''}>Đã
-												huỷ</option>
-											<option ${o.trangThai=='TRA_HANG'?'selected':''}>Trả
-												hàng</option>
-											<option ${o.trangThai=='HOAN_TIEN'?'selected':''}>Hoàn
-												tiền</option>
+											<option ${o.trangThai=='CHO_XAC_NHAN'?'selected':''}>Chờ xác nhận</option>
+											<option ${o.trangThai=='DA_XAC_NHAN'?'selected':''}>Đã xác nhận</option>
+											<option ${o.trangThai=='DANG_CHUAN_BI'?'selected':''}>Đang chuẩn bị</option>
+											<option ${o.trangThai=='DANG_GIAO'?'selected':''}>Đang giao</option>
+											<option ${o.trangThai=='DA_GIAO'?'selected':''}>Đã giao</option>
+											<option ${o.trangThai=='HOAN_THANH'?'selected':''}>Hoàn thành</option>
+											<option ${o.trangThai=='DA_HUY'?'selected':''}>Đã hủy</option>
+											<option ${o.trangThai=='TRA_HANG'?'selected':''}>Trả hàng</option>
+											<option ${o.trangThai=='HOAN_TIEN'?'selected':''}>Hoàn tiền</option>
 										</select>
 										<button class="btn">Lưu</button>
 									</form>

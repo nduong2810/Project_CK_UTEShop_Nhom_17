@@ -1,52 +1,7 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
-
-<%
-// Simulate backend data for orders
-java.util.List<Object> orders = new java.util.ArrayList<>();
-java.util.Map<String, Object> order1 = new java.util.HashMap<>();
-order1.put("orderId", "DH001");
-order1.put("shopName", "Gumivn Official");
-order1.put("status", "waiting");
-order1.put("productName", "[KID] Thùng 10 gói khăn ướt Gumi không cồn, không parabens cao cấp cho em bé");
-order1.put("productImage", "https://down-vn.img.susercontent.com/file/sg-11134201-22100-6cvx97sfjhiv34");
-order1.put("productType", "Thùng 5 KID");
-order1.put("quantity", 1);
-order1.put("originalPrice", 167000);
-order1.put("discountedPrice", 104800);
-order1.put("totalPrice", 74800);
-
-java.util.Map<String, Object> order2 = new java.util.HashMap<>();
-order2.put("orderId", "DH002");
-order2.put("shopName", "Gia Dụng Linh Quyết");
-order2.put("status", "done");
-order2.put("productName", "Hộp cơm giữ nhiệt văn phòng 3 tầng kèm túi, quay được lò vi sóng");
-order2.put("productImage", "https://down-vn.img.susercontent.com/file/sg-11134201-22110-wv1ay2s0p3hv34");
-order2.put("productType", "3 TẦNG");
-order2.put("quantity", 1);
-order2.put("originalPrice", 170000);
-order2.put("discountedPrice", 99000);
-order2.put("totalPrice", 84000);
-
-java.util.Map<String, Object> order3 = new java.util.HashMap<>();
-order3.put("orderId", "DH003");
-order3.put("shopName", "Shop Đồ Gia Dụng Việt");
-order3.put("status", "confirm");
-order3.put("productName", "Bình giữ nhiệt inox cao cấp, nắp gỗ 500ml sang trọng");
-order3.put("productImage", "https://down-vn.img.susercontent.com/file/sg-11134201-22100-83vxw1sfe2iv34");
-order3.put("productType", "Màu bạc");
-order3.put("quantity", 1);
-order3.put("originalPrice", 250000);
-order3.put("discountedPrice", 189000);
-order3.put("totalPrice", 189000);
-
-orders.add(order1);
-orders.add(order2);
-orders.add(order3);
-
-pageContext.setAttribute("orders", orders);
-%>
+<fmt:setLocale value="vi_VN" scope="session"/>
 
 <!DOCTYPE html>
 <html lang="vi">
@@ -60,121 +15,428 @@ pageContext.setAttribute("orders", orders);
 <body>
 
 <div class="orders-container">
+    <!-- Success Message -->
+    <c:if test="${not empty successMessage}">
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>${successMessage}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </c:if>
+    
+    <!-- Error Message -->
+    <c:if test="${not empty errorMessage}">
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>${errorMessage}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </c:if>
+
     <!-- Breadcrumbs -->
     <nav aria-label="breadcrumb" class="mb-4">
         <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="<c:url value='/guest/home'/>">Trang chủ</a></li>
+            <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/guest/home">Trang chủ</a></li>
             <li class="breadcrumb-item active" aria-current="page">Đơn Hàng Của Tôi</li>
         </ol>
     </nav>
 
-    <!-- Tabs -->
-    <div class="orders-tabs" id="orderTabs">
-        <a class="tab-item active" data-tab="all">Tất cả</a>
-        <a class="tab-item" data-tab="confirm">Chờ xác nhận</a>
-        <a class="tab-item" data-tab="shipping">Vận chuyển</a>
-        <a class="tab-item" data-tab="waiting">Chờ giao hàng</a>
-        <a class="tab-item" data-tab="done">Hoàn thành</a>
-        <a class="tab-item" data-tab="cancelled">Đã hủy</a>
-        <a class="tab-item" data-tab="refund">Trả hàng/Hoàn tiền</a>
-    </div>
-
-    <!-- Search Bar -->
-    <div class="search-bar">
-        <div class="input-group">
-            <span class="input-group-text bg-gradient border-end-0"><i class="fas fa-search"></i></span>
-            <input type="text" class="form-control border-start-0" placeholder="Tìm kiếm theo tên Shop, ID đơn hàng hoặc sản phẩm...">
-        </div>
-    </div>
+    <h2 class="mb-4">
+        <i class="fas fa-shopping-bag me-2"></i>Đơn Hàng Của Tôi
+        <c:if test="${not empty orderCount}">
+            <span class="badge bg-primary">${orderCount}</span>
+        </c:if>
+    </h2>
 
     <!-- Orders List -->
-    <c:forEach var="order" items="${orders}">
-        <div class="order-card" data-status="${order.status}">
-            <div class="order-header">
-                <div class="shop-info">
-                    <span class="shop-name"><i class="fas fa-store me-2"></i>${order.shopName}</span>
-                    <small class="order-id text-muted">ID: ${order.orderId}</small>
-                </div>
-                <div class="order-status-container">
-                    <div class="order-status ${order.status == 'done' ? 'text-success' : 'text-primary'}">
-                        <c:choose>
-                            <c:when test="${order.status == 'confirm'}">CHỜ XÁC NHẬN</c:when>
-                            <c:when test="${order.status == 'shipping'}">VẬN CHUYỂN</c:when>
-                            <c:when test="${order.status == 'waiting'}">CHỜ GIAO HÀNG</c:when>
-                            <c:when test="${order.status == 'done'}">HOÀN THÀNH</c:when>
-                            <c:when test="${order.status == 'cancelled'}">ĐÃ HỦY</c:when>
-                            <c:when test="${order.status == 'refund'}">TRẢ HÀNG/HOÀN TIỀN</c:when>
-                            <c:otherwise>TẤT CẢ</c:otherwise>
-                        </c:choose>
+    <c:choose>
+        <c:when test="${not empty orders}">
+            <c:forEach var="order" items="${orders}">
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="shop-info">
+                            <span class="order-id">Đơn hàng #${order.maDH}</span>
+                            <small class="text-muted">
+                                <i class="far fa-calendar me-1"></i>
+                                <fmt:formatDate value="${order.ngayDat}" pattern="dd/MM/yyyy HH:mm"/>
+                            </small>
+                        </div>
+                        <div class="order-status-container">
+                            <span class="order-status status-${order.trangThai}">
+                                <c:choose>
+                                    <c:when test="${order.trangThai == 'CHO_XAC_NHAN'}">CHỜ XÁC NHẬN</c:when>
+                                    <c:when test="${order.trangThai == 'DA_XAC_NHAN'}">ĐÃ XÁC NHẬN</c:when>
+                                    <c:when test="${order.trangThai == 'DANG_CHUAN_BI'}">ĐANG CHUẨN BỊ</c:when>
+                                    <c:when test="${order.trangThai == 'DANG_GIAO'}">ĐANG GIAO HÀNG</c:when>
+                                    <c:when test="${order.trangThai == 'DA_GIAO'}">ĐÃ GIAO</c:when>
+                                    <c:when test="${order.trangThai == 'HOAN_THANH'}">HOÀN THÀNH</c:when>
+                                    <c:when test="${order.trangThai == 'DA_HUY'}">ĐÃ HỦY</c:when>
+                                    <c:when test="${order.trangThai == 'TRA_HANG'}">TRẢ HÀNG</c:when>
+                                    <c:when test="${order.trangThai == 'HOAN_TIEN'}">HOÀN TIỀN</c:when>
+                                    <c:otherwise>${order.trangThai}</c:otherwise>
+                                </c:choose>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="order-body">
+                        <c:forEach var="item" items="${order.chiTietDonHangs}" varStatus="status">
+                            <c:if test="${status.index < 3}">
+                                <div class="product-row">
+                                    <div class="image-container">
+                                        <c:choose>
+                                            <c:when test="${not empty item.sanPham.hinhAnh}">
+                                                <img src="${pageContext.request.contextPath}/assets/img/products/${item.sanPham.hinhAnh}" 
+                                                     alt="${item.sanPham.tenSP}" class="product-image">
+                                            </c:when>
+                                            <c:otherwise>
+                                                <div class="product-image bg-light d-flex align-items-center justify-content-center">
+                                                    <i class="fas fa-image text-muted"></i>
+                                                </div>
+                                            </c:otherwise>
+                                        </c:choose>
+                                    </div>
+                                    <div class="order-info">
+                                        <div class="name">${item.sanPham.tenSP}</div>
+                                        <div class="type text-muted">Số lượng: ${item.soLuong}</div>
+                                        <div class="price">
+                                            <b class="text-primary">
+                                                <fmt:formatNumber value="${item.donGia}" type="currency" currencySymbol="₫"/>
+                                            </b>
+                                        </div>
+                                    </div>
+                                </div>
+                            </c:if>
+                        </c:forEach>
+                        
+                        <c:if test="${order.chiTietDonHangs.size() > 3}">
+                            <div class="text-muted small mt-2">
+                                <i class="fas fa-ellipsis-h me-1"></i>
+                                Và ${order.chiTietDonHangs.size() - 3} sản phẩm khác
+                            </div>
+                        </c:if>
+                    </div>
+
+                    <div class="order-footer">
+                        <div class="order-total">
+                            <span class="text-muted">Tổng thanh toán:</span>
+                            <span class="text-primary fw-bold">
+                                <fmt:formatNumber value="${order.tongThanhToan}" type="currency" currencySymbol="₫"/>
+                            </span>
+                        </div>
+                        <div class="order-actions">
+                            <a href="${pageContext.request.contextPath}/user/order-detail?id=${order.maDH}" 
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-eye me-2"></i>Chi tiết
+                            </a>
+                            
+                            <c:if test="${order.trangThai == 'CHO_XAC_NHAN'}">
+                                <button class="btn btn-outline-danger btn-sm" 
+                                        onclick="if(confirm('Bạn có chắc muốn hủy đơn hàng này?')) { window.location.href='${pageContext.request.contextPath}/user/orders/cancel?id=${order.maDH}'; }">
+                                    <i class="fas fa-times me-2"></i>Hủy đơn
+                                </button>
+                            </c:if>
+                            
+                            <c:if test="${order.trangThai == 'DA_GIAO' || order.trangThai == 'HOAN_THANH'}">
+                                <a href="${pageContext.request.contextPath}/user/review?orderId=${order.maDH}" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="fas fa-star me-2"></i>Đánh giá
+                                </a>
+                            </c:if>
+                        </div>
                     </div>
                 </div>
+            </c:forEach>
+        </c:when>
+        <c:otherwise>
+            <!-- Empty State -->
+            <div class="text-center py-5">
+                <i class="fas fa-box-open fa-5x text-muted mb-4"></i>
+                <h3 class="text-muted mb-3">Chưa có đơn hàng</h3>
+                <p class="text-muted">Hãy đặt hàng để xem danh sách tại đây.</p>
+                <a href="${pageContext.request.contextPath}/guest/home" class="btn btn-primary">
+                    <i class="fas fa-shopping-bag me-2"></i>Tiếp tục mua sắm
+                </a>
             </div>
-
-            <div class="order-body">
-                <div class="image-container">
-                    <img src="${order.productImage}" alt="${order.productName}" class="product-image">
-                </div>
-                <div class="order-info">
-                    <div class="name">${order.productName}</div>
-                    <div class="type text-muted">Phân loại: ${order.productType} | Số lượng: ${order.quantity}</div>
-                    <div class="price">
-                        <s><fmt:formatNumber value="${order.originalPrice}" type="number" groupingUsed="true"/>₫</s>
-                        <b class="text-primary ms-2"><fmt:formatNumber value="${order.discountedPrice}" type="number" groupingUsed="true"/>₫</b>
-                    </div>
-                </div>
-            </div>
-
-            <div class="order-footer">
-                <div class="order-total">
-                    Thành tiền: <span class="text-primary"><fmt:formatNumber value="${order.totalPrice}" type="number" groupingUsed="true"/>₫</span>
-                </div>
-                <div class="order-actions">
-                    <button class="btn btn-outline" onclick="viewDetails('${order.orderId}')">
-                        <i class="fas fa-eye me-2"></i>Chi tiết
-                    </button>
-                    <c:choose>
-                        <c:when test="${order.status == 'confirm'}">
-                            <button class="btn btn-danger" onclick="cancelOrder('${order.orderId}', ${empty sessionScope.user})">
-                                <i class="fas fa-times me-2"></i>Hủy đơn
-                            </button>
-                        </c:when>
-                        <c:when test="${order.status == 'done'}">
-                            <button class="btn btn-primary" onclick="reviewOrder('${order.orderId}', ${empty sessionScope.user})">
-                                <i class="fas fa-star me-2"></i>Đánh giá
-                            </button>
-                        </c:when>
-                        <c:when test="${order.status == 'waiting' || order.status == 'shipping'}">
-                            <button class="btn btn-primary" onclick="contactSeller('${order.orderId}', ${empty sessionScope.user})">
-                                <i class="fas fa-headset me-2"></i>Liên hệ người bán
-                            </button>
-                        </c:when>
-                        <c:when test="${order.status == 'cancelled' || order.status == 'refund'}">
-                            <button class="btn btn-primary" onclick="reorder('${order.orderId}', ${empty sessionScope.user})">
-                                <i class="fas fa-redo me-2"></i>Mua lại
-                            </button>
-                        </c:when>
-                    </c:choose>
-                </div>
-            </div>
-        </div>
-    </c:forEach>
-
-    <!-- Empty State -->
-    <c:if test="${empty orders}">
-        <div class="text-center py-5">
-            <i class="fas fa-box-open fa-5x text-muted mb-4"></i>
-            <h3 class="text-muted mb-3">Chưa có đơn hàng</h3>
-            <p class="text-muted">Hãy đặt hàng để xem danh sách tại đây.</p>
-            <a href="<c:url value='/guest/home'/>" class="btn btn-primary"><i class="fas fa-shopping-bag me-2"></i>Tiếp tục mua sắm</a>
-        </div>
-    </c:if>
+        </c:otherwise>
+    </c:choose>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Auto dismiss alerts after 5 seconds
+    setTimeout(function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        });
+    }, 5000);
+</script>
 
 <style>
     body {
-        background-color: #e9ecef; /* Slightly darker background for contrast */
-        font-family: 'Arial', sans-serif;
+        background-color: #f0f2f5;
+        font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
+
+    .orders-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        padding: 30px;
+    }
+
+    .breadcrumb {
+        background-color: #f8f9fa;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+    }
+    
+    .breadcrumb-item a {
+        text-decoration: none;
+        color: #667eea;
+        font-weight: 500;
+    }
+    
+    .breadcrumb-item.active {
+        color: #6c757d;
+    }
+
+    .order-card {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        background: #fff;
+        margin-bottom: 20px;
+        padding: 0;
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .order-card:hover {
+        border-color: #667eea;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .shop-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .order-id {
+        font-weight: 700;
+        color: #333;
+        font-size: 1.1rem;
+    }
+
+    .order-status-container {
+        text-align: right;
+    }
+    
+    .order-status {
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: inline-block;
+    }
+    
+    .status-CHO_XAC_NHAN {
+        background: #fff3cd;
+        color: #856404;
+    }
+    
+    .status-DA_XAC_NHAN {
+        background: #cfe2ff;
+        color: #084298;
+    }
+    
+    .status-DANG_CHUAN_BI {
+        background: #e7d6f9;
+        color: #6f42c1;
+    }
+    
+    .status-DANG_GIAO {
+        background: #cff4fc;
+        color: #055160;
+    }
+    
+    .status-DA_GIAO {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+    
+    .status-HOAN_THANH {
+        background: #d1e7dd;
+        color: #0a3622;
+    }
+    
+    .status-DA_HUY {
+        background: #f8d7da;
+        color: #842029;
+    }
+    
+    .status-TRA_HANG {
+        background: #fff3cd;
+        color: #664d03;
+    }
+    
+    .status-HOAN_TIEN {
+        background: #e2e3e5;
+        color: #41464b;
+    }
+
+    .order-body {
+        padding: 20px;
+    }
+    
+    .product-row {
+        display: flex;
+        gap: 15px;
+        padding: 15px 0;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .product-row:last-child {
+        border-bottom: none;
+    }
+
+    .image-container {
+        flex-shrink: 0;
+    }
+    
+    .product-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+
+    .order-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 5px;
+    }
+    
+    .order-info .name {
+        font-weight: 600;
+        color: #333;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+    
+    .order-info .type {
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    
+    .order-info .price {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #667eea;
+    }
+
+    .order-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .order-total {
+        font-size: 1rem;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .order-total .text-primary {
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    .order-actions {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .order-actions .btn {
+        padding: 8px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .order-actions .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Alert styling */
+    .alert {
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .orders-container {
+            padding: 15px;
+            margin: 20px 10px;
+        }
+        
+        .order-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .order-status-container {
+            text-align: left;
+        }
+        
+        .order-footer {
+            flex-direction: column;
+            gap: 15px;
+            align-items: flex-start;
+        }
+        
+        .order-actions {
+            width: 100%;
+            flex-direction: column;
+        }
+        
+        .order-actions .btn {
+            width: 100%;
+        }
+        
+        .product-row {
+            flex-direction: column;
+        }
+    }
+</style>
+</body>
+</html>
 
     .orders-container {
         max-width: 1200px;

@@ -691,6 +691,10 @@ public class SanPhamDAO {
 	 * Lấy sản phẩm bán chạy theo cửa hàng với số lượng đã bán Trả về: [SanPham,
 	 * soLuongDaBan]
 	 */
+	/**
+	 * Lấy top sản phẩm bán chạy nhất của cửa hàng (với số lượng đã bán)
+	 * Fixed: Include both DA_GIAO and HOAN_THANH status
+	 */
 	public List<Object[]> findTopSellingWithQuantityByStore(Integer maCH, int limit) {
 		EntityManager em = getEntityManager();
 		try {
@@ -698,12 +702,17 @@ public class SanPhamDAO {
 					+ "LEFT JOIN s.chiTietDonHangs ctdh " + "LEFT JOIN ctdh.donHang dh "
 					+ "WHERE s.cuaHang.maCH = :maCH " + "  AND s.trangThai = true "
 					+ "  AND (dh.trangThai = com.uteshop.entity.DonHang.TrangThaiDonHang.DA_GIAO "
+					+ "       OR dh.trangThai = com.uteshop.entity.DonHang.TrangThaiDonHang.HOAN_THANH "
 					+ "       OR dh.trangThai IS NULL) " + "GROUP BY s " + "ORDER BY totalSold DESC";
 			TypedQuery<Object[]> query = em.createQuery(jpql, Object[].class);
 			query.setParameter("maCH", maCH);
 			query.setMaxResults(limit);
-			return query.getResultList();
+			
+			List<Object[]> results = query.getResultList();
+			System.out.println("✅ Found " + results.size() + " top selling products for store #" + maCH);
+			return results;
 		} catch (Exception e) {
+			System.err.println("❌ Error in findTopSellingWithQuantityByStore: " + e.getMessage());
 			e.printStackTrace();
 			return new ArrayList<>();
 		} finally {

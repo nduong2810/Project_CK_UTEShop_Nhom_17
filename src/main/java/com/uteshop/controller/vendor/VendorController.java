@@ -32,6 +32,7 @@ import java.nio.file.StandardCopyOption;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -719,17 +720,54 @@ public class VendorController extends HttpServlet {
         }
         
         try {
-            // 2. Lấy danh sách đơn hàng
-            List<DonHang> orders = donHangDAO.findByStoreWithPagination(store.getMaCH(), statusFilter, page, pageSize);
-            long totalOrders = donHangDAO.countByStoreAndStatus(store.getMaCH(), statusFilter);
+            System.out.println("🔍 Loading orders for store #" + store.getMaCH());
             
-            // 3. Tính toán phân trang
-            int totalPages = (int) Math.ceil((double) totalOrders / pageSize);
+            // 2. Lấy danh sách đơn hàng với try-catch riêng
+            List<DonHang> orders = null;
+            try {
+                orders = donHangDAO.findByStoreWithPagination(store.getMaCH(), statusFilter, page, pageSize);
+                if (orders == null) {
+                    orders = new ArrayList<>();
+                }
+                System.out.println("✅ Loaded " + orders.size() + " orders");
+            } catch (Exception e) {
+                System.err.println("❌ Error loading orders: " + e.getMessage());
+                e.printStackTrace();
+                orders = new ArrayList<>();
+            }
             
-            // 4. Lấy thống kê đơn hàng theo trạng thái
-            java.util.Map<DonHang.TrangThaiDonHang, Long> orderStats = donHangDAO.getOrderStatsByStore(store.getMaCH());
+            // 3. Đếm tổng số đơn hàng
+            long totalOrders = 0;
+            try {
+                totalOrders = donHangDAO.countByStoreAndStatus(store.getMaCH(), statusFilter);
+                System.out.println("✅ Total orders: " + totalOrders);
+            } catch (Exception e) {
+                System.err.println("❌ Error counting orders: " + e.getMessage());
+                e.printStackTrace();
+            }
             
-            // 5. Đặt attributes
+            // 4. Tính toán phân trang
+            int totalPages = totalOrders > 0 ? (int) Math.ceil((double) totalOrders / pageSize) : 1;
+            
+            // 5. Lấy thống kê đơn hàng theo trạng thái
+            java.util.Map<DonHang.TrangThaiDonHang, Long> orderStats = null;
+            try {
+                orderStats = donHangDAO.getOrderStatsByStore(store.getMaCH());
+                if (orderStats == null) {
+                    orderStats = new java.util.HashMap<>();
+                }
+                System.out.println("✅ Loaded order stats");
+            } catch (Exception e) {
+                System.err.println("❌ Error loading order stats: " + e.getMessage());
+                e.printStackTrace();
+                orderStats = new java.util.HashMap<>();
+                // Initialize with zeros
+                for (DonHang.TrangThaiDonHang status : DonHang.TrangThaiDonHang.values()) {
+                    orderStats.put(status, 0L);
+                }
+            }
+            
+            // 6. Đặt attributes
             request.setAttribute("orders", orders);
             request.setAttribute("currentPage", page);
             request.setAttribute("totalPages", totalPages);
@@ -739,13 +777,15 @@ public class VendorController extends HttpServlet {
             request.setAttribute("orderStats", orderStats);
             request.setAttribute("pageTitle", "Quản lý Đơn hàng");
             
-            // 6. Forward đến JSP
+            // 7. Forward đến JSP
             RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/vendor/orders.jsp");
             dispatcher.forward(request, response);
             
         } catch (Exception e) {
+            System.err.println("❌ Critical error in showOrders: " + e.getMessage());
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/vendor/dashboard?error=Co loi xay ra khi tai danh sach don hang.");
+            String errorMsg = "Co loi xay ra khi tai danh sach don hang: " + e.getMessage();
+            response.sendRedirect(request.getContextPath() + "/vendor/dashboard?error=" + URLEncoder.encode(errorMsg, StandardCharsets.UTF_8));
         }
     }
     
@@ -763,14 +803,21 @@ public class VendorController extends HttpServlet {
         
         try {
             Integer orderId = Integer.parseInt(idParam);
+            System.out.println("🔍 Loading order detail #" + orderId + " for store #" + store.getMaCH());
             
             // Lấy chi tiết đơn hàng (chỉ của cửa hàng này)
             DonHang order = donHangDAO.findByIdAndStore(orderId, store.getMaCH());
             
             if (order == null) {
+                System.err.println("❌ Order #" + orderId + " not found for store #" + store.getMaCH());
                 response.sendRedirect(request.getContextPath() + "/vendor/orders?error=Don hang khong ton tai hoac khong co quyen.");
                 return;
             }
+            
+            System.out.println("✅ Order #" + orderId + " loaded successfully");
+            System.out.println("   - Customer: " + order.getNguoiDung().getHoTen());
+            System.out.println("   - Status: " + order.getTrangThai());
+            System.out.println("   - Items: " + (order.getChiTietDonHangs() != null ? order.getChiTietDonHangs().size() : 0));
             
             // Đặt attributes
             request.setAttribute("order", order);
@@ -781,10 +828,13 @@ public class VendorController extends HttpServlet {
             dispatcher.forward(request, response);
             
         } catch (NumberFormatException e) {
+            System.err.println("❌ Invalid order ID format: " + idParam);
             response.sendRedirect(request.getContextPath() + "/vendor/orders?error=ID don hang khong hop le.");
         } catch (Exception e) {
+            System.err.println("❌ Error loading order detail: " + e.getMessage());
             e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/vendor/orders?error=Co loi xay ra khi tai chi tiet don hang.");
+            String errorMsg = "Co loi xay ra khi tai chi tiet don hang: " + e.getMessage();
+            response.sendRedirect(request.getContextPath() + "/vendor/orders?error=" + URLEncoder.encode(errorMsg, StandardCharsets.UTF_8));
         }
     }
     
@@ -1047,15 +1097,15 @@ public class VendorController extends HttpServlet {
      */
     private String getStatusDisplayName(DonHang.TrangThaiDonHang status) {
         switch (status) {
-            case DON_HANG_MOI: return "Đơn hàng mới";
+            case CHO_XAC_NHAN: return "Chờ xác nhận";
             case DA_XAC_NHAN: return "Đã xác nhận";
+            case DANG_CHUAN_BI: return "Đang chuẩn bị";
             case DANG_GIAO: return "Đang giao";
             case DA_GIAO: return "Đã giao";
+            case HOAN_THANH: return "Hoàn thành";
             case DA_HUY: return "Đã hủy";
             case TRA_HANG: return "Trả hàng";
             case HOAN_TIEN: return "Hoàn tiền";
-            case DANG_XU_LY: return "Đang xử lý";
-            case CHO_XAC_NHAN: return "Chờ xác nhận";
             default: return status.toString();
         }
     }

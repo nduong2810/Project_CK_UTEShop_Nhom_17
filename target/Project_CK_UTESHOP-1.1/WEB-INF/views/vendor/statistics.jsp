@@ -287,33 +287,7 @@
             </div>
         </div>
 
-        <!-- Charts Section -->
-        <div class="row mb-4">
-            <!-- Revenue Chart 7 Days -->
-            <div class="col-lg-8 mb-4">
-                <div class="chart-section">
-                    <h5 class="section-title">
-                        <i class="fas fa-chart-area"></i>
-                        Doanh thu 7 ngày gần nhất
-                    </h5>
-                    <div style="height: 300px;">
-                        <canvas id="revenue7DaysChart"></canvas>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Order Status Chart -->
-            <div class="col-lg-4 mb-4">
-                <div class="chart-section">
-                    <h5 class="section-title">
-                        <i class="fas fa-chart-pie"></i>
-                        Trạng thái đơn hàng
-                    </h5>
-                    <div style="height: 300px;">
-                        <canvas id="orderStatusChart"></canvas>
-                    </div>
-                </div>
-            </div>
 
             <!-- Revenue Chart 12 Months -->
             <div class="col-12 mb-4">
