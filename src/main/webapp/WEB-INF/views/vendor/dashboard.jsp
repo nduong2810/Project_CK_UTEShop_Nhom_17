@@ -509,33 +509,6 @@
                     </div>
                 </div>
 
-                <!-- Sản phẩm đang hoạt động -->
-                <div class="col-lg-4 col-md-6 fade-in-up">
-                    <div class="stat-card success">
-                        <div class="stat-icon success">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="stat-value">${totalProducts}</div>
-                        <div class="stat-label">Sản phẩm trong kho</div>
-                        <a href="${pageContext.request.contextPath}/vendor/products" class="stat-link">
-                            Xem chi tiết <i class="fas fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Đơn hàng hôm nay -->
-                <div class="col-lg-4 col-md-6 fade-in-up">
-                    <div class="stat-card" style="border-color: #4facfe;">
-                        <div class="stat-icon" style="background: linear-gradient(45deg, #4facfe, #00f2fe);">
-                            <i class="fas fa-calendar-check"></i>
-                        </div>
-                        <div class="stat-value">${newOrdersCount}</div>
-                        <div class="stat-label">Đơn hàng cần xử lý</div>
-                        <a href="${pageContext.request.contextPath}/vendor/orders" class="stat-link">
-                            Xử lý ngay <i class="fas fa-arrow-right"></i>
-                        </a>
-                    </div>
-                </div>
             </div>
         </section>
 

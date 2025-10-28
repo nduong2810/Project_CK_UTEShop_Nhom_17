@@ -340,7 +340,7 @@ public class DonHangDAO {
 	                + "JOIN ctdh.sanPham sp "         
 	                + "WHERE sp.cuaHang.maCH = :maCH " 
 	                + "  AND dh.trangThai = :status_done "
-	                + "  AND dh.ngayDat >= FUNCTION('DATE_SUB', CURRENT_DATE, 7, 'DAY') "
+	                + "  AND dh.ngayDat >= FUNCTION('DATEADD', DAY, -7, CURRENT_DATE) "
 	                + "GROUP BY FUNCTION('DATE', dh.ngayDat) "
 	                + "ORDER BY orderDate ASC";
 	    
@@ -369,7 +369,7 @@ public class DonHangDAO {
 	                + "JOIN ctdh.sanPham sp "         
 	                + "WHERE sp.cuaHang.maCH = :maCH " 
 	                + "  AND dh.trangThai = :status_done "
-	                + "  AND dh.ngayDat >= FUNCTION('DATE_SUB', CURRENT_DATE, 12, 'MONTH') "
+	                + "  AND dh.ngayDat >= FUNCTION('DATEADD', MONTH, -12, CURRENT_DATE) "
 	                + "GROUP BY FUNCTION('YEAR', dh.ngayDat), FUNCTION('MONTH', dh.ngayDat) "
 	                + "ORDER BY FUNCTION('YEAR', dh.ngayDat) ASC, FUNCTION('MONTH', dh.ngayDat) ASC";
 	    

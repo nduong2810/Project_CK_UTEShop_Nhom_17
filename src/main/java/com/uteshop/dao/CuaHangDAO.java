@@ -34,22 +34,36 @@ public class CuaHangDAO {
 	public CuaHang findByUserId(Integer userId) {
 		EntityManager em = getEntityManager();
 		try {
-			// 🛑 ĐÃ SỬA: Thống nhất JPQL. Giả định Entity CuaHang có mối quan hệ
-			// 'nguoiDung'
-			// và ID của người dùng là 'maND' (hoặc 'id'). Tôi chọn 'maND' để tránh nhầm
-			// lẫn.
-			// Nếu lỗi UnknownPathException xảy ra, hãy kiểm tra lại tên trường khóa ngoại
-			// chính xác của bạn trong CuaHang Entity (ví dụ: c.nguoiDung.maND).
-			TypedQuery<CuaHang> query = em.createQuery("SELECT c FROM CuaHang c WHERE c.nguoiDung.maND = :userId",
+			// Sử dụng trực tiếp field maND thay vì đi qua relationship nguoiDung
+			// Sử dụng getResultList() và lấy phần tử đầu tiên để tránh NonUniqueResultException
+			TypedQuery<CuaHang> query = em.createQuery(
+					"SELECT c FROM CuaHang c WHERE c.maND = :userId ORDER BY c.ngayTao ASC",
 					CuaHang.class);
 			query.setParameter("userId", userId);
-			return query.getSingleResult();
-		} catch (NoResultException e) {
-			System.err.println("Không tìm thấy CuaHang cho userId: " + userId);
-			return null;
+			query.setMaxResults(1); // Chỉ lấy 1 kết quả
+			
+			List<CuaHang> results = query.getResultList();
+			
+			if (results.isEmpty()) {
+				System.err.println("Không tìm thấy CuaHang cho userId: " + userId);
+				return null;
+			}
+			
+			// Nếu có nhiều hơn 1 cửa hàng, cảnh báo (lỗi dữ liệu)
+			TypedQuery<Long> countQuery = em.createQuery(
+					"SELECT COUNT(c) FROM CuaHang c WHERE c.maND = :userId", Long.class);
+			countQuery.setParameter("userId", userId);
+			Long count = countQuery.getSingleResult();
+			
+			if (count > 1) {
+				System.err.println("⚠️ CẢNH BÁO: User " + userId + " có " + count + " cửa hàng! Nên chỉ có 1 cửa hàng/user.");
+			}
+			
+			return results.get(0);
+			
 		} catch (Exception e) {
-			// Lỗi NonUniqueResultException hoặc các lỗi khác
 			System.err.println("Lỗi tìm CuaHang cho userId " + userId + ": " + e.getMessage());
+			e.printStackTrace();
 			return null;
 		} finally {
 			em.close();

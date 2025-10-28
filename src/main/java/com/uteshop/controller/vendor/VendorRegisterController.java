@@ -87,8 +87,15 @@ public class VendorRegisterController extends HttpServlet {
         }
         
         // 2. Kiểm tra lại Vendor đã có cửa hàng chưa (tránh trùng lặp)
-        if (cuaHangDAO.findByUserId(user.getMaND()) != null) {
-            response.sendRedirect(request.getContextPath() + "/vendor/dashboard?error=Bạn đã có cửa hàng.");
+        try {
+            CuaHang existingStore = cuaHangDAO.findByUserId(user.getMaND());
+            if (existingStore != null) {
+                response.sendRedirect(request.getContextPath() + "/vendor/dashboard?error=Bạn đã có cửa hàng.");
+                return;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect(request.getContextPath() + "/auth/login?error=Lỗi hệ thống khi kiểm tra cửa hàng.");
             return;
         }
         
@@ -126,15 +133,16 @@ public class VendorRegisterController extends HttpServlet {
         // 6. Lưu vào DAO
         try {
             if (cuaHangDAO.insert(newStore)) {
-                // *** THAY ĐỔI: Lưu thông báo thành công vào Session ***
+                // Cập nhật vai trò người dùng thành VENDOR
+                user.setVaiTro(NguoiDung.VaiTro.VENDOR); 
+                nguoiDungDAO.update(user);
+                request.getSession().setAttribute("user", user);
+                
+                // *** Lưu thông báo thành công vào Session ***
                 request.getSession().setAttribute("successMessage", "Đăng ký cửa hàng thành công!");
 
                 // Đăng ký thành công, chuyển hướng về Dashboard
                 response.sendRedirect(request.getContextPath() + "/vendor/dashboard");
-                
-                user.setVaiTro(NguoiDung.VaiTro.VENDOR); 
-                nguoiDungDAO.update(user);
-                request.getSession().setAttribute("user", user);
                 
             } else {
                 // Lỗi DB hoặc lỗi khác từ DAO (DAO trả về false)
