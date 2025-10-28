@@ -10,6 +10,19 @@
     <title>Sản Phẩm Yêu Thích - UTESHOP</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- DEBUG INFO - Remove this after fixing -->
+    <style>
+        .debug-info {
+            background: #f8d7da;
+            border: 2px solid #f5c6cb;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+    </style>
+    
     <style>
         .product-card {
             border: 1px solid #ddd;

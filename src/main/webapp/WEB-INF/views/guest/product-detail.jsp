@@ -577,27 +577,50 @@
     }
 
     function handleAddToFavorites(event, button, productId, isGuest) {
-	    event.stopPropagation();
-	    event.preventDefault();
-	
-	    if (isGuest) {
-	        requireLogin();
-	        return;
-	    }
-	
-	    button.classList.toggle('active');
-	    
-	    const icon = button.querySelector('i');
-	    if (button.classList.contains('active')) {
-	        icon.classList.remove('far');
-	        icon.classList.add('fas');
-	        showNotification('Đã thêm vào danh sách yêu thích!', 'success');
-	    } else {
-	        icon.classList.remove('fas');
-	        icon.classList.add('far');
-	        showNotification('Đã xóa khỏi danh sách yêu thích.', 'info');
-	    }
-	}
+        event.stopPropagation();
+        event.preventDefault();
+    
+        if (isGuest) {
+            requireLogin();
+            return;
+        }
+    
+        // ✅ GỌI API để lưu/xóa khỏi database
+        fetch('${pageContext.request.contextPath}/user/favorites/toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'maSP=' + productId
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Favorite API response:', data);
+            
+            if (data.status === 'success') {
+                // Cập nhật UI
+                const icon = button.querySelector('i');
+                
+                if (data.action === 'removed') {
+                    button.classList.remove('active');
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                    showNotification('Đã xóa khỏi danh sách yêu thích.', 'info');
+                } else {
+                    button.classList.add('active');
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    showNotification('Đã thêm vào danh sách yêu thích!', 'success');
+                }
+            } else {
+                showNotification(data.message || 'Có lỗi xảy ra!', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error adding to favorites:', error);
+            showNotification('Đã có lỗi xảy ra. Vui lòng thử lại sau.', 'error');
+        });
+    }
 
     function validateReviewForm(form) {
         const orderIdInput = form.querySelector('input[name="orderId"]');

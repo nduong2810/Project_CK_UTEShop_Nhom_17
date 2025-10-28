@@ -17,17 +17,31 @@ public class SanPhamYeuThichDAO {
         try {
             em.getTransaction().begin();
             
-            // Check if already exists
-            if (isFavorite(userId, productId)) {
+            // Check if already exists - Sử dụng cùng EntityManager
+            TypedQuery<Long> checkQuery = em.createQuery(
+                "SELECT COUNT(s) FROM SanPhamYeuThich s WHERE s.nguoiDung.maND = :userId AND s.sanPham.maSP = :productId", 
+                Long.class);
+            checkQuery.setParameter("userId", userId);
+            checkQuery.setParameter("productId", productId);
+            
+            if (checkQuery.getSingleResult() > 0) {
                 em.getTransaction().rollback();
+                System.out.println("Sản phẩm đã có trong danh sách yêu thích");
                 return false;
             }
             
             NguoiDung nguoiDung = em.find(NguoiDung.class, userId);
             SanPham sanPham = em.find(SanPham.class, productId);
             
-            if (nguoiDung == null || sanPham == null) {
+            if (nguoiDung == null) {
                 em.getTransaction().rollback();
+                System.err.println("Không tìm thấy người dùng với ID: " + userId);
+                return false;
+            }
+            
+            if (sanPham == null) {
+                em.getTransaction().rollback();
+                System.err.println("Không tìm thấy sản phẩm với ID: " + productId);
                 return false;
             }
             
@@ -35,13 +49,18 @@ public class SanPhamYeuThichDAO {
             em.persist(yeuThich);
             
             // Update product favorite count
-            sanPham.setLuotYeuThich(sanPham.getLuotYeuThich() + 1);
+            Integer currentLikes = sanPham.getLuotYeuThich();
+            sanPham.setLuotYeuThich((currentLikes != null ? currentLikes : 0) + 1);
             em.merge(sanPham);
             
             em.getTransaction().commit();
+            System.out.println("✅ Đã thêm sản phẩm " + productId + " vào danh sách yêu thích của user " + userId);
             return true;
         } catch (Exception e) {
-            em.getTransaction().rollback();
+            if (em.getTransaction().isActive()) {
+                em.getTransaction().rollback();
+            }
+            System.err.println("❌ Lỗi khi thêm vào danh sách yêu thích: " + e.getMessage());
             e.printStackTrace();
             return false;
         } finally {
@@ -104,13 +123,38 @@ public class SanPhamYeuThichDAO {
     public List<SanPhamYeuThich> getFavoritesByUser(int userId, int page, int pageSize) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
+            // Load đầy đủ thông tin sản phẩm và cửa hàng để tránh LazyInitializationException
             TypedQuery<SanPhamYeuThich> query = em.createQuery(
-                "SELECT s FROM SanPhamYeuThich s JOIN FETCH s.sanPham WHERE s.nguoiDung.maND = :userId ORDER BY s.id DESC",
+                "SELECT DISTINCT s FROM SanPhamYeuThich s " +
+                "JOIN FETCH s.sanPham sp " +
+                "LEFT JOIN FETCH sp.cuaHang " +
+                "WHERE s.nguoiDung.maND = :userId " +
+                "ORDER BY s.maYT DESC",
                 SanPhamYeuThich.class);
             query.setParameter("userId", userId);
             query.setFirstResult(page * pageSize);
             query.setMaxResults(pageSize);
-            return query.getResultList();
+            
+            List<SanPhamYeuThich> results = query.getResultList();
+            
+            System.out.println("📋 Đã load " + results.size() + " sản phẩm yêu thích cho user " + userId);
+            
+            // Force initialize lazy properties
+            for (SanPhamYeuThich spy : results) {
+                if (spy.getSanPham() != null) {
+                    // Touch the properties to initialize them
+                    spy.getSanPham().getTenSP();
+                    spy.getSanPham().getDonGia();
+                    spy.getSanPham().getHinhAnh();
+                    System.out.println("  - Sản phẩm: " + spy.getSanPham().getTenSP());
+                }
+            }
+            
+            return results;
+        } catch (Exception e) {
+            System.err.println("❌ Lỗi khi lấy danh sách yêu thích: " + e.getMessage());
+            e.printStackTrace();
+            return new java.util.ArrayList<>();
         } finally {
             em.close();
         }

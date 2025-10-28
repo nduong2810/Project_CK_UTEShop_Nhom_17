@@ -939,19 +939,42 @@ function toggleFavorite(event, button, productId, isGuest) {
         return;
     }
 
-    console.log('DEBUG JS: ❤️ Toggling favorite for product: ' + productId);
-    button.classList.toggle('active');
+    console.log('DEBUG: Toggling favorite for product: ' + productId);
     
-    const icon = button.querySelector('i');
-    if (button.classList.contains('active')) {
-        icon.classList.remove('far');
-        icon.classList.add('fas');
-        showNotification('Đã thêm vào danh sách yêu thích!', 'success');
-    } else {
-        icon.classList.remove('fas');
-        icon.classList.add('far');
-        showNotification('Đã xóa khỏi danh sách yêu thích.', 'info');
-    }
+    // ✅ GỌI API để lưu/xóa khỏi database
+    fetch('${pageContext.request.contextPath}/user/favorites/toggle', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'maSP=' + productId
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('API Response:', data);
+        
+        if (data.status === 'success') {
+            const icon = button.querySelector('i');
+            
+            if (data.action === 'removed') {
+                button.classList.remove('active');
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+                showNotification('Đã xóa khỏi danh sách yêu thích.', 'info');
+            } else {
+                button.classList.add('active');
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                showNotification('Đã thêm vào danh sách yêu thích!', 'success');
+            }
+        } else {
+            showNotification(data.message || 'Có lỗi xảy ra!', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Đã có lỗi xảy ra. Vui lòng thử lại sau.', 'error');
+    });
 }
 
 function applyFilters() {

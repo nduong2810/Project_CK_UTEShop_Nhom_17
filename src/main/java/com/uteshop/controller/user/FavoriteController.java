@@ -13,7 +13,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 
-@WebServlet({"/user/favorites/*"})
+@WebServlet({"/user/favorites/*", "/user/favorites", "/user/wishlist", "/user/wishlist/*"})
 public class FavoriteController extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private SanPhamYeuThichDAO sanPhamYeuThichDAO;
@@ -85,27 +85,47 @@ public class FavoriteController extends HttpServlet {
             return;
         }
         
-        int page = 0;
+        int page = 1; // Bắt đầu từ trang 1
         int pageSize = 12;
         
         try {
             String pageParam = request.getParameter("page");
             if (pageParam != null && !pageParam.isEmpty()) {
                 page = Integer.parseInt(pageParam);
-                if (page < 0) page = 0;
+                if (page < 1) page = 1;
             }
         } catch (NumberFormatException e) {
-            page = 0;
+            page = 1;
         }
 
-        List<SanPhamYeuThich> favorites = sanPhamYeuThichDAO.getFavoritesByUser(user.getMaND(), page, pageSize);
+        // Truyền (page - 1) vào DAO vì DAO sử dụng index từ 0
+        System.out.println("=== DEBUG WISHLIST ===");
+        System.out.println("User ID: " + user.getMaND());
+        System.out.println("User Name: " + user.getTenDangNhap());
+        System.out.println("Requested Page: " + page);
+        
         long totalItems = sanPhamYeuThichDAO.countFavoritesByUser(user.getMaND());
+        System.out.println("Total Items in DB: " + totalItems);
+        
+        List<SanPhamYeuThich> favorites = sanPhamYeuThichDAO.getFavoritesByUser(user.getMaND(), page - 1, pageSize);
+        System.out.println("Favorites loaded: " + favorites.size());
+        
+        if (favorites != null && !favorites.isEmpty()) {
+            System.out.println("First favorite product: " + favorites.get(0).getSanPham().getTenSP());
+        } else {
+            System.out.println("⚠️ Favorites list is empty!");
+        }
+        
         int totalPages = (int) Math.ceil((double) totalItems / pageSize);
 
         request.setAttribute("favorites", favorites);
         request.setAttribute("currentPage", page);
         request.setAttribute("pageSize", pageSize);
         request.setAttribute("totalPages", totalPages);
+        request.setAttribute("totalItems", totalItems);
+        
+        System.out.println("Forwarding to wishlist.jsp...");
+        System.out.println("======================");
 
         request.getRequestDispatcher("/WEB-INF/views/user/wishlist.jsp").forward(request, response);
     }
