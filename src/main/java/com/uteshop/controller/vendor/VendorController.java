@@ -14,12 +14,21 @@ import com.uteshop.utils.DiscountUtils;
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jakarta.servlet.http.Part;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -27,7 +36,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-@WebServlet(urlPatterns = {"/vendor/dashboard", "/vendor/products", "/vendor/discounts", "/vendor/discounts/create", "/vendor/discounts/edit", "/vendor/discounts/delete", "/vendor/orders", "/vendor/orders/detail", "/vendor/orders/update-status", "/vendor/revenue-report", "/vendor/statistics", "/vendor/settings", "/vendor/settings/update"})
+@WebServlet(urlPatterns = {"/vendor/dashboard", "/vendor/products", "/vendor/discounts", "/vendor/discounts/create", "/vendor/discounts/edit", "/vendor/discounts/delete", "/vendor/orders", "/vendor/orders/detail", "/vendor/orders/update-status", "/vendor/revenue-report", "/vendor/statistics", "/vendor/settings", "/vendor/settings/update", "/vendor/settings/payment"})
+@MultipartConfig(
+    fileSizeThreshold = 1024 * 1024 * 2,  // 2MB
+    maxFileSize = 1024 * 1024 * 10,        // 10MB
+    maxRequestSize = 1024 * 1024 * 50      // 50MB
+)
 public class VendorController extends HttpServlet {
     private static final long serialVersionUID = 1L;
     
@@ -114,6 +128,9 @@ public class VendorController extends HttpServlet {
                 break;
             case "/settings":
                 showSettings(request, response, user, store);
+                break;
+            case "/settings/payment":
+                showPaymentSettings(request, response, user, store);
                 break;
             default:
                 showDashboard(request, response, user);
@@ -333,6 +350,8 @@ public class VendorController extends HttpServlet {
             updateOrderStatus(request, response, user, store);
         } else if ("updateStoreSettings".equals(action)) {
             updateStoreSettings(request, response, user, store);
+        } else if ("updatePaymentInfo".equals(action)) {
+            updatePaymentInfo(request, response, user, store);
         } else {
             doGet(request, response); // Xử lý các POST khác bằng doGet
         }
@@ -1039,5 +1058,125 @@ public class VendorController extends HttpServlet {
             case CHO_XAC_NHAN: return "Chờ xác nhận";
             default: return status.toString();
         }
+    }
+    
+    /**
+     * Hiển thị trang quản lý thông tin thanh toán
+     */
+    private void showPaymentSettings(HttpServletRequest request, HttpServletResponse response, NguoiDung user, CuaHang store)
+            throws ServletException, IOException {
+        try {
+            request.setAttribute("pageTitle", "Quản lý Thông tin Thanh toán");
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/vendor/payment-settings.jsp");
+            dispatcher.forward(request, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/vendor/payment-settings.jsp");
+            dispatcher.forward(request, response);
+        }
+    }
+    
+    /**
+     * Cập nhật thông tin thanh toán (MoMo & Ngân hàng)
+     */
+    private void updatePaymentInfo(HttpServletRequest request, HttpServletResponse response, NguoiDung user, CuaHang store)
+            throws ServletException, IOException {
+        try {
+            // Lấy thông tin MoMo
+            String momoEnableStr = request.getParameter("momoEnable");
+            Boolean momoEnable = "on".equals(momoEnableStr) || "true".equals(momoEnableStr);
+            String momoPhone = request.getParameter("momoPhone");
+            String momoName = request.getParameter("momoName");
+            
+            // Lấy thông tin Ngân hàng
+            String bankEnableStr = request.getParameter("bankEnable");
+            Boolean bankEnable = "on".equals(bankEnableStr) || "true".equals(bankEnableStr);
+            String bankName = request.getParameter("bankName");
+            String bankAccountNumber = request.getParameter("bankAccountNumber");
+            String bankAccountName = request.getParameter("bankAccountName");
+            
+            // Xử lý upload ảnh QR cho MoMo
+            String momoQRPath = store.getMomoQR(); // Giữ nguyên nếu không upload mới
+            Part momoQRPart = request.getPart("momoQR");
+            if (momoQRPart != null && momoQRPart.getSize() > 0) {
+                momoQRPath = uploadQRImage(momoQRPart, "momo", store.getMaCH());
+            }
+            
+            // Xử lý upload ảnh QR cho Ngân hàng
+            String bankQRPath = store.getBankQR(); // Giữ nguyên nếu không upload mới
+            Part bankQRPart = request.getPart("bankQR");
+            if (bankQRPart != null && bankQRPart.getSize() > 0) {
+                bankQRPath = uploadQRImage(bankQRPart, "bank", store.getMaCH());
+            }
+            
+            // Validation: Nếu enable thì phải có đủ thông tin
+            if (momoEnable && (momoPhone == null || momoPhone.trim().isEmpty() || 
+                              momoName == null || momoName.trim().isEmpty())) {
+                String errorMsg = URLEncoder.encode("Vui lòng nhập đầy đủ thông tin MoMo", StandardCharsets.UTF_8.toString());
+                response.sendRedirect(request.getContextPath() + "/vendor/settings/payment?error=" + errorMsg);
+                return;
+            }
+            
+            if (bankEnable && (bankName == null || bankName.trim().isEmpty() || 
+                              bankAccountNumber == null || bankAccountNumber.trim().isEmpty() ||
+                              bankAccountName == null || bankAccountName.trim().isEmpty())) {
+                String errorMsg = URLEncoder.encode("Vui lòng nhập đầy đủ thông tin Ngân hàng", StandardCharsets.UTF_8.toString());
+                response.sendRedirect(request.getContextPath() + "/vendor/settings/payment?error=" + errorMsg);
+                return;
+            }
+            
+            // Cập nhật vào database
+            boolean success = cuaHangDAO.updatePaymentInfo(
+                store.getMaCH(),
+                momoEnable, momoPhone, momoName, momoQRPath,
+                bankEnable, bankName, bankAccountNumber, bankAccountName, bankQRPath
+            );
+            
+            if (success) {
+                // Cập nhật lại store object trong session
+                CuaHang updatedStore = cuaHangDAO.findById(store.getMaCH());
+                request.setAttribute("store", updatedStore);
+                String successMsg = URLEncoder.encode("Cập nhật thông tin thanh toán thành công", StandardCharsets.UTF_8.toString());
+                response.sendRedirect(request.getContextPath() + "/vendor/settings/payment?success=" + successMsg);
+            } else {
+                String errorMsg = URLEncoder.encode("Có lỗi xảy ra khi cập nhật thông tin thanh toán", StandardCharsets.UTF_8.toString());
+                response.sendRedirect(request.getContextPath() + "/vendor/settings/payment?error=" + errorMsg);
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            String errorMsg = URLEncoder.encode("Dữ liệu không hợp lệ: " + e.getMessage(), StandardCharsets.UTF_8.toString());
+            response.sendRedirect(request.getContextPath() + "/vendor/settings/payment?error=" + errorMsg);
+        }
+    }
+    
+    /**
+     * Upload ảnh QR và trả về đường dẫn file
+     */
+    private String uploadQRImage(Part filePart, String paymentType, Integer storeId) throws IOException {
+        String fileName = Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+        String fileExtension = fileName.substring(fileName.lastIndexOf("."));
+        
+        // Tạo tên file unique: paymentType_storeId_timestamp.extension
+        String newFileName = paymentType + "_qr_" + storeId + "_" + System.currentTimeMillis() + fileExtension;
+        
+        // Đường dẫn thư mục lưu ảnh (assets/img/qr)
+        String uploadPath = getServletContext().getRealPath("/") + "assets" + File.separator + "img" + File.separator + "qr";
+        
+        // Tạo thư mục nếu chưa tồn tại
+        File uploadDir = new File(uploadPath);
+        if (!uploadDir.exists()) {
+            uploadDir.mkdirs();
+        }
+        
+        // Lưu file
+        String filePath = uploadPath + File.separator + newFileName;
+        try (InputStream input = filePart.getInputStream()) {
+            Files.copy(input, Paths.get(filePath), StandardCopyOption.REPLACE_EXISTING);
+        }
+        
+        // Trả về đường dẫn relative để lưu vào database
+        return "qr/" + newFileName;
     }
 }

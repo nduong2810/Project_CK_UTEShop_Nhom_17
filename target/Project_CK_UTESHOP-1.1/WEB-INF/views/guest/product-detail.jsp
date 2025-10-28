@@ -12,6 +12,10 @@
             color: #050505;
             border: 1px solid #ced4da;
         }
+        .btn-favorite.active {
+            background-color: #ff3f6c;
+            color: white;
+        }
         .review-form .rating {
             display: flex;
             flex-direction: row-reverse;
@@ -182,16 +186,16 @@
                     </div>
 
                     <div class="action-buttons">
-                        <button class="btn-add-cart" onclick="handleAddToCart(${empty sessionScope.user})">
+                        <button class="btn-add-cart" onclick="handleAddToCart(${product.maSP}, ${empty sessionScope.user})">
                             <i class="fas fa-shopping-cart me-2"></i>
                             Thêm vào giỏ hàng
                         </button>
-                        <button class="btn-buy-now" onclick="handleBuyNow(${empty sessionScope.user})">
+                        <button class="btn-buy-now" onclick="handleBuyNow(${product.maSP}, ${empty sessionScope.user})">
                             <i class="fas fa-bolt me-2"></i>
                             Mua ngay
                         </button>
-                        <button class="btn btn-favorite" onclick="handleAddToFavorites(${empty sessionScope.user})">
-                            <i class="fas fa-heart me-2"></i>
+                        <button class="btn btn-favorite" onclick="handleAddToFavorites(event, this, ${product.maSP}, ${empty sessionScope.user})">
+                            <i class="far fa-heart me-2"></i>
                             Yêu thích
                         </button>
                     </div>
@@ -450,48 +454,172 @@
     });
 
     function showNotification(message, type) {
-        if (type === void 0) { type = 'info'; }
-        var notification = document.createElement('div');
-        notification.className = 'alert alert-' + (type === 'success' ? 'success' : 'info') + ' position-fixed';
-        notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; animation: slideInRight 0.3s ease-out;';
-        notification.innerHTML = '<i class="fas fa-' + (type === 'success' ? 'check-circle' : 'info-circle') + ' me-2"></i>' + message + '<button type="button" class="btn-close ms-2" onclick="this.parentElement.remove()"></button>';
-        document.body.appendChild(notification);
-        setTimeout(function () {
-            if (notification.parentElement) {
-                notification.style.animation = 'slideOutRight 0.3s ease-in';
-                setTimeout(function () { return notification.remove(); }, 300);
-            }
-        }, 3000);
-    }
+	    var notificationType = type || 'info';
+	
+	    var iconMap = {
+	        success: 'fa-check-circle',
+	        info: 'fa-info-circle',
+	        warning: 'fa-exclamation-triangle',
+	        danger: 'fa-exclamation-circle'
+	    };
+	    var iconClass = iconMap[notificationType] || 'fa-info-circle';
+	
+	    var notification = document.createElement('div');
+	    notification.className = 'alert alert-' + notificationType + ' position-fixed d-flex align-items-center';
+	    notification.style.top = '20px';
+	    notification.style.right = '20px';
+	    notification.style.zIndex = '9999';
+	    notification.style.minWidth = '300px';
+	    notification.style.animation = 'slideInRight 0.3s ease-out';
+	    
+	    var icon = document.createElement('i');
+	    icon.className = 'fas ' + iconClass + ' me-2';
+	
+	    var messageSpan = document.createElement('span');
+	    messageSpan.textContent = message;
+	    messageSpan.style.color = 'inherit';
+	
+	    var closeButton = document.createElement('button');
+	    closeButton.type = 'button';
+	    closeButton.className = 'btn-close ms-auto';
+	    closeButton.setAttribute('onclick', 'this.parentElement.remove()');
+	
+	    notification.appendChild(icon);
+	    notification.appendChild(messageSpan);
+	    notification.appendChild(closeButton);
+	    
+	    document.body.appendChild(notification);
+	
+	    setTimeout(function() {
+	        if (notification.parentElement) {
+	            notification.style.animation = 'slideOutRight 0.3s ease-in forwards';
+	            notification.addEventListener('animationend', function() { 
+	                if(notification.parentElement) { 
+	                    notification.remove(); 
+	                }
+	            });
+	        }
+	    }, 5000);
+	}
 
     function requireLogin() {
         showNotification('Bạn phải đăng nhập để thực hiện chức năng này!', 'warning');
     }
 
-    function handleAddToCart(isGuest) {
+    function handleAddToCart(productId, isGuest) {
         if (isGuest) {
             requireLogin();
             return;
         }
         const quantity = document.getElementById('quantity').value;
-        alert(`Đã thêm ${quantity} sản phẩm vào giỏ hàng!`);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '${pageContext.request.contextPath}/user/cart?action=add', true);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                try {
+                    var response = JSON.parse(xhr.responseText);
+                    if (response.success) {
+                        showNotification(response.message || 'Đã thêm vào giỏ hàng thành công!', 'success');
+                        if (response.cartCount !== undefined) {
+                            var cartCountElements = document.querySelectorAll('.cart-count, #cart-count');
+                            cartCountElements.forEach(function(el) {
+                                el.textContent = response.cartCount;
+                            });
+                        }
+                    } else {
+                        showNotification(response.message || 'Không thể thêm vào giỏ hàng!', 'danger');
+                    }
+                } catch (e) {
+                    showNotification('Đã thêm vào giỏ hàng thành công!', 'success');
+                }
+            } else {
+                showNotification('Có lỗi xảy ra. Vui lòng thử lại!', 'danger');
+            }
+        };
+        
+        xhr.onerror = function() {
+            showNotification('Có lỗi kết nối. Vui lòng thử lại!', 'danger');
+        };
+        
+        var data = 'productId=' + encodeURIComponent(productId) + '&quantity=' + encodeURIComponent(quantity);
+        xhr.send(data);
     }
 
-    function handleBuyNow(isGuest) {
+    function handleBuyNow(productId, isGuest) {
         if (isGuest) {
             requireLogin();
             return;
         }
         const quantity = document.getElementById('quantity').value;
-        alert(`Mua ngay ${quantity} sản phẩm!`);
+        
+        var form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '${pageContext.request.contextPath}/user/cart?action=add&buyNow=true';
+
+        var inputProduct = document.createElement('input');
+        inputProduct.type = 'hidden';
+        inputProduct.name = 'productId';
+        inputProduct.value = productId;
+        form.appendChild(inputProduct);
+
+        var inputQuantity = document.createElement('input');
+        inputQuantity.type = 'hidden';
+        inputQuantity.name = 'quantity';
+        inputQuantity.value = quantity;
+        form.appendChild(inputQuantity);
+
+        document.body.appendChild(form);
+        form.submit();
     }
 
-    function handleAddToFavorites(isGuest) {
+    function handleAddToFavorites(event, button, productId, isGuest) {
+        event.stopPropagation();
+        event.preventDefault();
+    
         if (isGuest) {
             requireLogin();
             return;
         }
-        alert('Đã thêm sản phẩm vào danh sách yêu thích!');
+    
+        // ✅ GỌI API để lưu/xóa khỏi database
+        fetch('${pageContext.request.contextPath}/user/favorites/toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'maSP=' + productId
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Favorite API response:', data);
+            
+            if (data.status === 'success') {
+                // Cập nhật UI
+                const icon = button.querySelector('i');
+                
+                if (data.action === 'removed') {
+                    button.classList.remove('active');
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                    showNotification('Đã xóa khỏi danh sách yêu thích.', 'info');
+                } else {
+                    button.classList.add('active');
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                    showNotification('Đã thêm vào danh sách yêu thích!', 'success');
+                }
+            } else {
+                showNotification(data.message || 'Có lỗi xảy ra!', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error adding to favorites:', error);
+            showNotification('Đã có lỗi xảy ra. Vui lòng thử lại sau.', 'error');
+        });
     }
 
     function validateReviewForm(form) {

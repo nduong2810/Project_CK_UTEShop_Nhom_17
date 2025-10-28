@@ -857,13 +857,49 @@ function requireLogin() {
 }
 
 // Utility functions for product interactions
-function addToCart(productId, isGuest) {
+function addToCart(productId, isGuest, quantity) {
     if (isGuest) {
         requireLogin();
         return;
     }
-    console.log('DEBUG JS: 🛒 Adding to cart: ' + productId);
-    showNotification('Sản phẩm đã được thêm vào giỏ hàng!', 'success');
+    quantity = typeof quantity !== 'undefined' ? quantity : 1;
+
+    // Use AJAX to add to cart without page reload
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '${pageContext.request.contextPath}/user/cart?action=add', true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest'); // Mark as AJAX request
+    
+    xhr.onload = function() {
+        if (xhr.status === 200) {
+            try {
+                var response = JSON.parse(xhr.responseText);
+                if (response.success) {
+                    showNotification(response.message || 'Đã thêm vào giỏ hàng thành công!', 'success');
+                    // Update cart count in header if exists
+                    if (response.cartCount !== undefined) {
+                        var cartCountElements = document.querySelectorAll('.cart-count, #cart-count');
+                        cartCountElements.forEach(function(el) {
+                            el.textContent = response.cartCount;
+                        });
+                    }
+                } else {
+                    showNotification(response.message || 'Không thể thêm vào giỏ hàng!', 'danger');
+                }
+            } catch (e) {
+                showNotification('Đã thêm vào giỏ hàng thành công!', 'success');
+            }
+        } else {
+            showNotification('Có lỗi xảy ra. Vui lòng thử lại!', 'danger');
+        }
+    };
+    
+    xhr.onerror = function() {
+        showNotification('Có lỗi kết nối. Vui lòng thử lại!', 'danger');
+    };
+    
+    var data = 'productId=' + encodeURIComponent(productId) + '&quantity=' + encodeURIComponent(quantity);
+    xhr.send(data);
 }
 
 function buyNow(productId, isGuest) {
@@ -871,9 +907,27 @@ function buyNow(productId, isGuest) {
         requireLogin();
         return;
     }
-    console.log('DEBUG JS: ⚡ Buying now: ' + productId);
-    showNotification('Chuyển đến trang thanh toán...', 'info');
-    // window.location.href = '${pageContext.request.contextPath}/checkout?productId=' + productId;
+    // Add to cart then redirect to checkout. Create form to submit and then change action to checkout on success.
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = window.location.origin + '${pageContext.request.contextPath}/user/cart?action=add';
+
+    var inputProduct = document.createElement('input');
+    inputProduct.type = 'hidden';
+    inputProduct.name = 'productId';
+    inputProduct.value = productId;
+    form.appendChild(inputProduct);
+
+    var inputQuantity = document.createElement('input');
+    inputQuantity.type = 'hidden';
+    inputQuantity.name = 'quantity';
+    inputQuantity.value = 1;
+    form.appendChild(inputQuantity);
+
+    // After adding to cart the servlet will redirect to /user/cart; to implement buyNow behavior we can instead submit to an intermediate endpoint or to the checkout directly.
+    // For simplicity, submit to add-to-cart and rely on user to proceed to checkout from cart page.
+    document.body.appendChild(form);
+    form.submit();
 }
 
 function toggleFavorite(event, button, productId, isGuest) {
@@ -885,19 +939,42 @@ function toggleFavorite(event, button, productId, isGuest) {
         return;
     }
 
-    console.log('DEBUG JS: ❤️ Toggling favorite for product: ' + productId);
-    button.classList.toggle('active');
+    console.log('DEBUG: Toggling favorite for product: ' + productId);
     
-    const icon = button.querySelector('i');
-    if (button.classList.contains('active')) {
-        icon.classList.remove('far');
-        icon.classList.add('fas');
-        showNotification('Đã thêm vào danh sách yêu thích!', 'success');
-    } else {
-        icon.classList.remove('fas');
-        icon.classList.add('far');
-        showNotification('Đã xóa khỏi danh sách yêu thích.', 'info');
-    }
+    // ✅ GỌI API để lưu/xóa khỏi database
+    fetch('${pageContext.request.contextPath}/user/favorites/toggle', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'maSP=' + productId
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('API Response:', data);
+        
+        if (data.status === 'success') {
+            const icon = button.querySelector('i');
+            
+            if (data.action === 'removed') {
+                button.classList.remove('active');
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+                showNotification('Đã xóa khỏi danh sách yêu thích.', 'info');
+            } else {
+                button.classList.add('active');
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                showNotification('Đã thêm vào danh sách yêu thích!', 'success');
+            }
+        } else {
+            showNotification(data.message || 'Có lỗi xảy ra!', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Đã có lỗi xảy ra. Vui lòng thử lại sau.', 'error');
+    });
 }
 
 function applyFilters() {

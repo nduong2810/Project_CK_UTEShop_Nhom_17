@@ -337,4 +337,52 @@ public class CuaHangDAO {
 			em.close();
 		}
 	}
+
+	/**
+	 * Cập nhật thông tin thanh toán cho cửa hàng
+	 */
+	public boolean updatePaymentInfo(Integer maCH, 
+									Boolean momoEnable, String momoPhone, String momoName, String momoQR,
+									Boolean bankEnable, String bankName, String bankAccountNumber, 
+									String bankAccountName, String bankQR) {
+		EntityManager em = JPAUtil.getEntityManager();
+		EntityTransaction tx = em.getTransaction();
+		try {
+			tx.begin();
+			CuaHang cuaHang = em.find(CuaHang.class, maCH);
+			if (cuaHang == null) {
+				tx.rollback();
+				return false;
+			}
+			
+			// Cập nhật thông tin MoMo
+			cuaHang.setMomoEnable(momoEnable != null ? momoEnable : false);
+			cuaHang.setMomoPhone(momoPhone);
+			cuaHang.setMomoName(momoName);
+			if (momoQR != null && !momoQR.trim().isEmpty()) {
+				cuaHang.setMomoQR(momoQR);
+			}
+			
+			// Cập nhật thông tin Ngân hàng
+			cuaHang.setBankEnable(bankEnable != null ? bankEnable : false);
+			cuaHang.setBankName(bankName);
+			cuaHang.setBankAccountNumber(bankAccountNumber);
+			cuaHang.setBankAccountName(bankAccountName);
+			if (bankQR != null && !bankQR.trim().isEmpty()) {
+				cuaHang.setBankQR(bankQR);
+			}
+			
+			em.merge(cuaHang);
+			tx.commit();
+			return true;
+		} catch (Exception ex) {
+			if (tx.isActive()) {
+				tx.rollback();
+			}
+			ex.printStackTrace();
+			return false;
+		} finally {
+			em.close();
+		}
+	}
 }

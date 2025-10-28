@@ -2,23 +2,47 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>${pageTitle}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-</head>
-<body>
-    <div class="container-fluid p-4">
-        <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="fas fa-box"></i> ${pageTitle} - ${store.tenCH}</h2>
-            <a href="${pageContext.request.contextPath}/vendor/product-crud" class="btn btn-success">
-                <i class="fas fa-plus"></i> Thêm Sản phẩm mới
-            </a>
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar Navigation -->
+        <div class="col-md-3 col-lg-2">
+            <div class="bg-white rounded-3 shadow-sm p-3 mb-4">
+                <h6 class="text-muted mb-3">VENDOR MENU</h6>
+                <div class="list-group list-group-flush">
+                    <a href="${pageContext.request.contextPath}/vendor/dashboard" class="list-group-item list-group-item-action border-0">
+                        <i class="fas fa-tachometer-alt me-2"></i> Dashboard
+                    </a>
+                    <a href="${pageContext.request.contextPath}/vendor/products" class="list-group-item list-group-item-action border-0 active">
+                        <i class="fas fa-box me-2"></i> Sản phẩm
+                    </a>
+                    <a href="${pageContext.request.contextPath}/vendor/discounts" class="list-group-item list-group-item-action border-0">
+                        <i class="fas fa-tags me-2"></i> Mã giảm giá
+                    </a>
+                    <a href="${pageContext.request.contextPath}/vendor/orders" class="list-group-item list-group-item-action border-0">
+                        <i class="fas fa-shopping-cart me-2"></i> Đơn hàng
+                    </a>
+                    <a href="${pageContext.request.contextPath}/vendor/statistics" class="list-group-item list-group-item-action border-0">
+                        <i class="fas fa-chart-pie me-2"></i> Thống kê
+                    </a>
+                    <a href="${pageContext.request.contextPath}/vendor/settings" class="list-group-item list-group-item-action border-0">
+                        <i class="fas fa-cog me-2"></i> Cài đặt
+                    </a>
+                </div>
+            </div>
         </div>
+        
+        <!-- Main Content -->
+        <div class="col-md-9 col-lg-10">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-box"></i> ${pageTitle}</h2>
+                    <p class="text-muted mb-0">${store.tenCH}</p>
+                </div>
+                <a href="${pageContext.request.contextPath}/vendor/product-crud" class="btn btn-success">
+                    <i class="fas fa-plus"></i> Thêm Sản phẩm mới
+                </a>
+            </div>
 
         <!-- Statistics Cards -->
         <div class="row mb-4">
@@ -215,6 +239,22 @@
                                                        class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
+                                                    <c:choose>
+                                                        <c:when test="${product.trangThai == true}">
+                                                            <button type="button" class="btn btn-sm btn-outline-warning" 
+                                                                    onclick="toggleStatus(${product.maSP}, '${product.tenSP}', false)" 
+                                                                    title="Ẩn sản phẩm">
+                                                                <i class="fas fa-eye-slash"></i>
+                                                            </button>
+                                                        </c:when>
+                                                        <c:otherwise>
+                                                            <button type="button" class="btn btn-sm btn-outline-success" 
+                                                                    onclick="toggleStatus(${product.maSP}, '${product.tenSP}', true)" 
+                                                                    title="Hiện sản phẩm">
+                                                                <i class="fas fa-eye"></i>
+                                                            </button>
+                                                        </c:otherwise>
+                                                    </c:choose>
                                                     <button type="button" class="btn btn-sm btn-outline-danger" 
                                                             onclick="confirmDelete(${product.maSP}, '${product.tenSP}')" title="Xóa">
                                                         <i class="fas fa-trash"></i>
@@ -297,6 +337,38 @@
                     </c:otherwise>
                 </c:choose>
             </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Toggle Status Modal -->
+    <div class="modal fade" id="toggleStatusModal" tabindex="-1" aria-labelledby="toggleStatusModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="toggleStatusModalLabel">
+                        <i class="fas fa-info-circle text-info"></i> Xác nhận thay đổi trạng thái
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="toggleStatusMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Hủy
+                    </button>
+                    <form id="toggleStatusForm" method="POST" style="display: inline;">
+                        <input type="hidden" name="action" value="toggleStatus">
+                        <input type="hidden" name="id" id="toggleProductId">
+                        <input type="hidden" name="status" id="toggleProductStatus">
+                        <button type="submit" class="btn btn-primary" id="toggleStatusBtn">
+                            <i class="fas fa-check"></i> Xác nhận
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -332,6 +404,28 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        function toggleStatus(productId, productName, newStatus) {
+            document.getElementById('toggleProductId').value = productId;
+            document.getElementById('toggleProductStatus').value = newStatus;
+            
+            const message = newStatus 
+                ? `Bạn có chắc chắn muốn <strong>HIỆN</strong> sản phẩm <strong>${productName}</strong>?<br><small class="text-muted">Sản phẩm sẽ hiển thị trên cửa hàng.</small>`
+                : `Bạn có chắc chắn muốn <strong>ẨN</strong> sản phẩm <strong>${productName}</strong>?<br><small class="text-muted">Sản phẩm sẽ không hiển thị trên cửa hàng.</small>`;
+            
+            document.getElementById('toggleStatusMessage').innerHTML = message;
+            
+            const btn = document.getElementById('toggleStatusBtn');
+            if (newStatus) {
+                btn.className = 'btn btn-success';
+                btn.innerHTML = '<i class="fas fa-eye"></i> Hiện';
+            } else {
+                btn.className = 'btn btn-warning';
+                btn.innerHTML = '<i class="fas fa-eye-slash"></i> Ẩn';
+            }
+            
+            new bootstrap.Modal(document.getElementById('toggleStatusModal')).show();
+        }
+        
         function confirmDelete(productId, productName) {
             document.getElementById('productId').value = productId;
             document.getElementById('productName').textContent = productName;
@@ -347,5 +441,3 @@
             });
         }, 5000);
     </script>
-</body>
-</html>

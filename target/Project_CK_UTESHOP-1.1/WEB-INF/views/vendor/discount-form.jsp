@@ -3,19 +3,38 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <fmt:setLocale value="vi_VN" scope="session"/>
 
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${pageTitle} - UTESHOP Vendor</title>
-    
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    
-    <style>
+<style>
+        /* Base font styling for Vietnamese */
+        * {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Enhanced styling for Vietnamese text display */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: 600;
+            color: #2d3748;
+            text-rendering: optimizeLegibility;
+        }
+        
+        .form-label {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: 600;
+            color: #2d3748;
+            text-rendering: optimizeLegibility;
+        }
+        
+        .form-control {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
         .form-container {
             background: white;
             border-radius: 15px;
@@ -112,18 +131,14 @@
         .conditional-field {
             display: none;
         }
-    </style>
-</head>
-<body>
-    <!-- Include Header -->
-    <jsp:include page="../common/header.jsp" />
-    
-    <div class="container-fluid py-4">
+</style>
+
+<div class="container-fluid py-4">
         <div class="row">
             <!-- Sidebar Navigation -->
             <div class="col-md-3 col-lg-2">
                 <div class="bg-white rounded-3 shadow-sm p-3 mb-4">
-                    <h6 class="text-muted mb-3">VENDOR MENU</h6>
+                    <h6 class="text-muted mb-3">MENU</h6>
                     <div class="list-group list-group-flush">
                         <a href="${pageContext.request.contextPath}/vendor/dashboard" class="list-group-item list-group-item-action border-0">
                             <i class="fas fa-tachometer-alt me-2"></i> Dashboard
@@ -134,6 +149,9 @@
                         <a href="${pageContext.request.contextPath}/vendor/discounts" class="list-group-item list-group-item-action border-0 active">
                             <i class="fas fa-tags me-2"></i> Mã giảm giá
                         </a>
+                        <a href="${pageContext.request.contextPath}/vendor/orders" class="list-group-item list-group-item-action border-0">
+                            <i class="fas fa-shopping-cart me-2"></i> Đơn hàng
+                            </a>
                     </div>
                 </div>
             </div>
@@ -485,5 +503,3 @@
             }
         });
     </script>
-</body>
-</html>

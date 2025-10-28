@@ -52,12 +52,43 @@ public class CuaHang implements Serializable {
 	@Column(name = "TyLeChietKhau", precision = 5, scale = 2)
 	private java.math.BigDecimal tyLeChietKhau;
 
+	// Thông tin thanh toán MoMo
+	@Column(name = "MomoEnable")
+	private Boolean momoEnable = false;
+
+	@Column(name = "MomoPhone", length = 15)
+	private String momoPhone;
+
+	@Column(name = "MomoName", length = 255)
+	private String momoName;
+
+	@Column(name = "MomoQR", length = 500)
+	private String momoQR;
+
+	// Thông tin thanh toán Ngân hàng
+	@Column(name = "BankEnable")
+	private Boolean bankEnable = false;
+
+	@Column(name = "BankName", length = 255)
+	private String bankName;
+
+	@Column(name = "BankAccountNumber", length = 50)
+	private String bankAccountNumber;
+
+	@Column(name = "BankAccountName", length = 255)
+	private String bankAccountName;
+
+	@Column(name = "BankQR", length = 500)
+	private String bankQR;
+
 	@OneToMany(mappedBy = "cuaHang", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private List<SanPham> sanPhams = new ArrayList<>();
 
 	public CuaHang() {
 		this.ngayTao = new Date();
 		this.trangThai = true; // Use Boolean
+		this.momoEnable = false;
+		this.bankEnable = false;
 	}
 
 	// Getters and Setters
@@ -168,5 +199,79 @@ public class CuaHang implements Serializable {
 
 	public void setTyLeChietKhau(java.math.BigDecimal v) {
 		this.tyLeChietKhau = v;
+	}
+
+	// Getter và Setter cho MoMo
+	public Boolean getMomoEnable() {
+		return momoEnable;
+	}
+
+	public void setMomoEnable(Boolean momoEnable) {
+		this.momoEnable = momoEnable;
+	}
+
+	public String getMomoPhone() {
+		return momoPhone;
+	}
+
+	public void setMomoPhone(String momoPhone) {
+		this.momoPhone = momoPhone;
+	}
+
+	public String getMomoName() {
+		return momoName;
+	}
+
+	public void setMomoName(String momoName) {
+		this.momoName = momoName;
+	}
+
+	public String getMomoQR() {
+		return momoQR;
+	}
+
+	public void setMomoQR(String momoQR) {
+		this.momoQR = momoQR;
+	}
+
+	// Getter và Setter cho Bank
+	public Boolean getBankEnable() {
+		return bankEnable;
+	}
+
+	public void setBankEnable(Boolean bankEnable) {
+		this.bankEnable = bankEnable;
+	}
+
+	public String getBankName() {
+		return bankName;
+	}
+
+	public void setBankName(String bankName) {
+		this.bankName = bankName;
+	}
+
+	public String getBankAccountNumber() {
+		return bankAccountNumber;
+	}
+
+	public void setBankAccountNumber(String bankAccountNumber) {
+		this.bankAccountNumber = bankAccountNumber;
+	}
+
+	public String getBankAccountName() {
+		return bankAccountName;
+	}
+
+	public void setBankAccountName(String bankAccountName) {
+		this.bankAccountName = bankAccountName;
+	}
+
+	public String getBankQR() {
+		return bankQR;
+	}
+
+	public void setBankQR(String bankQR) {
+		this.bankQR = bankQR;
 	}
 }
