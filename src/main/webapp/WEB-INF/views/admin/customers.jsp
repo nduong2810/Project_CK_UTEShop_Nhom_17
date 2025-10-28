@@ -107,9 +107,16 @@
 	border-color: transparent
 }
 
+.btn-danger {
+	border-color: #fecaca;
+	color: #991b1b;
+	background: #fff
+}
+
 .actions {
 	display: flex;
-	gap: 6px
+	gap: 6px;
+	flex-wrap: wrap
 }
 
 .pagination {
@@ -137,6 +144,42 @@
 
 .muted {
 	color: #6b7280
+}
+
+/* ----- Appeal mini form ----- */
+.appeal-box {
+	display: none;
+	margin-top: 8px;
+	border: 1px dashed #fca5a5;
+	background: #fff7f7;
+	padding: 10px;
+	border-radius: 10px
+}
+
+.appeal-box textarea {
+	width: 100%;
+	min-height: 70px;
+	border: 1px solid var(--border);
+	border-radius: 8px;
+	padding: 8px;
+	resize: vertical
+}
+
+.appeal-actions {
+	display: flex;
+	gap: 8px;
+	justify-content: flex-end;
+	margin-top: 8px
+}
+
+.appeal-link {
+	color: #b91c1c;
+	font-size: 13px;
+	text-decoration: underline;
+	cursor: pointer;
+	background: transparent;
+	border: 0;
+	padding: 0
 }
 </style>
 
@@ -167,6 +210,10 @@
 							A→Z</option>
 						<option value="name_desc" ${param_sort=='name_desc'?'selected':''}>Tên
 							Z→A</option>
+						<option value="id_asc" ${param_sort=='id_asc'?'selected':''}>Mã
+							↑</option>
+						<option value="id_desc" ${param_sort=='id_desc'?'selected':''}>Mã
+							↓</option>
 					</select> <select class="select" name="pageSize"
 						onchange="this.form.submit()">
 						<option value="10" ${pageSize==10?'selected':''}>10 /
@@ -191,7 +238,7 @@
 							<th>Vai trò</th>
 							<th>Trạng thái</th>
 							<th>Ngày tạo</th>
-							<th style="width: 160px">Thao tác</th>
+							<th style="width: 260px">Thao tác</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -212,10 +259,37 @@
 									</c:choose></td>
 								<td><fmt:formatDate value="${u.ngayTao}"
 										pattern="dd/MM/yyyy HH:mm" /></td>
-								<td class="actions">
-									<button class="btn"
-										onclick="location.href='${pageContext.request.contextPath}/admin/customers/edit?id=${u.maND}'">Sửa</button>
-									<!-- Có thể thêm nút Khoá/Mở -> gọi /admin/customers/toggle?id=... -->
+								<td>
+									<div class="actions">
+										<button class="btn"
+											onclick="location.href='${pageContext.request.contextPath}/admin/customers/edit?id=${u.maND}'">Sửa</button>
+
+										<!-- Nếu đang bị khoá: hiện nút Khiếu nại + form mini -->
+										<c:if test="${!u.trangThai}">
+											<button class="btn btn-primary"
+												onclick="location.href='${pageContext.request.contextPath}/admin/appeals?status=PENDING&userId=${u.maND}'">
+												Duyệt khiếu nại</button>
+										</c:if>
+									</div> <!-- Appeal mini form (ẩn/hiện) --> <c:if
+										test="${!u.trangThai}">
+										<div id="appeal-${u.maND}" class="appeal-box">
+											<form method="post"
+												action="${pageContext.request.contextPath}/admin/customers/appeal">
+												<input type="hidden" name="userId" value="${u.maND}">
+												<label class="muted"
+													style="display: block; margin-bottom: 6px"> Ghi rõ
+													lý do bạn cần mở khoá tài khoản: </label>
+												<textarea name="message"
+													placeholder="Ví dụ: tài khoản bị khoá nhầm, tôi có thể cung cấp thêm thông tin để xác minh..."></textarea>
+												<div class="appeal-actions">
+													<button type="button" class="btn"
+														onclick="toggleAppeal('${u.maND}')">Huỷ</button>
+													<button class="btn btn-primary" type="submit">Gửi
+														khiếu nại</button>
+												</div>
+											</form>
+										</div>
+									</c:if>
 								</td>
 							</tr>
 						</c:forEach>
@@ -225,30 +299,30 @@
 
 			<div class="pagination">
 				<form method="get" style="display: inline">
-					<input type="hidden" name="q" value="${param_q}" /> <input
-						type="hidden" name="role" value="${param_role}" /> <input
-						type="hidden" name="sort" value="${param_sort}" /> <input
-						type="hidden" name="pageSize" value="${pageSize}" />
+					<input type="hidden" name="q" value="${param_q}"> <input
+						type="hidden" name="role" value="${param_role}"> <input
+						type="hidden" name="sort" value="${param_sort}"> <input
+						type="hidden" name="pageSize" value="${pageSize}">
 					<button class="pbtn" name="page" value="${currentPage-1}"
 						<c:if test="${currentPage<=1}">disabled</c:if>>Trước</button>
 				</form>
 
 				<c:forEach var="i" begin="1" end="${totalPages}">
 					<form method="get" style="display: inline">
-						<input type="hidden" name="q" value="${param_q}" /> <input
-							type="hidden" name="role" value="${param_role}" /> <input
-							type="hidden" name="sort" value="${param_sort}" /> <input
-							type="hidden" name="pageSize" value="${pageSize}" />
+						<input type="hidden" name="q" value="${param_q}"> <input
+							type="hidden" name="role" value="${param_role}"> <input
+							type="hidden" name="sort" value="${param_sort}"> <input
+							type="hidden" name="pageSize" value="${pageSize}">
 						<button class="pbtn ${i==currentPage?'active':''}" name="page"
 							value="${i}">${i}</button>
 					</form>
 				</c:forEach>
 
 				<form method="get" style="display: inline">
-					<input type="hidden" name="q" value="${param_q}" /> <input
-						type="hidden" name="role" value="${param_role}" /> <input
-						type="hidden" name="sort" value="${param_sort}" /> <input
-						type="hidden" name="pageSize" value="${pageSize}" />
+					<input type="hidden" name="q" value="${param_q}"> <input
+						type="hidden" name="role" value="${param_role}"> <input
+						type="hidden" name="sort" value="${param_sort}"> <input
+						type="hidden" name="pageSize" value="${pageSize}">
 					<button class="pbtn" name="page" value="${currentPage+1}"
 						<c:if test="${currentPage>=totalPages}">disabled</c:if>>Sau</button>
 				</form>
@@ -257,3 +331,12 @@
 		</div>
 	</main>
 </div>
+
+<script>
+	function toggleAppeal(id) {
+		const box = document.getElementById('appeal-' + id);
+		if (!box)
+			return;
+		box.style.display = (box.style.display === 'block') ? 'none' : 'block';
+	}
+</script>
