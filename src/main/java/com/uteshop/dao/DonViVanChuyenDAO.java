@@ -122,13 +122,17 @@ public class DonViVanChuyenDAO {
 			if (notBlank(q)) {
 				jpql.append(" AND LOWER(s.tenDonVi) LIKE :kw ");
 			}
+
+			// ---- ORDER BY (mặc định: id_asc = MaVC ASC)
 			jpql.append(" ORDER BY ");
 			switch (safeSort(sort)) {
-			case "name_asc" -> jpql.append(" s.tenDonVi ASC ");
-			case "name_desc" -> jpql.append(" s.tenDonVi DESC ");
-			case "fee_asc" -> jpql.append(" s.phiVanChuyen ASC ");
-			case "fee_desc" -> jpql.append(" s.phiVanChuyen DESC ");
-			default -> jpql.append(" s.tenDonVi ASC ");
+			case "id_desc" -> jpql.append(" s.maVC DESC ");
+			case "name_asc" -> jpql.append(" s.tenDonVi ASC, s.maVC ASC ");
+			case "name_desc" -> jpql.append(" s.tenDonVi DESC, s.maVC ASC ");
+			case "fee_asc" -> jpql.append(" s.phiVanChuyen ASC, s.maVC ASC ");
+			case "fee_desc" -> jpql.append(" s.phiVanChuyen DESC, s.maVC ASC ");
+			case "id_asc" -> jpql.append(" s.maVC ASC ");
+			default -> jpql.append(" s.maVC ASC "); // tăng dần mặc định
 			}
 
 			TypedQuery<DonViVanChuyen> query = em.createQuery(jpql.toString(), DonViVanChuyen.class);
@@ -140,6 +144,16 @@ public class DonViVanChuyenDAO {
 		} finally {
 			em.close();
 		}
+	}
+
+	private String safeSort(String s) {
+		if (s == null || s.isBlank())
+			return "id_asc"; // mặc định: tăng dần
+		s = s.trim().toLowerCase();
+		return switch (s) {
+		case "id_asc", "id_desc", "name_asc", "name_desc", "fee_asc", "fee_desc" -> s;
+		default -> "id_asc";
+		};
 	}
 
 	public int countAll(String q) {
@@ -202,12 +216,5 @@ public class DonViVanChuyenDAO {
 		return s != null && !s.trim().isEmpty();
 	}
 
-	private String safeSort(String sort) {
-		if (sort == null)
-			return "";
-		return switch (sort) {
-		case "name_asc", "name_desc", "fee_asc", "fee_desc" -> sort;
-		default -> "";
-		};
-	}
+	
 }

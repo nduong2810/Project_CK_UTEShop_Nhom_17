@@ -259,14 +259,7 @@ public class MaGiamGiaDAO {
 		return s != null && !s.trim().isEmpty();
 	}
 
-	private String safeSort(String s) {
-		if (s == null)
-			return "";
-		return switch (s) {
-		case "name_asc", "name_desc", "start_asc", "start_desc", "end_asc", "end_desc" -> s;
-		default -> "";
-		};
-	}
+	
 
 	public List<MaGiamGia> findPaged(int page, int pageSize, String q, String type, String status, String sort) {
 		EntityManager em = JPAUtil.getEntityManager();
@@ -279,10 +272,8 @@ public class MaGiamGiaDAO {
 			if (notBlank(type)) {
 				jpql.append(" AND LOWER(c.loaiGiam) = :type ");
 			}
-			// status: ongoing | upcoming | expired
 			if (notBlank(status)) {
 				jpql.append(" AND ");
-				Date now = new Date();
 				switch (status) {
 				case "ongoing" -> jpql.append(" :now BETWEEN c.ngayBatDau AND c.ngayKetThuc ");
 				case "upcoming" -> jpql.append(" c.ngayBatDau > :now ");
@@ -292,15 +283,18 @@ public class MaGiamGiaDAO {
 				}
 			}
 
+			// ---- ORDER BY: mặc định mã tăng dần
 			jpql.append(" ORDER BY ");
 			switch (safeSort(sort)) {
-			case "name_asc" -> jpql.append(" c.tenChuongTrinh ASC ");
-			case "name_desc" -> jpql.append(" c.tenChuongTrinh DESC ");
-			case "start_asc" -> jpql.append(" c.ngayBatDau ASC ");
-			case "start_desc" -> jpql.append(" c.ngayBatDau DESC ");
-			case "end_asc" -> jpql.append(" c.ngayKetThuc ASC ");
-			case "end_desc" -> jpql.append(" c.ngayKetThuc DESC ");
-			default -> jpql.append(" c.ngayBatDau DESC ");
+			case "id_desc" -> jpql.append(" c.maGG DESC ");
+			case "id_asc" -> jpql.append(" c.maGG ASC ");
+			case "name_asc" -> jpql.append(" c.tenChuongTrinh ASC, c.maGG ASC ");
+			case "name_desc" -> jpql.append(" c.tenChuongTrinh DESC, c.maGG ASC ");
+			case "start_asc" -> jpql.append(" c.ngayBatDau ASC, c.maGG ASC ");
+			case "start_desc" -> jpql.append(" c.ngayBatDau DESC, c.maGG ASC ");
+			case "end_asc" -> jpql.append(" c.ngayKetThuc ASC, c.maGG ASC ");
+			case "end_desc" -> jpql.append(" c.ngayKetThuc DESC, c.maGG ASC ");
+			default -> jpql.append(" c.maGG ASC "); // mặc định: mã tăng dần
 			}
 
 			TypedQuery<MaGiamGia> query = em.createQuery(jpql.toString(), MaGiamGia.class);
@@ -317,6 +311,17 @@ public class MaGiamGiaDAO {
 			em.close();
 		}
 	}
+
+	private String safeSort(String s) {
+		if (s == null || s.isBlank())
+			return "id_asc"; // mặc định tăng dần
+		s = s.trim().toLowerCase();
+		return switch (s) {
+		case "id_asc", "id_desc", "name_asc", "name_desc", "start_asc", "start_desc", "end_asc", "end_desc" -> s;
+		default -> "id_asc";
+		};
+	}
+
 	public boolean create(MaGiamGia e) {
 		EntityManager em = JPAUtil.getEntityManager();
 		EntityTransaction tx = em.getTransaction();
@@ -335,5 +340,4 @@ public class MaGiamGiaDAO {
 		}
 	}
 
-	
 }

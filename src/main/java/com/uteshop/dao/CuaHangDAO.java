@@ -35,32 +35,33 @@ public class CuaHangDAO {
 		EntityManager em = getEntityManager();
 		try {
 			// Sử dụng trực tiếp field maND thay vì đi qua relationship nguoiDung
-			// Sử dụng getResultList() và lấy phần tử đầu tiên để tránh NonUniqueResultException
+			// Sử dụng getResultList() và lấy phần tử đầu tiên để tránh
+			// NonUniqueResultException
 			TypedQuery<CuaHang> query = em.createQuery(
-					"SELECT c FROM CuaHang c WHERE c.maND = :userId ORDER BY c.ngayTao ASC",
-					CuaHang.class);
+					"SELECT c FROM CuaHang c WHERE c.maND = :userId ORDER BY c.ngayTao ASC", CuaHang.class);
 			query.setParameter("userId", userId);
 			query.setMaxResults(1); // Chỉ lấy 1 kết quả
-			
+
 			List<CuaHang> results = query.getResultList();
-			
+
 			if (results.isEmpty()) {
 				System.err.println("Không tìm thấy CuaHang cho userId: " + userId);
 				return null;
 			}
-			
+
 			// Nếu có nhiều hơn 1 cửa hàng, cảnh báo (lỗi dữ liệu)
-			TypedQuery<Long> countQuery = em.createQuery(
-					"SELECT COUNT(c) FROM CuaHang c WHERE c.maND = :userId", Long.class);
+			TypedQuery<Long> countQuery = em.createQuery("SELECT COUNT(c) FROM CuaHang c WHERE c.maND = :userId",
+					Long.class);
 			countQuery.setParameter("userId", userId);
 			Long count = countQuery.getSingleResult();
-			
+
 			if (count > 1) {
-				System.err.println("⚠️ CẢNH BÁO: User " + userId + " có " + count + " cửa hàng! Nên chỉ có 1 cửa hàng/user.");
+				System.err.println(
+						"⚠️ CẢNH BÁO: User " + userId + " có " + count + " cửa hàng! Nên chỉ có 1 cửa hàng/user.");
 			}
-			
+
 			return results.get(0);
-			
+
 		} catch (Exception e) {
 			System.err.println("Lỗi tìm CuaHang cho userId " + userId + ": " + e.getMessage());
 			e.printStackTrace();
@@ -119,27 +120,28 @@ public class CuaHangDAO {
 			StringBuilder jpql = new StringBuilder("SELECT c FROM CuaHang c WHERE 1=1 ");
 			if (notBlank(q)) {
 				jpql.append("""
-						AND (LOWER(c.tenCH) LIKE :kw OR LOWER(c.email) LIKE :kw
-						OR LOWER(c.soDienThoai) LIKE :kw OR LOWER(c.diaChi) LIKE :kw)
+						    AND (LOWER(c.tenCH) LIKE :kw OR LOWER(c.email) LIKE :kw
+						    OR LOWER(c.soDienThoai) LIKE :kw OR LOWER(c.diaChi) LIKE :kw)
 						""");
 			}
-			if (active != null) {
+			if (active != null)
 				jpql.append(" AND c.trangThai = :act ");
-			}
-			if (ownerId != null) {
+			if (ownerId != null)
 				jpql.append(" AND c.maND = :owner ");
-			}
 
+			// ---- ORDER BY (mặc định: MaCH DESC = từ lớn đến nhỏ)
 			jpql.append(" ORDER BY ");
 			switch (safeSort(sort)) {
-			case "name_asc" -> jpql.append(" c.tenCH ASC ");
-			case "name_desc" -> jpql.append(" c.tenCH DESC ");
-			case "date_desc" -> jpql.append(" c.ngayTao DESC ");
-			default -> jpql.append(" c.ngayTao DESC ");
+			case "id_asc" -> jpql.append(" c.maCH ASC ");
+			case "id_desc" -> jpql.append(" c.maCH DESC ");
+			case "name_asc" -> jpql.append(" c.tenCH ASC,  c.maCH DESC ");
+			case "name_desc" -> jpql.append(" c.tenCH DESC, c.maCH DESC ");
+			case "date_asc" -> jpql.append(" c.ngayTao ASC,  c.maCH DESC ");
+			case "date_desc" -> jpql.append(" c.ngayTao DESC, c.maCH DESC ");
+			default -> jpql.append(" c.maCH DESC "); // mặc định
 			}
 
 			TypedQuery<CuaHang> query = em.createQuery(jpql.toString(), CuaHang.class);
-
 			if (notBlank(q))
 				query.setParameter("kw", "%" + q.toLowerCase().trim() + "%");
 			if (active != null)
@@ -280,12 +282,13 @@ public class CuaHangDAO {
 		return s != null && !s.trim().isEmpty();
 	}
 
-	private String safeSort(String sort) {
-		if (sort == null)
-			return "";
-		return switch (sort) {
-		case "name_asc", "name_desc", "date_desc" -> sort;
-		default -> "";
+	private String safeSort(String s) {
+		if (s == null || s.isBlank())
+			return "id_desc"; // mặc định: từ lớn → nhỏ
+		s = s.trim().toLowerCase();
+		return switch (s) {
+		case "id_asc", "id_desc", "name_asc", "name_desc", "date_asc", "date_desc" -> s;
+		default -> "id_desc";
 		};
 	}
 
@@ -341,10 +344,8 @@ public class CuaHangDAO {
 	/**
 	 * Cập nhật thông tin thanh toán cho cửa hàng
 	 */
-	public boolean updatePaymentInfo(Integer maCH, 
-									Boolean momoEnable, String momoPhone, String momoName, String momoQR,
-									Boolean bankEnable, String bankName, String bankAccountNumber, 
-									String bankAccountName, String bankQR) {
+	public boolean updatePaymentInfo(Integer maCH, Boolean momoEnable, String momoPhone, String momoName, String momoQR,
+			Boolean bankEnable, String bankName, String bankAccountNumber, String bankAccountName, String bankQR) {
 		EntityManager em = JPAUtil.getEntityManager();
 		EntityTransaction tx = em.getTransaction();
 		try {
@@ -354,7 +355,7 @@ public class CuaHangDAO {
 				tx.rollback();
 				return false;
 			}
-			
+
 			// Cập nhật thông tin MoMo
 			cuaHang.setMomoEnable(momoEnable != null ? momoEnable : false);
 			cuaHang.setMomoPhone(momoPhone);
@@ -362,7 +363,7 @@ public class CuaHangDAO {
 			if (momoQR != null && !momoQR.trim().isEmpty()) {
 				cuaHang.setMomoQR(momoQR);
 			}
-			
+
 			// Cập nhật thông tin Ngân hàng
 			cuaHang.setBankEnable(bankEnable != null ? bankEnable : false);
 			cuaHang.setBankName(bankName);
@@ -371,7 +372,7 @@ public class CuaHangDAO {
 			if (bankQR != null && !bankQR.trim().isEmpty()) {
 				cuaHang.setBankQR(bankQR);
 			}
-			
+
 			em.merge(cuaHang);
 			tx.commit();
 			return true;
