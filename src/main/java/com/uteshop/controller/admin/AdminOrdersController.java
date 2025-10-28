@@ -30,7 +30,10 @@ public class AdminOrdersController extends HttpServlet {
 
 		TrangThaiDonHang status = orderDao.mapStatus(statusStr);
 
-		List<DonHang> orders = orderDao.findPaged(q, status, from, to, page, pageSize);
+		String sort = req.getParameter("sort");
+		if (sort == null || sort.isBlank())
+			sort = "id_asc";// ví dụ: id_desc (mặc định)
+		List<DonHang> orders = orderDao.findPaged(q, status, from, to, page, pageSize, sort);
 		int total = orderDao.countAll(q, status, from, to);
 		int totalPages = Math.max(1, (int) Math.ceil(total * 1.0 / pageSize));
 		page = Math.min(Math.max(page, 1), totalPages);

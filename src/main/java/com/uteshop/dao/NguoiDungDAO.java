@@ -421,22 +421,27 @@ public class NguoiDungDAO {
 	public List<NguoiDung> findPaged(int page, int pageSize, String q, NguoiDung.VaiTro role, String sort) {
 		EntityManager em = JPAUtil.getEntityManager();
 		try {
-			StringBuilder jpql = new StringBuilder("SELECT u FROM NguoiDung u WHERE 1=1 ");
+			StringBuilder jpql = new StringBuilder("SELECT n FROM NguoiDung n WHERE 1=1 ");
+
 			if (notBlank(q)) {
 				jpql.append(
-						" AND (LOWER(u.hoTen) LIKE :kw OR LOWER(u.tenDangNhap) LIKE :kw OR LOWER(u.email) LIKE :kw) ");
+						" AND (LOWER(n.hoTen) LIKE :kw OR LOWER(n.email) LIKE :kw OR LOWER(n.tenDangNhap) LIKE :kw) ");
 			}
 			if (role != null) {
-				jpql.append(" AND u.vaiTro = :role ");
+				jpql.append(" AND n.vaiTro = :role ");
 			}
 
-// sort an toàn (whitelist)
-			jpql.append(" ORDER BY ");
-			switch (safeSort(sort)) {
-			case "name_asc" -> jpql.append(" u.hoTen ASC ");
-			case "name_desc" -> jpql.append(" u.hoTen DESC ");
-			case "date_desc" -> jpql.append(" u.ngayTao DESC ");
-			default -> jpql.append(" u.ngayTao DESC ");
+			// sort:
+			// id_asc|id_desc|name_asc|name_desc|created_asc|created_desc|status_asc|status_desc
+			switch (sort == null ? "id_asc" : sort) {
+			case "id_asc" -> jpql.append(" ORDER BY n.maND ASC ");
+			case "name_asc" -> jpql.append(" ORDER BY n.hoTen ASC ");
+			case "name_desc" -> jpql.append(" ORDER BY n.hoTen DESC ");
+			case "created_asc" -> jpql.append(" ORDER BY n.ngayTao ASC ");
+			case "created_desc" -> jpql.append(" ORDER BY n.ngayTao DESC ");
+			case "status_asc" -> jpql.append(" ORDER BY n.trangThai ASC, n.maND ASC ");
+			case "status_desc" -> jpql.append(" ORDER BY n.trangThai DESC, n.maND ASC ");
+			default -> jpql.append(" ORDER BY n.maND DESC ");
 			}
 
 			TypedQuery<NguoiDung> query = em.createQuery(jpql.toString(), NguoiDung.class);
@@ -446,7 +451,9 @@ public class NguoiDungDAO {
 				query.setParameter("role", role);
 
 			int first = Math.max(0, (page - 1) * pageSize);
-			return query.setFirstResult(first).setMaxResults(pageSize).getResultList();
+			query.setFirstResult(first);
+			query.setMaxResults(pageSize);
+			return query.getResultList();
 		} finally {
 			em.close();
 		}
@@ -483,12 +490,14 @@ public class NguoiDungDAO {
 	}
 
 	/** Chỉ cho phép các giá trị sort hợp lệ để tránh JPQL injection */
-	private String safeSort(String sort) {
-		if (sort == null)
-			return "";
-		return switch (sort) {
-		case "name_asc", "name_desc", "date_desc" -> sort;
-		default -> "";
+	private String safeSort(String s) {
+		if (s == null)
+			return "id_desc";
+		s = s.trim().toLowerCase();
+		return switch (s) {
+		case "id_asc", "id_desc", "name_asc", "name_desc", "created_asc", "created_desc", "status_asc", "status_desc" ->
+			s;
+		default -> "id_desc";
 		};
 	}
 }

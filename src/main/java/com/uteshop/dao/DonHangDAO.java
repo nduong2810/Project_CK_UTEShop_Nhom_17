@@ -264,130 +264,115 @@ public class DonHangDAO {
 	 * Lấy doanh thu theo ngày cụ thể
 	 */
 	public BigDecimal getDailyRevenue(Integer maCH, int day, int month, int year) {
-	    EntityManager em = getEntityManager();
-	    String jpql = "SELECT SUM(dh.tongThanhToan) "
-	                + "FROM DonHang dh "
-	                + "JOIN dh.chiTietDonHangs ctdh " 
-	                + "JOIN ctdh.sanPham sp "         
-	                + "WHERE sp.cuaHang.maCH = :maCH " 
-	                + "  AND dh.trangThai = :status_done " 
-	                + "  AND FUNCTION('DAY', dh.ngayDat) = :day "
-	                + "  AND FUNCTION('MONTH', dh.ngayDat) = :month "
-	                + "  AND FUNCTION('YEAR', dh.ngayDat) = :year";
-	    
-	    try {
-	        TypedQuery<BigDecimal> query = em.createQuery(jpql, BigDecimal.class);
-	        query.setParameter("maCH", maCH);
-	        query.setParameter("status_done", DonHang.TrangThaiDonHang.DA_GIAO);
-	        query.setParameter("day", day);
-	        query.setParameter("month", month);
-	        query.setParameter("year", year);
-	        
-	        BigDecimal result = query.getSingleResult();
-	        return result != null ? result : BigDecimal.ZERO;
-	        
-	    } catch (NoResultException e) {
-	        return BigDecimal.ZERO;
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return BigDecimal.ZERO;
-	    } finally {
-	        em.close();
-	    }
+		EntityManager em = getEntityManager();
+		String jpql = "SELECT SUM(dh.tongThanhToan) " + "FROM DonHang dh " + "JOIN dh.chiTietDonHangs ctdh "
+				+ "JOIN ctdh.sanPham sp " + "WHERE sp.cuaHang.maCH = :maCH " + "  AND dh.trangThai = :status_done "
+				+ "  AND FUNCTION('DAY', dh.ngayDat) = :day " + "  AND FUNCTION('MONTH', dh.ngayDat) = :month "
+				+ "  AND FUNCTION('YEAR', dh.ngayDat) = :year";
+
+		try {
+			TypedQuery<BigDecimal> query = em.createQuery(jpql, BigDecimal.class);
+			query.setParameter("maCH", maCH);
+			query.setParameter("status_done", DonHang.TrangThaiDonHang.DA_GIAO);
+			query.setParameter("day", day);
+			query.setParameter("month", month);
+			query.setParameter("year", year);
+
+			BigDecimal result = query.getSingleResult();
+			return result != null ? result : BigDecimal.ZERO;
+
+		} catch (NoResultException e) {
+			return BigDecimal.ZERO;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return BigDecimal.ZERO;
+		} finally {
+			em.close();
+		}
 	}
-	
+
 	/**
 	 * Lấy doanh thu theo năm
 	 */
 	public BigDecimal getYearlyRevenue(Integer maCH, int year) {
-	    EntityManager em = getEntityManager();
-	    String jpql = "SELECT SUM(dh.tongThanhToan) "
-	                + "FROM DonHang dh "
-	                + "JOIN dh.chiTietDonHangs ctdh " 
-	                + "JOIN ctdh.sanPham sp "         
-	                + "WHERE sp.cuaHang.maCH = :maCH " 
-	                + "  AND dh.trangThai = :status_done " 
-	                + "  AND FUNCTION('YEAR', dh.ngayDat) = :year";
-	    
-	    try {
-	        TypedQuery<BigDecimal> query = em.createQuery(jpql, BigDecimal.class);
-	        query.setParameter("maCH", maCH);
-	        query.setParameter("status_done", DonHang.TrangThaiDonHang.DA_GIAO);
-	        query.setParameter("year", year);
-	        
-	        BigDecimal result = query.getSingleResult();
-	        return result != null ? result : BigDecimal.ZERO;
-	        
-	    } catch (NoResultException e) {
-	        return BigDecimal.ZERO;
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return BigDecimal.ZERO;
-	    } finally {
-	        em.close();
-	    }
+		EntityManager em = getEntityManager();
+		String jpql = "SELECT SUM(dh.tongThanhToan) " + "FROM DonHang dh " + "JOIN dh.chiTietDonHangs ctdh "
+				+ "JOIN ctdh.sanPham sp " + "WHERE sp.cuaHang.maCH = :maCH " + "  AND dh.trangThai = :status_done "
+				+ "  AND FUNCTION('YEAR', dh.ngayDat) = :year";
+
+		try {
+			TypedQuery<BigDecimal> query = em.createQuery(jpql, BigDecimal.class);
+			query.setParameter("maCH", maCH);
+			query.setParameter("status_done", DonHang.TrangThaiDonHang.DA_GIAO);
+			query.setParameter("year", year);
+
+			BigDecimal result = query.getSingleResult();
+			return result != null ? result : BigDecimal.ZERO;
+
+		} catch (NoResultException e) {
+			return BigDecimal.ZERO;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return BigDecimal.ZERO;
+		} finally {
+			em.close();
+		}
 	}
-	
+
 	/**
 	 * Lấy doanh thu 7 ngày gần nhất
 	 */
 	public List<Object[]> getLast7DaysRevenue(Integer maCH) {
-	    EntityManager em = getEntityManager();
-	    String jpql = "SELECT FUNCTION('DATE', dh.ngayDat) as orderDate, SUM(dh.tongThanhToan) "
-	                + "FROM DonHang dh "
-	                + "JOIN dh.chiTietDonHangs ctdh " 
-	                + "JOIN ctdh.sanPham sp "         
-	                + "WHERE sp.cuaHang.maCH = :maCH " 
-	                + "  AND dh.trangThai = :status_done "
-	                + "  AND dh.ngayDat >= FUNCTION('DATEADD', DAY, -7, CURRENT_DATE) "
-	                + "GROUP BY FUNCTION('DATE', dh.ngayDat) "
-	                + "ORDER BY orderDate ASC";
-	    
-	    try {
-	        TypedQuery<Object[]> query = em.createQuery(jpql, Object[].class);
-	        query.setParameter("maCH", maCH);
-	        query.setParameter("status_done", DonHang.TrangThaiDonHang.DA_GIAO);
-	        
-	        return query.getResultList();
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return new java.util.ArrayList<>();
-	    } finally {
-	        em.close();
-	    }
+		EntityManager em = getEntityManager();
+		String jpql = "SELECT FUNCTION('DATE', dh.ngayDat) as orderDate, SUM(dh.tongThanhToan) " + "FROM DonHang dh "
+				+ "JOIN dh.chiTietDonHangs ctdh " + "JOIN ctdh.sanPham sp " + "WHERE sp.cuaHang.maCH = :maCH "
+				+ "  AND dh.trangThai = :status_done "
+				+ "  AND dh.ngayDat >= FUNCTION('DATEADD', DAY, -7, CURRENT_DATE) "
+				+ "GROUP BY FUNCTION('DATE', dh.ngayDat) " + "ORDER BY orderDate ASC";
+
+		try {
+			TypedQuery<Object[]> query = em.createQuery(jpql, Object[].class);
+			query.setParameter("maCH", maCH);
+			query.setParameter("status_done", DonHang.TrangThaiDonHang.DA_GIAO);
+
+			return query.getResultList();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new java.util.ArrayList<>();
+		} finally {
+			em.close();
+		}
 	}
-	
+
 	/**
 	 * Lấy doanh thu 12 tháng gần nhất
 	 */
 	public List<Object[]> getLast12MonthsRevenue(Integer maCH) {
-	    EntityManager em = getEntityManager();
-	    String jpql = "SELECT FUNCTION('YEAR', dh.ngayDat), FUNCTION('MONTH', dh.ngayDat), SUM(dh.tongThanhToan) "
-	                + "FROM DonHang dh "
-	                + "JOIN dh.chiTietDonHangs ctdh " 
-	                + "JOIN ctdh.sanPham sp "         
-	                + "WHERE sp.cuaHang.maCH = :maCH " 
-	                + "  AND dh.trangThai = :status_done "
-	                + "  AND dh.ngayDat >= FUNCTION('DATEADD', MONTH, -12, CURRENT_DATE) "
-	                + "GROUP BY FUNCTION('YEAR', dh.ngayDat), FUNCTION('MONTH', dh.ngayDat) "
-	                + "ORDER BY FUNCTION('YEAR', dh.ngayDat) ASC, FUNCTION('MONTH', dh.ngayDat) ASC";
-	    
-	    try {
-	        TypedQuery<Object[]> query = em.createQuery(jpql, Object[].class);
-	        query.setParameter("maCH", maCH);
-	        query.setParameter("status_done", DonHang.TrangThaiDonHang.DA_GIAO);
-	        
-	        return query.getResultList();
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	        return new java.util.ArrayList<>();
-	    } finally {
-	        em.close();
-	    }
+		EntityManager em = getEntityManager();
+		String jpql = "SELECT FUNCTION('YEAR', dh.ngayDat), FUNCTION('MONTH', dh.ngayDat), SUM(dh.tongThanhToan) "
+				+ "FROM DonHang dh " + "JOIN dh.chiTietDonHangs ctdh " + "JOIN ctdh.sanPham sp "
+				+ "WHERE sp.cuaHang.maCH = :maCH " + "  AND dh.trangThai = :status_done "
+				+ "  AND dh.ngayDat >= FUNCTION('DATEADD', MONTH, -12, CURRENT_DATE) "
+				+ "GROUP BY FUNCTION('YEAR', dh.ngayDat), FUNCTION('MONTH', dh.ngayDat) "
+				+ "ORDER BY FUNCTION('YEAR', dh.ngayDat) ASC, FUNCTION('MONTH', dh.ngayDat) ASC";
+
+		try {
+			TypedQuery<Object[]> query = em.createQuery(jpql, Object[].class);
+			query.setParameter("maCH", maCH);
+			query.setParameter("status_done", DonHang.TrangThaiDonHang.DA_GIAO);
+
+			return query.getResultList();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new java.util.ArrayList<>();
+		} finally {
+			em.close();
+		}
 	}
-	
+
 	/**
-	 * Cập nhật trạng thái đơn hàng (chỉ vendor có quyền cập nhật đơn hàng của cửa hàng mình)
+	 * Cập nhật trạng thái đơn hàng (chỉ vendor có quyền cập nhật đơn hàng của cửa
+	 * hàng mình)
 	 */
 	public boolean updateOrderStatusByStore(Integer maDH, Integer maCH, DonHang.TrangThaiDonHang newStatus) {
 		EntityManager em = getEntityManager();
@@ -451,17 +436,24 @@ public class DonHangDAO {
 		}
 	}
 
-	public List<DonHang> findPaged(String q, TrangThaiDonHang status, Date from, Date to, int page, int pageSize) {
-
+	public List<DonHang> findPaged(String q, // từ khóa: tên, email, mã đơn
+			DonHang.TrangThaiDonHang status, // trạng thái đơn
+			Date from, // ngày đặt từ
+			Date to, // ngày đặt đến (<= 23:59:59 cùng ngày)
+			int page, // trang
+			int pageSize, // kích thước trang
+			String sort // id_desc | id_asc | date_desc | date_asc | total_desc | total_asc | status_* |
+						// customer_*
+	) {
 		EntityManager em = JPAUtil.getEntityManager();
 		try {
 			StringBuilder jpql = new StringBuilder("SELECT d FROM DonHang d JOIN FETCH d.nguoiDung n WHERE 1=1 ");
 
-			List<Object[]> params = new ArrayList<>();
-
-			if (q != null && !q.isBlank()) {
-				jpql.append(
-						" AND (LOWER(n.hoTen) LIKE :kw OR LOWER(n.email) LIKE :kw OR CAST(d.maDH AS string) LIKE :kw) ");
+			// ---- Filters
+			boolean hasKw = (q != null && !q.isBlank());
+			if (hasKw) {
+				jpql.append(" AND (LOWER(n.hoTen) LIKE :kw ").append(" OR LOWER(n.email) LIKE :kw ")
+						.append(" OR CAST(d.maDH AS string) LIKE :kw) ");
 			}
 			if (status != null) {
 				jpql.append(" AND d.trangThai = :st ");
@@ -470,14 +462,28 @@ public class DonHangDAO {
 				jpql.append(" AND d.ngayDat >= :from ");
 			}
 			if (to != null) {
-				jpql.append(" AND d.ngayDat < :toNext "); // < to + 1d
+				jpql.append(" AND d.ngayDat < :toNext "); // < (to + 1 day)
 			}
 
-			jpql.append(" ORDER BY d.ngayDat DESC ");
+			// ---- Sort
+			jpql.append(" ORDER BY ");
+			switch (safeSort(sort)) {
+			case "id_asc" -> jpql.append(" d.maDH ASC ");
+			case "date_desc" -> jpql.append(" d.ngayDat DESC ");
+			case "date_asc" -> jpql.append(" d.ngayDat ASC ");
+			case "total_desc" -> jpql.append(" d.tongThanhToan DESC ");
+			case "total_asc" -> jpql.append(" d.tongThanhToan ASC ");
+			case "status_asc" -> jpql.append(" d.trangThai ASC, d.maDH DESC ");
+			case "status_desc" -> jpql.append(" d.trangThai DESC, d.maDH DESC ");
+			case "customer_asc" -> jpql.append(" n.hoTen ASC, d.maDH DESC ");
+			case "customer_desc" -> jpql.append(" n.hoTen DESC, d.maDH DESC ");
+			default -> jpql.append(" d.maDH DESC "); // id_desc
+			}
 
 			TypedQuery<DonHang> query = em.createQuery(jpql.toString(), DonHang.class);
 
-			if (q != null && !q.isBlank()) {
+			// ---- Bind params
+			if (hasKw) {
 				String kw = "%" + q.toLowerCase().trim() + "%";
 				query.setParameter("kw", kw);
 			}
@@ -488,13 +494,26 @@ public class DonHangDAO {
 			if (to != null)
 				query.setParameter("toNext", new Date(to.getTime() + 24L * 60 * 60 * 1000));
 
-			query.setFirstResult(Math.max(0, (page - 1) * pageSize));
+			// ---- Paging
+			int first = Math.max(0, (page - 1) * pageSize);
+			query.setFirstResult(first);
 			query.setMaxResults(pageSize);
 
 			return query.getResultList();
 		} finally {
 			em.close();
 		}
+	}
+
+	private String safeSort(String sort) {
+		if (sort == null || sort.isBlank())
+			return "id_desc";
+		return switch (sort) {
+		case "id_asc", "id_desc", "date_asc", "date_desc", "total_asc", "total_desc", "status_asc", "status_desc",
+				"customer_asc", "customer_desc" ->
+			sort;
+		default -> "id_desc";
+		};
 	}
 
 	/** Đếm tổng dòng theo cùng bộ lọc */
@@ -606,7 +625,7 @@ public class DonHangDAO {
 			em.close();
 		}
 	}
-	
+
 	/**
 	 * Insert new order with order details
 	 */
