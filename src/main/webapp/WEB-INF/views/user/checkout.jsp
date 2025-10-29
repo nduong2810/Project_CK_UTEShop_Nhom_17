@@ -88,6 +88,9 @@
             width: 22px;
             height: 22px;
             margin-right: 15px;
+            cursor: pointer;
+            position: relative;
+            z-index: 10;
         }
         
         .payment-icon {
@@ -879,7 +882,7 @@
                         </div>
                         
                         <!-- COD - Tiền mặt -->
-                        <div class="payment-method" onclick="selectPayment(this, 'COD')">
+                        <div class="payment-method" onclick="selectPayment(this, 'COD', event)">
                             <div class="d-flex align-items-center">
                                 <input type="radio" name="paymentMethod" value="COD" checked required>
                                 <i class="fas fa-money-bill-wave payment-icon"></i>
@@ -897,7 +900,7 @@
                         </div>
                         
                         <!-- Chuyển khoản Ngân hàng -->
-                        <div class="payment-method" onclick="selectPayment(this, 'BANK_TRANSFER')">
+                        <div class="payment-method" onclick="selectPayment(this, 'BANK_TRANSFER', event)">
                             <div class="d-flex align-items-center">
                                 <input type="radio" name="paymentMethod" value="BANK_TRANSFER" required>
                                 <i class="fas fa-university payment-icon"></i>
@@ -943,8 +946,9 @@
                                             <c:if test="${not empty storeEntry.key.bankQR}">
                                                 <div class="qr-code-container">
                                                     <p class="fw-bold mb-3">Quét mã QR để thanh toán</p>
-                                                    <img src="${pageContext.request.contextPath}/assets/img/qr/${storeEntry.key.bankQR}" 
-                                                         alt="Bank QR Code">
+                                                    <img src="${pageContext.request.contextPath}/assets/img/${storeEntry.key.bankQR}" 
+                                                         alt="Bank QR Code"
+                                                         style="max-width: 250px; height: auto;">
                                                 </div>
                                             </c:if>
                                         </div>
@@ -954,7 +958,7 @@
                         </div>
                         
                         <!-- MoMo -->
-                        <div class="payment-method" onclick="selectPayment(this, 'MOMO')">
+                        <div class="payment-method" onclick="selectPayment(this, 'MOMO', event)">
                             <div class="d-flex align-items-center">
                                 <input type="radio" name="paymentMethod" value="MOMO" required>
                                 <i class="fab fa-cc-amazon-pay payment-icon" style="color: #d82d8b;"></i>
@@ -996,8 +1000,9 @@
                                             <c:if test="${not empty storeEntry.key.momoQR}">
                                                 <div class="qr-code-container">
                                                     <p class="fw-bold mb-3">Quét mã QR để thanh toán</p>
-                                                    <img src="${pageContext.request.contextPath}/assets/img/qr/${storeEntry.key.momoQR}" 
-                                                         alt="MoMo QR Code">
+                                                    <img src="${pageContext.request.contextPath}/assets/img/${storeEntry.key.momoQR}" 
+                                                         alt="MoMo QR Code"
+                                                         style="max-width: 250px; height: auto;">
                                                 </div>
                                             </c:if>
                                         </div>
@@ -1090,24 +1095,27 @@
         });
         
         // === HÀM XỬ LÝ THANH TOÁN (ĐÃ SỬA LỖI) ===
-        function selectPayment(element, method) {
+        function selectPayment(element, method, event) {
+            // Ngăn chặn event bubbling nếu click trực tiếp vào radio button
+            if (event && event.target.tagName === 'INPUT') {
+                return; // Để radio button tự xử lý
+            }
+            
             console.log('🔵 selectPayment called - method:', method);
             
-            // Bước 1: Bỏ chọn tất cả radio buttons trước
-            document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
-                radio.checked = false;
-            });
-            
-            // Bước 2: Xóa CSS selected khỏi tất cả
+            // Bước 1: Xóa CSS selected khỏi tất cả
             document.querySelectorAll('.payment-method').forEach(item => {
                 item.classList.remove('selected');
-                item.querySelector('.payment-details').classList.remove('active');
+                const details = item.querySelector('.payment-details');
+                if (details) {
+                    details.classList.remove('active');
+                }
             });
             
-            // Bước 3: Thêm selected CSS
+            // Bước 2: Thêm selected CSS
             element.classList.add('selected');
             
-            // Bước 4: CHECK RADIO BUTTON - ĐÂY LÀ QUAN TRỌNG NHẤT!
+            // Bước 3: CHECK RADIO BUTTON
             const radioButton = element.querySelector('input[type="radio"][value="' + method + '"]');
             if (radioButton) {
                 radioButton.checked = true;
@@ -1116,9 +1124,10 @@
                 console.error('❌ Radio button NOT FOUND for method:', method);
             }
             
-            // Bước 5: Hiển thị chi tiết nếu là COD
-            if (method === 'COD') {
-                element.querySelector('.payment-details').classList.add('active');
+            // Bước 4: Hiển thị chi tiết thanh toán
+            const details = element.querySelector('.payment-details');
+            if (details) {
+                details.classList.add('active');
             }
             
             // Debug: In ra giá trị hiện tại của form
@@ -1127,6 +1136,32 @@
                 console.log('🔍 After 100ms - Checked payment method:', checkedRadio ? checkedRadio.value : 'NONE');
             }, 100);
         }
+        
+        // Thêm event listener cho radio buttons để cập nhật UI khi click trực tiếp
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.payment-method input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const method = this.value;
+                    const paymentMethodDiv = this.closest('.payment-method');
+                    
+                    // Xóa selected khỏi tất cả
+                    document.querySelectorAll('.payment-method').forEach(item => {
+                        item.classList.remove('selected');
+                        const details = item.querySelector('.payment-details');
+                        if (details) {
+                            details.classList.remove('active');
+                        }
+                    });
+                    
+                    // Thêm selected cho cái được chọn
+                    paymentMethodDiv.classList.add('selected');
+                    const details = paymentMethodDiv.querySelector('.payment-details');
+                    if (details) {
+                        details.classList.add('active');
+                    }
+                });
+            });
+        });
         
         // === CÁC HÀM KHÁC ===
         function selectAddress(element, addressId) {
