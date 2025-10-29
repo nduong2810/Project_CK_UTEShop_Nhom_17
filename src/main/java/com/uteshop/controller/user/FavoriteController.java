@@ -10,6 +10,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @WebServlet({"/user/favorites/*", "/user/favorites"})
 public class FavoriteController extends HttpServlet {
    private static final long serialVersionUID = 1L;
@@ -97,6 +100,12 @@ public class FavoriteController extends HttpServlet {
       
        List<SanPhamYeuThich> favorites = sanPhamYeuThichDAO.getFavoritesByUser(user.getMaND(), page - 1, pageSize);
        System.out.println("Favorites loaded: " + favorites.size());
+
+       // Create a set of favorite product IDs for product-card.jsp
+       Set<Integer> favoriteProductIds = favorites.stream()
+               .map(fav -> fav.getSanPham().getMaSP())
+               .collect(Collectors.toSet());
+       request.setAttribute("favoriteProductIds", favoriteProductIds);
       
        if (favorites != null && !favorites.isEmpty()) {
            System.out.println("First favorite product: " + favorites.get(0).getSanPham().getTenSP());

@@ -195,6 +195,38 @@
             color: #dee2e6;
             margin-bottom: 1rem;
         }
+
+        /* Alert Styles */
+        .alert {
+            border-radius: 12px;
+            border: none;
+        }
+
+        .alert-danger {
+            background: #fff5f5;
+            color: #c53030;
+        }
+
+        .alert-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+        }
+
+        .alert-warning {
+            background-color: #fffbeb;
+            color: #b45309;
+        }
+
+        /* Notification Animations */
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideOutRight { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+        @keyframes shake { 
+            10%, 90% { transform: translateX(-1px); } 
+            20%, 80% { transform: translateX(2px); } 
+            30%, 50%, 70% { transform: translateX(-4px); } 
+            40%, 60% { transform: translateX(4px); } 
+        }
+        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
     </style>
 </head>
 
@@ -214,10 +246,9 @@
 
     <c:choose>
         <c:when test="${not empty favorites}">
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="product-list">
                 <c:forEach var="favorite" items="${favorites}">
                     <c:set var="product" value="${favorite.sanPham}" scope="request"/>
-                    <c:set var="favoriteProductIds" value="${[favorite.sanPham.maSP]}" scope="request"/>
                     <c:import url="/WEB-INF/views/guest/product-card.jsp"/>
                 </c:forEach>
             </div>
@@ -254,3 +285,106 @@
         </c:otherwise>
     </c:choose>
 </div>
+<script>
+    var contextPath = "${pageContext.request.contextPath}";
+
+    function showNotification(message, type) {
+        var notificationType = type || 'info';
+
+        var iconMap = {
+            success: 'fa-check-circle',
+            info: 'fa-info-circle',
+            warning: 'fa-exclamation-triangle',
+            danger: 'fa-exclamation-circle'
+        };
+        var iconClass = iconMap[notificationType] || 'fa-info-circle';
+
+        var notification = document.createElement('div');
+        notification.className = 'alert alert-' + notificationType + ' position-fixed d-flex align-items-center';
+        notification.style.top = '20px';
+        notification.style.right = '20px';
+        notification.style.zIndex = '9999';
+        notification.style.minWidth = '300px';
+        notification.style.animation = 'slideInRight 0.3s ease-out';
+        
+        var icon = document.createElement('i');
+        icon.className = 'fas ' + iconClass + ' me-2';
+
+        var messageSpan = document.createElement('span');
+        messageSpan.textContent = message;
+        messageSpan.style.color = 'inherit';
+
+        var closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'btn-close ms-auto';
+        closeButton.setAttribute('onclick', 'this.parentElement.remove()');
+
+        notification.appendChild(icon);
+        notification.appendChild(messageSpan);
+        notification.appendChild(closeButton);
+        
+        document.body.appendChild(notification);
+
+        setTimeout(function() {
+            if (notification.parentElement) {
+                notification.style.animation = 'slideOutRight 0.3s ease-in forwards';
+                notification.addEventListener('animationend', function() { 
+                    if(notification.parentElement) { 
+                        notification.remove(); 
+                    }
+                });
+            }
+        }, 5000);
+    }
+
+    function toggleFavorite(event, button, productId, requireLogin) {
+        event.preventDefault();
+        
+        if (requireLogin) {
+            window.location.href = contextPath + '/auth/login';
+            return;
+        }
+        fetch(contextPath + '/user/favorites/toggle', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'maSP=' + productId
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const heartIcon = button.querySelector('i.fa-heart');
+                if (data.action === 'removed') {
+                        if (window.location.pathname.includes('/user/favorites')) {
+                            // Remove the product card from the DOM
+                            const productCard = button.closest('.col');
+                            if (productCard) {
+                                productCard.remove();
+                            }
+                        } else {
+                            // Update button state
+                            button.classList.remove('active');
+                            if (heartIcon) {
+                                heartIcon.classList.replace('fas', 'far');
+                            }
+                        }
+                    } else { // added
+                        // Update button state
+                        button.classList.add('active');
+                        if (heartIcon) {
+                            heartIcon.classList.replace('far', 'fas');
+                        }
+                    }
+                // Hiển thị thông báo thành công
+                showNotification(data.message, data.action === 'removed' ? 'info' : 'success');
+            } else {
+                showNotification(data.message, 'danger');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Đã có lỗi xảy ra. Vui lòng thử lại sau.', 'danger');
+        });
+    }
+</script>

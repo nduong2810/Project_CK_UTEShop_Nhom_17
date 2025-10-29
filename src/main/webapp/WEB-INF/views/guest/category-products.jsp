@@ -356,7 +356,7 @@
 
     <c:choose>
         <c:when test="${not empty products}">
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4" id="product-list">
                 <c:forEach var="sp" items="${products}" varStatus="status">
                     <c:set var="product" value="${sp}" scope="request"/>
                     <c:import url="/WEB-INF/views/guest/product-card.jsp"/>
@@ -511,6 +511,30 @@
                     icon.classList.remove('fas');
                     icon.classList.add('far');
                     showNotification('Đã xóa khỏi danh sách yêu thích.', 'info');
+
+                    // If on favorites page, remove the product card
+                    if (window.location.pathname.includes('/user/favorites')) {
+                        const productCard = button.closest('.col');
+                        if (productCard) {
+                            productCard.remove();
+                            // Check if there are any favorite products left
+                            const productList = document.getElementById('product-list');
+                            if (productList && productList.children.length === 0) {
+                                const container = document.querySelector('.container.my-5');
+                                if (container) {
+                                    container.innerHTML = `
+                                        <div class="empty-state">
+                                            <i class="fas fa-heart-broken mb-3"></i>
+                                            <h3>Danh sách yêu thích trống</h3>
+                                            <p class="text-muted">Bạn chưa thêm sản phẩm nào vào danh sách yêu thích.</p>
+                                            <a href="${pageContext.request.contextPath}/guest/home" class="btn btn-primary mt-3">
+                                                <i class="fas fa-shopping-bag me-2"></i>Tiếp tục mua sắm
+                                            </a>
+                                        </div>`;
+                                }
+                            }
+                        }
+                    }
                 } else {
                     button.classList.add('active');
                     icon.classList.remove('far');

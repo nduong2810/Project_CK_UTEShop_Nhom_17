@@ -183,70 +183,60 @@
                         <div class="stats-card ${statusFilter == null ? 'filter-active' : ''}" onclick="filterByStatus('')">
                             <div class="stats-number">${totalAllOrders}</div>
                             <div>Tất cả</div>
-                            <small class="text-white-50">${totalAllOrders} đơn hàng</small>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="stats-card ${statusFilter == 'CHO_XAC_NHAN' ? 'filter-active' : ''}" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);" onclick="filterByStatus('CHO_XAC_NHAN')">
                             <div class="stats-number">${choXacNhan}</div>
                             <div>Chờ xác nhận</div>
-                            <small class="text-white-50">${choXacNhan} đơn</small>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="stats-card ${statusFilter == 'DA_XAC_NHAN' ? 'filter-active' : ''}" style="background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);" onclick="filterByStatus('DA_XAC_NHAN')">
                             <div class="stats-number">${daXacNhan}</div>
                             <div>Đã xác nhận</div>
-                            <small class="text-white-50">${daXacNhan} đơn</small>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="stats-card ${statusFilter == 'DANG_CHUAN_BI' ? 'filter-active' : ''}" style="background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);" onclick="filterByStatus('DANG_CHUAN_BI')">
                             <div class="stats-number">${dangChuanBi}</div>
                             <div>Đang chuẩn bị</div>
-                            <small class="text-white-50">${dangChuanBi} đơn</small>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="stats-card ${statusFilter == 'DANG_GIAO' ? 'filter-active' : ''}" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);" onclick="filterByStatus('DANG_GIAO')">
                             <div class="stats-number">${dangGiao}</div>
                             <div>Đang giao</div>
-                            <small class="text-white-50">${dangGiao} đơn</small>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="stats-card ${statusFilter == 'DA_GIAO' ? 'filter-active' : ''}" style="background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);" onclick="filterByStatus('DA_GIAO')">
                             <div class="stats-number">${daGiao}</div>
                             <div>Đã giao</div>
-                            <small class="text-white-50">${daGiao} đơn</small>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="stats-card ${statusFilter == 'HOAN_THANH' ? 'filter-active' : ''}" style="background: linear-gradient(135deg, #20c997 0%, #17a2b8 100%);" onclick="filterByStatus('HOAN_THANH')">
                             <div class="stats-number">${hoanThanh}</div>
                             <div>Hoàn thành</div>
-                            <small class="text-white-50">${hoanThanh} đơn</small>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="stats-card ${statusFilter == 'DA_HUY' ? 'filter-active' : ''}" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);" onclick="filterByStatus('DA_HUY')">
                             <div class="stats-number">${daHuy}</div>
                             <div>Đã hủy</div>
-                            <small class="text-white-50">${daHuy} đơn</small>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="stats-card ${statusFilter == 'TRA_HANG' ? 'filter-active' : ''}" style="background: linear-gradient(135deg, #fd7e14 0%, #e8590c 100%);" onclick="filterByStatus('TRA_HANG')">
                             <div class="stats-number">${traHang}</div>
                             <div>Trả hàng</div>
-                            <small class="text-white-50">${traHang} đơn</small>
                         </div>
                     </div>
                     <div class="col-md-2">
                         <div class="stats-card ${statusFilter == 'HOAN_TIEN' ? 'filter-active' : ''}" style="background: linear-gradient(135deg, #6610f2 0%, #510bc4 100%);" onclick="filterByStatus('HOAN_TIEN')">
                             <div class="stats-number">${hoanTien}</div>
                             <div>Hoàn tiền</div>
-                            <small class="text-white-50">${hoanTien} đơn</small>
                         </div>
                     </div>
                 </div>
