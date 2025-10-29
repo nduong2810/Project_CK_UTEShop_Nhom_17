@@ -7,6 +7,7 @@ import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.TypedQuery;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class DanhMucDAO {
@@ -20,15 +21,14 @@ public class DanhMucDAO {
 	 * Find category by ID
 	 */
 	public DanhMuc findById(Integer id) {
-//		EntityManager em = getEntityManager();
-//		try {
-//			// Sử dụng find() là cách chuẩn và đơn giản nhất trong JPA để tìm theo Primary
-//			// Key.
-//			return em.find(DanhMuc.class, id);
-//		} finally {
-//			em.close();
-//		}
-		return new DanhMuc();
+		if (id == null)
+			return null;
+		EntityManager em = getEntityManager();
+		try {
+			return em.find(DanhMuc.class, id);
+		} finally {
+			em.close();
+		}
 	}
 
 	/**
@@ -103,38 +103,30 @@ public class DanhMucDAO {
 		}
 	}
 
-	public int countAll(String q, Integer activeInt) {
-		EntityManager em = JPAUtil.getEntityManager();
+	public int countAll(String q) {
+		EntityManager em = getEntityManager();
 		try {
-			StringBuilder jpql = new StringBuilder("SELECT COUNT(d) FROM DanhMuc d WHERE 1=1 ");
+			StringBuilder jpql = new StringBuilder("SELECT COUNT(c) FROM DanhMuc c WHERE 1=1 ");
 			if (notBlank(q)) {
-				jpql.append(" AND (LOWER(d.tenDM) LIKE :kw OR LOWER(d.moTa) LIKE :kw) ");
+				jpql.append(" AND (LOWER(c.tenDM) LIKE :kw OR LOWER(c.moTa) LIKE :kw) ");
 			}
-			if (activeInt != null) {
-				jpql.append(" AND d.trangThai = :act ");
-			}
-
 			TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
 			if (notBlank(q))
 				query.setParameter("kw", "%" + q.toLowerCase().trim() + "%");
-			if (activeInt != null)
-				query.setParameter("act", activeInt);
-
-			Long c = query.getSingleResult();
-			return c == null ? 0 : c.intValue();
+			return query.getSingleResult().intValue();
 		} finally {
 			em.close();
 		}
 	}
 
-	public boolean create(DanhMuc d) {
-		EntityManager em = JPAUtil.getEntityManager();
+	public boolean create(DanhMuc c) {
+		EntityManager em = getEntityManager();
 		EntityTransaction tx = em.getTransaction();
 		try {
 			tx.begin();
-			if (d.getTrangThai() == null)
-				d.setTrangThai(1); // default active
-			em.persist(d);
+			if (c.getNgayTao() == null)
+				c.setNgayTao(new Date());
+			em.persist(c);
 			tx.commit();
 			return true;
 		} catch (Exception ex) {
@@ -147,12 +139,25 @@ public class DanhMucDAO {
 		}
 	}
 
-	public boolean update(DanhMuc d) {
-		EntityManager em = JPAUtil.getEntityManager();
+	public boolean update(DanhMuc c) {
+		if (c == null || c.getMaDM() == null)
+			return false;
+		EntityManager em = getEntityManager();
 		EntityTransaction tx = em.getTransaction();
 		try {
 			tx.begin();
-			em.merge(d);
+			// cách 1: merge trực tiếp
+			em.merge(c);
+
+			// cách 2 (an toàn khi muốn giữ vài field): lấy managed entity rồi set
+			// DanhMuc db = em.find(DanhMuc.class, c.getMaDM());
+			// if (db == null) { tx.rollback(); return false; }
+			// db.setTenDM(c.getTenDM());
+			// db.setMoTa(c.getMoTa());
+			// db.setTrangThai(c.getTrangThai());
+			// db.setHinhAnh(c.getHinhAnh());
+			// em.flush();
+
 			tx.commit();
 			return true;
 		} catch (Exception ex) {
@@ -166,15 +171,17 @@ public class DanhMucDAO {
 	}
 
 	public boolean delete(Integer id) {
-		EntityManager em = JPAUtil.getEntityManager();
+		if (id == null)
+			return false;
+		EntityManager em = getEntityManager();
 		EntityTransaction tx = em.getTransaction();
 		try {
 			tx.begin();
-			DanhMuc d = em.find(DanhMuc.class, id);
-			if (d != null)
-				em.remove(d);
+			DanhMuc c = em.find(DanhMuc.class, id);
+			if (c != null)
+				em.remove(c);
 			tx.commit();
-			return d != null;
+			return true;
 		} catch (Exception ex) {
 			if (tx.isActive())
 				tx.rollback();

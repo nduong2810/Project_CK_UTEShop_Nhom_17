@@ -1,82 +1,147 @@
 package com.uteshop.controller.admin;
 
 import com.uteshop.dao.SanPhamDAO;
-import com.uteshop.entity.SanPham;
 import com.uteshop.entity.DanhMuc;
+import com.uteshop.entity.SanPham;
 
 import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.MultipartConfig;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
+
 import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @WebServlet("/admin/products/edit")
+@MultipartConfig(fileSizeThreshold = 1 * 1024 * 1024, // 1MB
+		maxFileSize = 10L * 1024 * 1024, // 10MB
+		maxRequestSize = 20L * 1024 * 1024 // 20MB
+)
 public class AdminProductEditController extends HttpServlet {
 
 	private final SanPhamDAO spDAO = new SanPhamDAO();
 
+	/* ============================ GET ============================ */
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
 		Integer id = tryParseInt(req.getParameter("id"));
-		if (id == null) {
-			resp.sendRedirect(req.getContextPath() + "/admin/products");
-			return;
-		}
-
-		SanPham sp = spDAO.findById(id);
-		if (sp == null) {
-			// Không thấy sản phẩm -> quay lại danh sách kèm báo lỗi
+		if (id == null)
+			id = tryParseInt(req.getParameter("maSP")); // chấp nhận cả ?maSP=
+		SanPham sp = (id == null) ? new SanPham() : spDAO.findById(id);
+		if (id != null && sp == null) {
 			resp.sendRedirect(req.getContextPath() + "/admin/products?msg=notfound");
 			return;
 		}
 
-		// Danh mục để fill select
 		List<DanhMuc> categories = spDAO.listCategories();
-
 		req.setAttribute("p", sp);
 		req.setAttribute("categories", categories);
 		req.getRequestDispatcher("/WEB-INF/views/admin/product-edit.jsp").forward(req, resp);
 	}
 
+	/* ============================ POST =========================== */
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
 		req.setCharacterEncoding("UTF-8");
 
 		Integer maSP = tryParseInt(req.getParameter("maSP"));
-		if (maSP == null) {
-			resp.sendRedirect(req.getContextPath() + "/admin/products?msg=invalid");
-			return;
-		}
-
-		// Lấy sp hiện có
-		SanPham sp = spDAO.findById(maSP);
-		if (sp == null) {
+		SanPham sp = (maSP == null) ? new SanPham() : spDAO.findById(maSP);
+		if (maSP != null && sp == null) {
 			resp.sendRedirect(req.getContextPath() + "/admin/products?msg=notfound");
 			return;
 		}
 
-		// Map field từ form
+		// Map các trường text
 		sp.setTenSP(nvl(req.getParameter("tenSP")));
+		sp.setMoTa(trimToNull(req.getParameter("moTa")));
 		sp.setDonGia(parseDecimal(req.getParameter("donGia")));
 		sp.setSoLuongTon(parseInt(req.getParameter("soLuongTon"), 0));
-		sp.setHinhAnh(trimToNull(req.getParameter("hinhAnh")));
-		sp.setMoTa(trimToNull(req.getParameter("moTa")));
-		sp.setTrangThai("on".equals(req.getParameter("trangThai"))); // checkbox
+		sp.setTrangThai("on".equals(req.getParameter("trangThai")));
 
 		Integer catId = tryParseInt(req.getParameter("maDM"));
-		if (catId != null) {
-			sp.setMaDM(catId); // dùng field ID (JDBC-friendly). Nếu entity của bạn dùng @ManyToOne, hãy thay
-								// đổi tương ứng.
+		if (catId != null)
+			sp.setMaDM(catId);
+
+		// Ảnh: ưu tiên file upload; nếu không có file thì dùng ô text; nếu cả hai rỗng
+		// → giữ ảnh cũ
+		String uploadedName = saveUploadedImage(req.getPart("fileImage")); // chỉ tên file, hoặc null
+		if (uploadedName != null) {
+			sp.setHinhAnh(uploadedName);
+		} else {
+			String typed = trimToNull(req.getParameter("hinhAnh"));
+			if (typed != null)
+				sp.setHinhAnh(Path.of(typed).getFileName().toString());
+			// nếu typed == null → KHÔNG đụng vào sp.hinhAnh để DAO không ghi đè
 		}
 
-		boolean ok = spDAO.update(sp);
+		boolean ok;
+		if (maSP == null) {
+			// tạo mới
+			ok = spDAO.insert(sp);
+		} else {
+			// cập nhật (DAO.update chỉ set HinhAnh khi có giá trị mới)
+			ok = spDAO.update(sp);
+		}
+
 		String qs = ok ? "msg=saved" : "msg=error";
-		resp.sendRedirect(req.getContextPath() + "/admin/products/edit?id=" + maSP + "&" + qs);
+		if (maSP == null && ok) {
+			// vừa tạo xong → quay về list
+			resp.sendRedirect(req.getContextPath() + "/admin/products?" + qs);
+		} else {
+			// sửa → ở lại trang sửa
+			Integer backId = (sp.getMaSP() != null) ? sp.getMaSP() : maSP;
+			resp.sendRedirect(req.getContextPath() + "/admin/products/edit?id=" + backId + "&" + qs);
+		}
 	}
 
-	/* ===== Helpers ===== */
+	/* ======================== IMAGE HELPER ======================= */
+	/**
+	 * Lưu ảnh vào /assets/img (webapp) và trả về TÊN FILE (không path). Trả về null
+	 * nếu không có file.
+	 */
+	private String saveUploadedImage(Part part) throws IOException, ServletException {
+		if (part == null || part.getSize() == 0)
+			return null;
+
+		String ct = part.getContentType();
+		if (ct == null || !ct.startsWith("image/")) {
+			throw new ServletException("File tải lên không phải ảnh hợp lệ.");
+		}
+
+		// Tạo tên file an toàn + timestamp
+		String submitted = part.getSubmittedFileName();
+		String base = (submitted == null ? "image" : submitted.replace("\\", "/"));
+		base = base.substring(base.lastIndexOf('/') + 1);
+		base = base.replaceAll("[^a-zA-Z0-9._-]", "_");
+		int dot = base.lastIndexOf('.');
+		String ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+		String safeName = (dot > 0) ? base.substring(0, dot) + "_" + ts + base.substring(dot) : base + "_" + ts;
+
+		String uploadDir = getServletContext().getRealPath("/assets/img");
+		if (uploadDir == null) {
+			// nếu WAR không exploded → nên chuyển qua thư mục ngoài + static mapping
+			throw new ServletException(
+					"Không xác định được thư mục /assets/img. Bật exploded deployment hoặc cấu hình thư mục upload ngoài.");
+		}
+
+		Files.createDirectories(Path.of(uploadDir));
+		try (InputStream is = part.getInputStream()) {
+			Files.copy(is, Path.of(uploadDir, safeName), StandardCopyOption.REPLACE_EXISTING);
+		}
+		return safeName; // chỉ tên file để ghép với /assets/img khi render
+	}
+
+	/* ============================ Utils ========================== */
 	private Integer tryParseInt(String s) {
 		try {
 			return (s == null || s.trim().isEmpty()) ? null : Integer.valueOf(s.trim());
@@ -93,11 +158,11 @@ public class AdminProductEditController extends HttpServlet {
 		}
 	}
 
-	private java.math.BigDecimal parseDecimal(String s) {
+	private BigDecimal parseDecimal(String s) {
 		try {
-			return (s == null || s.trim().isEmpty()) ? java.math.BigDecimal.ZERO : new java.math.BigDecimal(s.trim());
+			return (s == null || s.trim().isEmpty()) ? BigDecimal.ZERO : new BigDecimal(s.trim());
 		} catch (Exception e) {
-			return java.math.BigDecimal.ZERO;
+			return BigDecimal.ZERO;
 		}
 	}
 

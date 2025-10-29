@@ -30,7 +30,7 @@ public class AdminCategoriesController extends HttpServlet {
 		else if ("inactive".equalsIgnoreCase(status))
 			activeInt = 0;
 
-		int total = catDAO.countAll(q, activeInt);
+		int total = catDAO.countAll(q);
 		int totalPages = Math.max(1, (int) Math.ceil(total * 1.0 / pageSize));
 		page = Math.min(Math.max(page, 1), totalPages);
 
