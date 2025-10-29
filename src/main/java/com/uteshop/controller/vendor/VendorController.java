@@ -750,21 +750,29 @@ public class VendorController extends HttpServlet {
             int totalPages = totalOrders > 0 ? (int) Math.ceil((double) totalOrders / pageSize) : 1;
             
             // 5. Lấy thống kê đơn hàng theo trạng thái
-            java.util.Map<DonHang.TrangThaiDonHang, Long> orderStats = null;
+            java.util.Map<DonHang.TrangThaiDonHang, Long> orderStatsEnum = null;
             try {
-                orderStats = donHangDAO.getOrderStatsByStore(store.getMaCH());
-                if (orderStats == null) {
-                    orderStats = new java.util.HashMap<>();
+                orderStatsEnum = donHangDAO.getOrderStatsByStore(store.getMaCH());
+                if (orderStatsEnum == null) {
+                    orderStatsEnum = new java.util.HashMap<>();
                 }
                 System.out.println("✅ Loaded order stats");
             } catch (Exception e) {
                 System.err.println("❌ Error loading order stats: " + e.getMessage());
                 e.printStackTrace();
-                orderStats = new java.util.HashMap<>();
+                orderStatsEnum = new java.util.HashMap<>();
                 // Initialize with zeros
                 for (DonHang.TrangThaiDonHang status : DonHang.TrangThaiDonHang.values()) {
-                    orderStats.put(status, 0L);
+                    orderStatsEnum.put(status, 0L);
                 }
+            }
+            
+            // Chuyển đổi Map<Enum, Long> sang Map<String, Long> để JSP có thể truy cập
+            java.util.Map<String, Long> orderStats = new java.util.HashMap<>();
+            for (java.util.Map.Entry<DonHang.TrangThaiDonHang, Long> entry : orderStatsEnum.entrySet()) {
+                String statusKey = entry.getKey().name(); // CHO_XAC_NHAN, DA_XAC_NHAN, etc.
+                orderStats.put(statusKey, entry.getValue());
+                System.out.println("📊 Status " + statusKey + ": " + entry.getValue());
             }
             
             // 6. Đặt attributes
@@ -926,7 +934,15 @@ public class VendorController extends HttpServlet {
             // Thống kê đơn hàng
             long newOrdersCount = donHangDAO.countNewOrders(store.getMaCH());
             long totalOrders = donHangDAO.countByStoreAndStatus(store.getMaCH(), null);
-            java.util.Map<DonHang.TrangThaiDonHang, Long> orderStats = donHangDAO.getOrderStatsByStore(store.getMaCH());
+            java.util.Map<DonHang.TrangThaiDonHang, Long> orderStatsEnum = donHangDAO.getOrderStatsByStore(store.getMaCH());
+            
+            // Chuyển đổi orderStats từ Enum key sang String key cho JSP
+            java.util.Map<String, Long> orderStats = new java.util.HashMap<>();
+            if (orderStatsEnum != null) {
+                for (java.util.Map.Entry<DonHang.TrangThaiDonHang, Long> entry : orderStatsEnum.entrySet()) {
+                    orderStats.put(entry.getKey().name(), entry.getValue());
+                }
+            }
             
             // Thống kê sản phẩm
             int totalProducts = sanPhamDAO.countByCuaHangId(store.getMaCH());
