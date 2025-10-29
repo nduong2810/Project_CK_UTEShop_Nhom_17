@@ -1,49 +1,78 @@
 package com.uteshop.controller.shipper;
 
+import com.uteshop.dao.PhanCongGiaoHangDAO;
 import com.uteshop.entity.NguoiDung;
-
+import com.uteshop.entity.PhanCongGiaoHang;
+import com.uteshop.util.JPAUtil; // Đã thêm import JPAUtil để minh họa việc quản lý EM
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
+/**
+ * Servlet Controller chính xử lý tất cả các yêu cầu liên quan đến Shipper (Nhân viên giao hàng).
+ * Bao gồm: Dashboard (Thống kê), Quản lý đơn hàng cần giao, và Lịch sử giao hàng.
+ * URL Patterns: /shipper/dashboard, /shipper/orders, /shipper/history
+ */
 @WebServlet(urlPatterns = {"/shipper/dashboard", "/shipper/orders", "/shipper/history"})
 public class ShipperController extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    
+    // Khởi tạo DAO (Giả định đã sửa đổi để sử dụng JPAUtil)
+    private PhanCongGiaoHangDAO orderRepo = new PhanCongGiaoHangDAO();
+    
+    // Khởi tạo EntityManagerFactory khi ứng dụng khởi động (Chỉ dùng khi chưa có ContextListener)
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        try {
+            // Đảm bảo EntityManagerFactory được khởi tạo khi Servlet bắt đầu
+            JPAUtil.getEntityManager(); 
+            log("JPA EntityManagerFactory is ready.");
+        } catch (Exception e) {
+            log("❌ Lỗi khởi tạo JPA trong ShipperController:", e);
+            // Nếu dòng này xuất hiện trong log, lỗi nằm ở cấu hình persistence.xml hoặc kết nối DB
+            throw new UnavailableException("Cơ sở dữ liệu không thể kết nối hoặc JPA không khởi tạo.");
+        }
+    }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        // Kiểm tra đăng nhập
+        // --- 1. KIỂM TRA QUYỀN VÀ ĐĂNG NHẬP ---
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user") == null) {
             response.sendRedirect(request.getContextPath() + "/auth/login");
             return;
         }
-        
         NguoiDung user = (NguoiDung) session.getAttribute("user");
         
-        // Kiểm tra quyền SHIPPER
+        // Kiểm tra Vai trò (chỉ SHIPPER và ADMIN được phép truy cập)
         if (user.getVaiTro() != NguoiDung.VaiTro.SHIPPER && user.getVaiTro() != NguoiDung.VaiTro.ADMIN) {
-            response.sendRedirect(request.getContextPath() + "/guest/home");
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "Bạn không có quyền truy cập trang này.");
             return;
         }
         
+        // Lấy MaND của shipper để truy vấn dữ liệu
+        Integer shipperMaND = user.getMaND();
+        
         String path = request.getServletPath();
         
+        // --- 2. XỬ LÝ ĐIỀU HƯỚNG THEO PATH ---
         switch (path) {
-            case "/shipper/dashboard":
-                showDashboard(request, response, user);
-                break;
             case "/shipper/orders":
-                showOrders(request, response, user);
+                showOrders(request, response, shipperMaND); // Danh sách đơn hàng cần giao
                 break;
             case "/shipper/history":
-                showHistory(request, response, user);
+                showHistory(request, response, shipperMaND); // Lịch sử đã giao/hủy
                 break;
+            case "/shipper/dashboard":
             default:
-                showDashboard(request, response, user);
+                showDashboard(request, response, shipperMaND); // Thống kê + Dashboard mặc định
                 break;
         }
     }
@@ -51,41 +80,120 @@ public class ShipperController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        doGet(request, response);
-    }
-    
-    private void showDashboard(HttpServletRequest request, HttpServletResponse response, NguoiDung user)
-            throws ServletException, IOException {
-        
-        try {
-            // Lấy danh sách đơn hàng cần giao
-            // TODO: Implement các phương thức lấy đơn hàng trong DAO
-            
-            request.setAttribute("user", user);
-            request.setAttribute("pageTitle", "Shipper Dashboard");
-            
-            // Tạm thời redirect về trang home với thông báo
-            response.sendRedirect(request.getContextPath() + "/guest/home");
-            
-            // TODO: Tạo view shipper/dashboard.jsp
-            // RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/shipper/dashboard.jsp");
-            // dispatcher.forward(request, response);
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.sendRedirect(request.getContextPath() + "/guest/home");
+        // Xử lý tất cả các thao tác cập nhật (POST)
+        String action = request.getParameter("action");
+        if ("updateStatus".equals(action)) {
+            handleUpdateStatus(request, response);
+        } else {
+            // Nếu không có action POST hợp lệ, redirect lại trang hiển thị
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Yêu cầu POST không hợp lệ.");
         }
     }
     
-    private void showOrders(HttpServletRequest request, HttpServletResponse response, NguoiDung user)
+    // --- PHƯƠNG THỨC XỬ LÝ CHỨC NĂNG ---
+
+    private void showDashboard(HttpServletRequest request, HttpServletResponse response, Integer shipperMaND)
             throws ServletException, IOException {
-        // TODO: Implement hiển thị danh sách đơn hàng cần giao
-        response.sendRedirect(request.getContextPath() + "/guest/home");
+        try {
+            // Tích hợp logic Thống kê vào Dashboard
+            Long totalAssigned = orderRepo.countOrdersByShipperAndStatus(shipperMaND, "Tất cả");
+            Long completed = orderRepo.countOrdersByShipperAndStatus(shipperMaND, "HOAN_THANH");
+            Long inProgress = orderRepo.countOrdersByShipperAndStatus(shipperMaND, "DANG_GIAO");
+            
+            request.setAttribute("totalAssigned", totalAssigned);
+            request.setAttribute("completed", completed);
+            request.setAttribute("inProgress", inProgress);
+            request.setAttribute("viewTitle", "Shipper Dashboard & Thống kê");
+            
+            // Forward tới JSP của Dashboard/Thống kê
+            request.getRequestDispatcher("/WEB-INF/views/shipper/order-statistics.jsp").forward(request, response);
+            
+        } catch (Exception e) {
+            log("Lỗi tải Dashboard Shipper:", e);
+            request.setAttribute("error", "Lỗi tải dữ liệu Dashboard.");
+            // Chuyển hướng tới trang lỗi chung (hoặc trang chủ)
+            response.sendRedirect(request.getContextPath() + "/guest/home?error=Lỗi tải dữ liệu Dashboard."); 
+        }
     }
     
-    private void showHistory(HttpServletRequest request, HttpServletResponse response, NguoiDung user)
+    private void showOrders(HttpServletRequest request, HttpServletResponse response, Integer shipperMaND)
             throws ServletException, IOException {
-        // TODO: Implement hiển thị lịch sử giao hàng
-        response.sendRedirect(request.getContextPath() + "/guest/home");
+        try {
+            // 1. Lấy tất cả đơn hàng được phân công
+            List<PhanCongGiaoHang> assignedOrders = orderRepo.findAssignedOrdersByShipperId(shipperMaND);
+            
+            // 2. Lọc ra các đơn hàng đang giao (chưa hoàn thành/trả hàng)
+            List<PhanCongGiaoHang> pendingOrders = assignedOrders.stream()
+                    .filter(pc -> !("HOAN_THANH".equals(pc.getTrangThai()) || "TRA_HANG".equals(pc.getTrangThai())))
+                    .collect(Collectors.toList());
+            
+            request.setAttribute("pendingOrders", pendingOrders);
+            request.setAttribute("viewTitle", "Danh Sách Đơn Hàng Cần Giao");
+            
+            // Forward tới view danh sách đơn hàng
+            request.getRequestDispatcher("/WEB-INF/views/shipper/assigned-orders.jsp").forward(request, response);
+            
+        } catch (Exception e) {
+            log("Lỗi tải danh sách đơn hàng:", e);
+            response.sendRedirect(request.getContextPath() + "/shipper/dashboard?error=Lỗi tải danh sách đơn hàng."); 
+        }
+    }
+    
+    private void showHistory(HttpServletRequest request, HttpServletResponse response, Integer shipperMaND)
+            throws ServletException, IOException {
+        try {
+            // 1. Lấy tất cả đơn hàng được phân công
+            List<PhanCongGiaoHang> assignedOrders = orderRepo.findAssignedOrdersByShipperId(shipperMaND);
+            
+            // 2. Lọc ra các đơn hàng đã HOAN_THANH hoặc TRA_HANG
+            List<PhanCongGiaoHang> historyOrders = assignedOrders.stream()
+                    .filter(pc -> "HOAN_THANH".equals(pc.getTrangThai()) || "TRA_HANG".equals(pc.getTrangThai()))
+                    .collect(Collectors.toList());
+            
+            request.setAttribute("historyOrders", historyOrders);
+            request.setAttribute("viewTitle", "Lịch Sử Giao Hàng");
+            
+            // Forward tới view lịch sử giao hàng
+            request.getRequestDispatcher("/WEB-INF/views/shipper/history.jsp").forward(request, response);
+            
+        } catch (Exception e) {
+            log("Lỗi tải lịch sử giao hàng:", e);
+            response.sendRedirect(request.getContextPath() + "/shipper/dashboard?error=Lỗi tải lịch sử giao hàng.");
+        }
+    }
+
+    private void handleUpdateStatus(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        
+        Integer maPC = null;
+        String newStatus = null;
+        
+        try {
+            maPC = Integer.parseInt(request.getParameter("maPC"));
+            newStatus = request.getParameter("newStatus");
+            
+            LocalDateTime ngayHoanThanh = null;
+            if ("HOAN_THANH".equals(newStatus) || "TRA_HANG".equals(newStatus)) {
+                // Gán ngày hoàn thành/trả hàng nếu trạng thái là cuối cùng
+                ngayHoanThanh = LocalDateTime.now();
+            }
+            
+            orderRepo.updateDeliveryStatus(maPC, newStatus, ngayHoanThanh);
+            
+            // Redirect về trang Orders sau khi cập nhật thành công
+            response.sendRedirect(request.getContextPath() + "/shipper/orders?message=Cập nhật trạng thái đơn hàng thành công!");
+            
+        } catch (NumberFormatException e) {
+            // Lỗi khi chuyển MaPC sang số
+            log("Lỗi định dạng MaPC khi cập nhật trạng thái Shipper", e);
+            response.sendRedirect(request.getContextPath() + "/shipper/orders?error=Dữ liệu đầu vào không hợp lệ (Mã Phân công).");
+        } catch (RuntimeException e) {
+            // Lỗi từ DAO (ví dụ: lỗi Transaction/DB)
+            log("Lỗi CSDL khi cập nhật trạng thái đơn hàng MaPC=" + maPC, e);
+            response.sendRedirect(request.getContextPath() + "/shipper/orders?error=Cập nhật thất bại. Vui lòng thử lại. Lỗi: " + e.getMessage());
+        } catch (Exception e) {
+            log("Lỗi không xác định khi cập nhật trạng thái Shipper", e);
+            response.sendRedirect(request.getContextPath() + "/shipper/orders?error=Cập nhật thất bại. Lỗi không xác định.");
+        }
     }
 }
