@@ -1262,55 +1262,6 @@
         }
         
         // Cập nhật tổng đơn hàng
-                    originalTotal: storeTotal,
-                    discountAmount: discountAmount,
-                    discountCode: discountCode
-                });
-                
-                // Đóng panel
-                toggleDiscountPanel(storeId);
-                
-                // Cập nhật tổng đơn hàng
-                updateOrderTotal();
-                
-            } else {
-                // Bỏ áp dụng mã
-                removeStoreDiscount(storeId);
-            }
-        }
-        
-        // Bỏ áp dụng mã giảm giá của cửa hàng
-        function removeStoreDiscount(storeId) {
-            
-            // ✅ SỬA LỖI: Tính lại và khôi phục giá gốc cho "Tổng cộng"
-            const storeGroup = document.querySelector('.store-group[data-store-id="' + storeId + '"]');
-            const productItems = storeGroup.querySelectorAll('.product-item');
-            let storeTotal = 0;
-            productItems.forEach(item => {
-                const priceText = item.querySelector('.product-price').textContent;
-                const price = parseFloat(priceText.replace(/[^\d]/g, ''));
-                storeTotal += price;
-            });
-            
-            const storeSubtotalEl = document.getElementById('storeSubtotal-' + storeId);
-            if (storeSubtotalEl) {
-                storeSubtotalEl.textContent = storeTotal.toLocaleString('vi-VN') + '₫';
-            }
-            
-            // Ẩn badge
-            document.getElementById('appliedBadge-' + storeId).style.display = 'none';
-            
-            // Xóa hidden input
-            document.getElementById('selectedDiscountCode-' + storeId).value = '';
-            document.getElementById('selectedDiscountAmount-' + storeId).value = '0';
-            
-            console.log('✅ Removed discount for store ' + storeId);
-            
-            // Cập nhật tổng đơn hàng
-            updateOrderTotal();
-        }
-        
-        // Cập nhật tổng đơn hàng
         function updateOrderTotal() {
             // --- 1. TÍNH TOÁN ---
             
