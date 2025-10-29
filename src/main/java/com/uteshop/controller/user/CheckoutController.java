@@ -85,16 +85,65 @@ public class CheckoutController extends HttpServlet {
         
         System.out.println("[DEBUG] showCheckoutPage - Start for userId: " + user.getMaND());
         
-        // Lấy giỏ hàng
-        List<ChiTietGioHang> cartItems = gioHangDAO.getCartItems(user.getMaND());
+        // Lấy danh sách sản phẩm được chọn từ request
+        String[] selectedItemIds = request.getParameterValues("selectedItems");
         
-        System.out.println("[DEBUG] showCheckoutPage - Cart items count: " + (cartItems != null ? cartItems.size() : 0));
+        System.out.println("[DEBUG] showCheckoutPage - Selected items: " + (selectedItemIds != null ? Arrays.toString(selectedItemIds) : "null"));
         
-        if (cartItems == null || cartItems.isEmpty()) {
+        // Lấy toàn bộ giỏ hàng
+        List<ChiTietGioHang> allCartItems = gioHangDAO.getCartItems(user.getMaND());
+        
+        if (allCartItems == null || allCartItems.isEmpty()) {
             System.out.println("[DEBUG] showCheckoutPage - Cart is empty, redirecting to cart");
             response.sendRedirect(request.getContextPath() + "/user/cart");
             return;
         }
+        
+        // Lọc chỉ lấy các sản phẩm được chọn
+        List<ChiTietGioHang> cartItems = new ArrayList<>();
+        
+        if (selectedItemIds != null && selectedItemIds.length > 0) {
+            // Chuyển selectedItemIds thành Set để tra cứu nhanh
+            Set<Integer> selectedIds = new HashSet<>();
+            for (String idStr : selectedItemIds) {
+                try {
+                    selectedIds.add(Integer.parseInt(idStr));
+                } catch (NumberFormatException e) {
+                    System.out.println("[DEBUG] Invalid product ID: " + idStr);
+                }
+            }
+            
+            // Lọc các sản phẩm được chọn
+            for (ChiTietGioHang item : allCartItems) {
+                if (selectedIds.contains(item.getSanPham().getMaSP())) {
+                    cartItems.add(item);
+                }
+            }
+            
+            System.out.println("[DEBUG] showCheckoutPage - Filtered cart items count: " + cartItems.size());
+        } else {
+            // Nếu không có selectedItems, lấy toàn bộ giỏ hàng (fallback)
+            cartItems = allCartItems;
+            System.out.println("[DEBUG] showCheckoutPage - No selection, using all cart items: " + cartItems.size());
+        }
+        
+        if (cartItems.isEmpty()) {
+            System.out.println("[DEBUG] showCheckoutPage - No items to checkout, redirecting to cart");
+            request.setAttribute("error", "Vui lòng chọn ít nhất một sản phẩm để thanh toán!");
+            response.sendRedirect(request.getContextPath() + "/user/cart");
+            return;
+        }
+        
+        // Lưu danh sách sản phẩm được chọn vào session để sử dụng cho các request sau
+        HttpSession session = request.getSession();
+        
+        // Lưu danh sách ID sản phẩm được chọn
+        List<Integer> selectedProductIds = cartItems.stream()
+            .map(item -> item.getSanPham().getMaSP())
+            .collect(Collectors.toList());
+        session.setAttribute("selectedProductIds", selectedProductIds);
+        
+        System.out.println("[DEBUG] Saved selected product IDs to session: " + selectedProductIds);
         
         // Nhóm sản phẩm theo cửa hàng
         Map<CuaHang, List<ChiTietGioHang>> itemsByStore = groupItemsByStore(cartItems);
@@ -121,7 +170,6 @@ public class CheckoutController extends HttpServlet {
         BigDecimal totalAmount = subtotal.add(shippingFee);
         
         // Lấy thông tin discount từ session (nếu có)
-        HttpSession session = request.getSession();
         MaGiamGia appliedDiscount = (MaGiamGia) session.getAttribute("appliedDiscount");
         BigDecimal discountAmount = (BigDecimal) session.getAttribute("discountAmount");
         
@@ -175,8 +223,26 @@ public class CheckoutController extends HttpServlet {
             return;
         }
         
-        // Lấy giỏ hàng và tính tổng
-        List<ChiTietGioHang> cartItems = gioHangDAO.getCartItems(user.getMaND());
+        // Lấy danh sách sản phẩm được chọn từ session
+        HttpSession session = request.getSession();
+        @SuppressWarnings("unchecked")
+        List<Integer> selectedProductIds = (List<Integer>) session.getAttribute("selectedProductIds");
+        
+        // Lấy giỏ hàng và lọc theo sản phẩm được chọn
+        List<ChiTietGioHang> allCartItems = gioHangDAO.getCartItems(user.getMaND());
+        List<ChiTietGioHang> cartItems = new ArrayList<>();
+        
+        if (selectedProductIds != null && !selectedProductIds.isEmpty()) {
+            Set<Integer> selectedIds = new HashSet<>(selectedProductIds);
+            for (ChiTietGioHang item : allCartItems) {
+                if (selectedIds.contains(item.getSanPham().getMaSP())) {
+                    cartItems.add(item);
+                }
+            }
+        } else {
+            cartItems = allCartItems;
+        }
+        
         BigDecimal subtotal = cartItems.stream()
             .map(ChiTietGioHang::getThanhTien)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -198,7 +264,6 @@ public class CheckoutController extends HttpServlet {
         BigDecimal discountAmount = calculateDiscountAmount(discount, subtotal);
         
         // Lưu vào session
-        HttpSession session = request.getSession();
         session.setAttribute("appliedDiscount", discount);
         session.setAttribute("discountAmount", discountAmount);
         
@@ -238,8 +303,27 @@ public class CheckoutController extends HttpServlet {
             return;
         }
         
-        // Lấy giỏ hàng
-        List<ChiTietGioHang> cartItems = gioHangDAO.getCartItems(user.getMaND());
+        // Lấy danh sách sản phẩm được chọn từ session
+        HttpSession session = request.getSession();
+        @SuppressWarnings("unchecked")
+        List<Integer> selectedProductIds = (List<Integer>) session.getAttribute("selectedProductIds");
+        
+        // Lấy giỏ hàng và lọc theo sản phẩm được chọn
+        List<ChiTietGioHang> allCartItems = gioHangDAO.getCartItems(user.getMaND());
+        List<ChiTietGioHang> cartItems = new ArrayList<>();
+        
+        if (selectedProductIds != null && !selectedProductIds.isEmpty()) {
+            Set<Integer> selectedIds = new HashSet<>(selectedProductIds);
+            for (ChiTietGioHang item : allCartItems) {
+                if (selectedIds.contains(item.getSanPham().getMaSP())) {
+                    cartItems.add(item);
+                }
+            }
+            System.out.println("[DEBUG] placeOrder - Processing " + cartItems.size() + " selected items out of " + allCartItems.size() + " total items");
+        } else {
+            cartItems = allCartItems;
+            System.out.println("[DEBUG] placeOrder - No selection found, using all " + cartItems.size() + " items");
+        }
         
         if (cartItems == null || cartItems.isEmpty()) {
             response.sendRedirect(request.getContextPath() + "/user/cart");
@@ -249,7 +333,6 @@ public class CheckoutController extends HttpServlet {
         // Nhóm theo cửa hàng và tạo đơn hàng cho mỗi cửa hàng
         Map<CuaHang, List<ChiTietGioHang>> itemsByStore = groupItemsByStore(cartItems);
         
-        HttpSession session = request.getSession();
         MaGiamGia appliedDiscount = (MaGiamGia) session.getAttribute("appliedDiscount");
         BigDecimal totalDiscountAmount = (BigDecimal) session.getAttribute("discountAmount");
         
