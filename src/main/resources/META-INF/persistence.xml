@@ -23,6 +23,8 @@
         <class>com.uteshop.entity.DanhGiaSanPham</class>
         <class>com.uteshop.entity.SanPhamDaXem</class>
         <class>com.uteshop.entity.SanPhamYeuThich</class>
+        <class>com.uteshop.entity.HoiThoai</class>
+        <class>com.uteshop.entity.TinNhan</class>
         
         <properties>
             <!-- Database connection properties (used by HikariCP) -->
