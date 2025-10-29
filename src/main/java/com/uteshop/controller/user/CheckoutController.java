@@ -16,7 +16,7 @@ import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@WebServlet(urlPatterns = {"/user/checkout", "/user/checkout/apply-discount", "/user/checkout/place-order"})
+@WebServlet(urlPatterns = {"/user/checkout", "/user/checkout/apply-discount", "/user/checkout/place-order", "/user/checkout/payment-banking", "/user/checkout/confirm-payment"})
 public class CheckoutController extends HttpServlet {
     private static final long serialVersionUID = 1L;
     
@@ -26,6 +26,7 @@ public class CheckoutController extends HttpServlet {
     private DonHangDAO donHangDAO = new DonHangDAO();
     private CuaHangDAO cuaHangDAO = new CuaHangDAO();
     private SanPhamDAO sanPhamDAO = new SanPhamDAO();
+    private DonViVanChuyenDAO donViVanChuyenDAO = new DonViVanChuyenDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -45,6 +46,8 @@ public class CheckoutController extends HttpServlet {
         
         if (path.equals("/user/checkout")) {
             showCheckoutPage(request, response, user);
+        } else if (path.equals("/user/checkout/payment-banking")) {
+            showPaymentBankingPage(request, response, user);
         }
     }
     
@@ -72,6 +75,8 @@ public class CheckoutController extends HttpServlet {
                 applyDiscount(request, response, user);
             } else if (path.equals("/user/checkout/place-order")) {
                 placeOrder(request, response, user);
+            } else if (path.equals("/user/checkout/confirm-payment")) {
+                confirmPayment(request, response, user);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -161,12 +166,22 @@ public class CheckoutController extends HttpServlet {
         List<DiaChiGiaoHang> addresses = diaChiDAO.getAddressesByUser(user.getMaND());
         DiaChiGiaoHang defaultAddress = diaChiDAO.getDefaultAddress(user.getMaND());
         
+        // Lấy danh sách đơn vị vận chuyển
+        List<DonViVanChuyen> shippingProviders = donViVanChuyenDAO.findAll();
+        DonViVanChuyen defaultShipping = null;
+        if (shippingProviders != null && !shippingProviders.isEmpty()) {
+            defaultShipping = shippingProviders.get(0); // Mặc định chọn đơn vị đầu tiên (phí thấp nhất)
+        }
+        
+        System.out.println("[DEBUG] Loaded shipping providers: " + (shippingProviders != null ? shippingProviders.size() : 0));
+        
         // Tính tổng tiền
         BigDecimal subtotal = cartItems.stream()
             .map(ChiTietGioHang::getThanhTien)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         
-        BigDecimal shippingFee = BigDecimal.valueOf(30000); // Phí ship cố định 30k
+        // Sử dụng phí vận chuyển của đơn vị mặc định hoặc 30k
+        BigDecimal shippingFee = (defaultShipping != null) ? defaultShipping.getPhiVanChuyen() : BigDecimal.valueOf(30000);
         BigDecimal totalAmount = subtotal.add(shippingFee);
         
         // Lấy thông tin discount từ session (nếu có)
@@ -182,6 +197,8 @@ public class CheckoutController extends HttpServlet {
         request.setAttribute("storeDiscounts", storeDiscounts);
         request.setAttribute("addresses", addresses);
         request.setAttribute("defaultAddress", defaultAddress);
+        request.setAttribute("shippingProviders", shippingProviders);
+        request.setAttribute("defaultShipping", defaultShipping);
         request.setAttribute("subtotal", subtotal);
         request.setAttribute("shippingFee", shippingFee);
         request.setAttribute("totalAmount", totalAmount);
@@ -455,9 +472,19 @@ public class CheckoutController extends HttpServlet {
         session.removeAttribute("appliedDiscount");
         session.removeAttribute("discountAmount");
         
-        // Redirect đến trang xác nhận
+        // ✅ FIX: Nếu thanh toán online, chuyển đến trang banking để xác nhận
         if (!orderIds.isEmpty()) {
-            response.sendRedirect(request.getContextPath() + "/user/orders?success=1");
+            if ("BANK_TRANSFER".equals(paymentMethod) || "MOMO".equals(paymentMethod)) {
+                // Lưu thông tin vào session để hiển thị trang thanh toán
+                session.setAttribute("pendingOrderIds", orderIds);
+                session.setAttribute("paymentMethod", paymentMethod);
+                
+                // Redirect đến trang thanh toán banking
+                response.sendRedirect(request.getContextPath() + "/user/checkout/payment-banking");
+            } else {
+                // COD - chuyển thẳng đến trang đơn hàng
+                response.sendRedirect(request.getContextPath() + "/user/orders?success=1");
+            }
         } else {
             request.setAttribute("error", "Không thể tạo đơn hàng. Vui lòng thử lại!");
             showCheckoutPage(request, response, user);
@@ -505,5 +532,94 @@ public class CheckoutController extends HttpServlet {
         }
         
         return discountAmount;
+    }
+    
+    /**
+     * Hiển thị trang thanh toán banking với QR code và thông tin chuyển khoản
+     */
+    private void showPaymentBankingPage(HttpServletRequest request, HttpServletResponse response, NguoiDung user)
+            throws ServletException, IOException {
+        
+        HttpSession session = request.getSession();
+        
+        @SuppressWarnings("unchecked")
+        List<Integer> orderIds = (List<Integer>) session.getAttribute("pendingOrderIds");
+        String paymentMethod = (String) session.getAttribute("paymentMethod");
+        
+        if (orderIds == null || orderIds.isEmpty() || paymentMethod == null) {
+            response.sendRedirect(request.getContextPath() + "/user/orders");
+            return;
+        }
+        
+        System.out.println("[DEBUG] showPaymentBankingPage - orderIds: " + orderIds + ", paymentMethod: " + paymentMethod);
+        
+        // Lấy thông tin đơn hàng đầu tiên để lấy orderId
+        Integer firstOrderId = orderIds.get(0);
+        DonHang firstOrder = donHangDAO.findById(firstOrderId);
+        
+        if (firstOrder == null) {
+            response.sendRedirect(request.getContextPath() + "/user/orders");
+            return;
+        }
+        
+        // Nhóm đơn hàng theo cửa hàng và tính tổng tiền mỗi cửa hàng
+        Map<CuaHang, BigDecimal> storePaymentInfo = new LinkedHashMap<>();
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        
+        for (Integer orderId : orderIds) {
+            DonHang order = donHangDAO.findById(orderId);
+            if (order != null) {
+                // Lấy cửa hàng từ sản phẩm đầu tiên trong đơn hàng
+                if (!order.getChiTietDonHangs().isEmpty()) {
+                    CuaHang store = order.getChiTietDonHangs().get(0).getSanPham().getCuaHang();
+                    
+                    // Reload store để có đầy đủ thông tin thanh toán
+                    store = cuaHangDAO.findById(store.getMaCH());
+                    
+                    BigDecimal orderTotal = order.getTongThanhToan();
+                    storePaymentInfo.put(store, orderTotal);
+                    totalAmount = totalAmount.add(orderTotal);
+                }
+            }
+        }
+        
+        request.setAttribute("orderId", firstOrderId);
+        request.setAttribute("paymentMethod", paymentMethod);
+        request.setAttribute("storePaymentInfo", storePaymentInfo);
+        request.setAttribute("totalAmount", totalAmount);
+        request.setAttribute("user", user);
+        
+        System.out.println("[DEBUG] showPaymentBankingPage - Stores: " + storePaymentInfo.size() + ", Total: " + totalAmount);
+        
+        request.getRequestDispatcher("/WEB-INF/views/user/payment-banking.jsp").forward(request, response);
+    }
+    
+    /**
+     * Xác nhận đã thanh toán - chuyển đến trang đơn hàng
+     */
+    private void confirmPayment(HttpServletRequest request, HttpServletResponse response, NguoiDung user)
+            throws ServletException, IOException {
+        
+        HttpSession session = request.getSession();
+        
+        @SuppressWarnings("unchecked")
+        List<Integer> orderIds = (List<Integer>) session.getAttribute("pendingOrderIds");
+        
+        if (orderIds == null || orderIds.isEmpty()) {
+            response.sendRedirect(request.getContextPath() + "/user/orders");
+            return;
+        }
+        
+        System.out.println("[DEBUG] confirmPayment - User confirmed payment for orders: " + orderIds);
+        
+        // TODO: Có thể thêm logic cập nhật trạng thái đơn hàng ở đây nếu cần
+        // Ví dụ: đánh dấu là "Đang chờ xác nhận thanh toán" thay vì "Chờ xác nhận"
+        
+        // Xóa thông tin thanh toán tạm khỏi session
+        session.removeAttribute("pendingOrderIds");
+        session.removeAttribute("paymentMethod");
+        
+        // Chuyển đến trang đơn hàng với thông báo thành công
+        response.sendRedirect(request.getContextPath() + "/user/orders?success=1&payment=confirmed");
     }
 }

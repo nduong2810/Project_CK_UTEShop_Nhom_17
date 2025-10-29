@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hướng dẫn tạo QR Code cho thanh toán</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #333;
+            margin-top: 30px;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+        }
+        .important {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        code {
+            background: #e9ecef;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .link-box {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .link-box a {
+            color: #155724;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        .link-box a:hover {
+            text-decoration: underline;
+        }
+        ul {
+            line-height: 1.8;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        table th {
+            background-color: #667eea;
+            color: white;
+        }
+        table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 Hướng dẫn Tạo QR Code cho Thanh toán</h1>
+        
+        <div class="important">
+            <strong>⚠️ LƯU Ý QUAN TRỌNG:</strong> Sau khi hoàn thành các bước dưới đây, tính năng thanh toán bằng QR Code sẽ hoạt động hoàn chỉnh!
+        </div>
+
+        <h2>🎯 Các bước thực hiện</h2>
+
+        <div class="step">
+            <h3>Bước 1: Tạo QR Code trực tuyến</h3>
+            <p>Truy cập các trang web sau để tạo QR Code:</p>
+            
+            <div class="link-box">
+                <strong>🏦 Cho Chuyển khoản Ngân hàng:</strong><br>
+                <a href="https://qr.sepay.vn/" target="_blank">https://qr.sepay.vn/</a> (Miễn phí, hỗ trợ VietQR)
+            </div>
+            
+            <div class="link-box">
+                <strong>💳 Cho Ví MoMo:</strong><br>
+                <a href="https://www.momo.vn/" target="_blank">Vào app MoMo → Mã QR → Lưu hình</a>
+            </div>
+
+            <p><strong>Thông tin cần có:</strong></p>
+            <ul>
+                <li>Tên ngân hàng / Số điện thoại MoMo</li>
+                <li>Số tài khoản / Số điện thoại</li>
+                <li>Tên chủ tài khoản</li>
+                <li>Số tiền (có thể để trống)</li>
+                <li>Nội dung chuyển khoản</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <h3>Bước 2: Lưu QR Code vào thư mục</h3>
+            <p>Sau khi tạo QR Code, lưu file ảnh với tên theo format:</p>
+            <table>
+                <tr>
+                    <th>Cửa hàng</th>
+                    <th>QR Bank</th>
+                    <th>QR MoMo</th>
+                </tr>
+                <tr>
+                    <td>TechZone (maCH=1)</td>
+                    <td><code>techzone_bank_qr.png</code></td>
+                    <td><code>techzone_momo_qr.png</code></td>
+                </tr>
+                <tr>
+                    <td>FashionHub (maCH=2)</td>
+                    <td><code>fashionhub_bank_qr.png</code></td>
+                    <td><code>fashionhub_momo_qr.png</code></td>
+                </tr>
+                <tr>
+                    <td>HomeDecor (maCH=3)</td>
+                    <td><code>homedecor_bank_qr.png</code></td>
+                    <td><code>homedecor_momo_qr.png</code></td>
+                </tr>
+            </table>
+            
+            <p><strong>📁 Đường dẫn lưu file:</strong></p>
+            <code>src/main/webapp/assets/img/qr/</code>
+            <br><br>
+            <p class="success">✅ Thư mục đã được tạo sẵn!</p>
+        </div>
+
+        <div class="step">
+            <h3>Bước 3: Cập nhật Database</h3>
+            <p>Mở file <code>update_payment_qr.sql</code> và chạy script trong MySQL/HeidiSQL:</p>
+            <ol>
+                <li>Mở HeidiSQL hoặc MySQL Workbench</li>
+                <li>Kết nối đến database <code>uteshop</code></li>
+                <li>Copy nội dung file SQL và Execute</li>
+                <li>Kiểm tra kết quả bằng query cuối cùng trong file</li>
+            </ol>
+            
+            <div class="important">
+                <strong>📌 Lưu ý:</strong> Bạn cần điều chỉnh thông tin trong file SQL cho đúng với thông tin thực tế của bạn (số tài khoản, tên chủ tài khoản, v.v.)
+            </div>
+        </div>
+
+        <div class="step">
+            <h3>Bước 4: Khởi động lại Server và Test</h3>
+            <ol>
+                <li>Khởi động lại Tomcat server</li>
+                <li>Truy cập trang checkout</li>
+                <li>Chọn phương thức thanh toán "Chuyển khoản Ngân hàng" hoặc "Ví MoMo"</li>
+                <li>Nhấn "Tôi xác nhận" → Modal QR sẽ hiển thị</li>
+            </ol>
+        </div>
+
+        <h2>🔧 Khắc phục sự cố</h2>
+        
+        <div class="step">
+            <h3>❌ Nếu QR Code không hiển thị:</h3>
+            <ul>
+                <li><strong>Kiểm tra đường dẫn file:</strong> File ảnh phải nằm trong <code>src/main/webapp/assets/img/qr/</code></li>
+                <li><strong>Kiểm tra tên file:</strong> Tên file trong database phải khớp với tên file thực tế</li>
+                <li><strong>Kiểm tra định dạng:</strong> Hỗ trợ .png, .jpg, .jpeg</li>
+                <li><strong>Xóa cache trình duyệt:</strong> Ctrl + Shift + Delete</li>
+                <li><strong>Kiểm tra console:</strong> F12 → Console để xem lỗi</li>
+            </ul>
+        </div>
+
+        <h2>📝 Tóm tắt các file đã được cập nhật</h2>
+        <ul>
+            <li class="success">✅ <code>checkout.jsp</code> - Đã thêm modal xác nhận và hiển thị QR</li>
+            <li class="success">✅ <code>assets/img/qr/</code> - Thư mục lưu QR Code đã được tạo</li>
+            <li class="success">✅ <code>update_payment_qr.sql</code> - Script cập nhật database</li>
+            <li class="success">✅ JavaScript - Xử lý lỗi khi không có QR Code</li>
+        </ul>
+
+        <h2>🎨 Tạo QR Code mẫu nhanh (Không cần tài khoản thật)</h2>
+        <div class="step">
+            <p>Nếu bạn chỉ muốn test giao diện, có thể dùng QR Code generator online:</p>
+            <div class="link-box">
+                <a href="https://www.qr-code-generator.com/" target="_blank">https://www.qr-code-generator.com/</a><br>
+                <small>Tạo QR Code bất kỳ với nội dung text hoặc URL</small>
+            </div>
+            <p>Sau đó lưu ảnh và đặt tên theo bảng ở Bước 2.</p>
+        </div>
+
+        <div class="important">
+            <strong>🎉 KẾT QUẢ MONG ĐỢI:</strong><br>
+            Sau khi hoàn thành, khi khách hàng chọn thanh toán Bank/MoMo:
+            <ol>
+                <li>Modal xác nhận hiển thị</li>
+                <li>Nhấn "Tôi xác nhận" → Modal QR hiển thị với đầy đủ thông tin</li>
+                <li>Hiển thị QR Code, thông tin tài khoản, nút copy</li>
+                <li>Nhấn "Tôi đã thanh toán" → Có thể đặt hàng</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>

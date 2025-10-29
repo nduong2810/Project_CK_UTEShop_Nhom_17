@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo QR Code Mẫu</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+        }
+        .qr-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .qr-placeholder {
+            width: 300px;
+            height: 300px;
+            background: white;
+            border: 3px dashed #667eea;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #999;
+            border-radius: 10px;
+        }
+        .step {
+            background: #e3f2fd;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #2196f3;
+            border-radius: 4px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background: #5568d3;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        code {
+            background: #f1f1f1;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Tạo QR Code để Test Thanh Toán</h1>
+        
+        <div class="warning">
+            <strong>⚠️ QR Code chưa có!</strong><br>
+            Trang thanh toán đang tìm file <code>qr_sample.png</code> nhưng chưa tồn tại.<br>
+            Hãy làm theo các bước bên dưới để tạo QR code mẫu.
+        </div>
+
+        <h2>🚀 Cách 1: Tạo QR Code Online (Nhanh nhất)</h2>
+        
+        <div class="step">
+            <strong>Bước 1:</strong> Truy cập một trong các trang sau:
+            <ul>
+                <li><a href="https://qr.sepay.vn/" target="_blank" class="btn">QR Sepay (Bank)</a></li>
+                <li><a href="https://www.qr-code-generator.com/" target="_blank" class="btn">QR Generator</a></li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <strong>Bước 2:</strong> Tạo QR với thông tin:
+            <ul>
+                <li><strong>Ngân hàng:</strong> Vietcombank</li>
+                <li><strong>Số TK:</strong> 1234567890</li>
+                <li><strong>Chủ TK:</strong> NGUYEN VAN A</li>
+                <li><strong>Nội dung:</strong> Thanh toan don hang</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <strong>Bước 3:</strong> Tải ảnh QR về và đổi tên thành: <code>qr_sample.png</code>
+        </div>
+
+        <div class="step">
+            <strong>Bước 4:</strong> Copy file vào thư mục:<br>
+            <code>src/main/webapp/assets/img/qr/qr_sample.png</code>
+        </div>
+
+        <hr style="margin: 30px 0;">
+
+        <h2>🎨 Cách 2: Tạo QR Mẫu Đơn Giản</h2>
+        
+        <div class="qr-box">
+            <h3>QR Code Mẫu (SVG)</h3>
+            <div class="qr-placeholder" id="qrCanvas">
+                QR CODE MẪU<br>
+                (Click nút tạo bên dưới)
+            </div>
+            <button onclick="generateSimpleQR()" class="btn">🎨 Tạo QR Mẫu</button>
+            <button onclick="downloadQR()" class="btn" style="background: #28a745;">⬇️ Tải về</button>
+        </div>
+
+        <hr style="margin: 30px 0;">
+
+        <h2>✅ Sau khi có QR Code:</h2>
+        
+        <div class="step">
+            <strong>1.</strong> Chạy file SQL: <code>UPDATE_PAYMENT_DATA.sql</code>
+        </div>
+        
+        <div class="step">
+            <strong>2.</strong> Đặt file <code>qr_sample.png</code> vào:<br>
+            <code>D:\HK I Year 3(first)\LTWeb\Project_CK_UTEShop_Nhom_17\src\main\webapp\assets\img\qr\</code>
+        </div>
+        
+        <div class="step">
+            <strong>3.</strong> Khởi động lại Tomcat server
+        </div>
+        
+        <div class="step">
+            <strong>4.</strong> Test: Đặt hàng > Chọn Bank/MoMo > Xem QR hiển thị!
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        let qrCode = null;
+
+        function generateSimpleQR() {
+            const container = document.getElementById('qrCanvas');
+            container.innerHTML = '';
+            
+            qrCode = new QRCode(container, {
+                text: "Vietcombank\nSTK: 1234567890\nChu TK: NGUYEN VAN A\nNoi dung: Thanh toan don hang UTESHOP",
+                width: 280,
+                height: 280,
+                colorDark: "#667eea",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            alert('✅ QR Code đã được tạo! Nhấn nút "Tải về" để lưu.');
+        }
+
+        function downloadQR() {
+            const canvas = document.querySelector('#qrCanvas canvas');
+            if (!canvas) {
+                alert('❌ Vui lòng tạo QR code trước!');
+                return;
+            }
+
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = 'qr_sample.png';
+                link.href = url;
+                link.click();
+                
+                alert('✅ QR Code đã được tải về!\n\nBước tiếp theo:\n1. Đặt file vào: src/main/webapp/assets/img/qr/\n2. Khởi động lại server\n3. Test thanh toán!');
+            });
+        }
+    </script>
+</body>
+</html>
