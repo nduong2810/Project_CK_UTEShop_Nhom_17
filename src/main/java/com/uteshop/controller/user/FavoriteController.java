@@ -75,7 +75,7 @@ public class FavoriteController extends HttpServlet {
        }
       
        int page = 1; // Bắt đầu từ trang 1
-       int pageSize = 12;
+       int pageSize = 8;
       
        try {
            String pageParam = request.getParameter("page");
@@ -112,7 +112,7 @@ public class FavoriteController extends HttpServlet {
        request.setAttribute("totalItems", totalItems);
       
        System.out.println("Forwarding to favorites.jsp...");
-       System.out.println("======================");
+       System.out.println("=======================");
        request.getRequestDispatcher("/WEB-INF/views/user/favorites.jsp").forward(request, response);
    }
    private void addToFavorites(HttpServletRequest request, HttpServletResponse response, NguoiDung user)

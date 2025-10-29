@@ -5,6 +5,7 @@ import com.uteshop.dao.DonHangDAO;
 import com.uteshop.dao.NguoiDungDAO;
 import com.uteshop.dao.SanPhamDAO;
 import com.uteshop.dao.SanPhamDaXemDAO;
+import com.uteshop.dao.SanPhamYeuThichDAO;
 import com.uteshop.entity.DanhGiaSanPham;
 import com.uteshop.entity.DonHang;
 import com.uteshop.entity.NguoiDung;
@@ -27,6 +28,7 @@ public class ProductController extends HttpServlet {
     private final NguoiDungDAO nguoiDungDAO = new NguoiDungDAO();
     private final DonHangDAO donHangDAO = new DonHangDAO();
     private final SanPhamDaXemDAO sanPhamDaXemDAO = new SanPhamDaXemDAO();
+    private final SanPhamYeuThichDAO sanPhamYeuThichDAO = new SanPhamYeuThichDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -47,6 +49,9 @@ public class ProductController extends HttpServlet {
                 NguoiDung loggedInUser = (NguoiDung) request.getSession().getAttribute("user");
                 if (loggedInUser != null) {
                     sanPhamDaXemDAO.recordView(loggedInUser.getMaND(), productId);
+                    
+                    boolean isFavorite = sanPhamYeuThichDAO.isFavorite(loggedInUser.getMaND(), productId);
+                    request.setAttribute("isFavorite", isFavorite);
                 }
                 
                 request.setAttribute("product", product);

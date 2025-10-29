@@ -2,13 +2,17 @@ package com.uteshop.controller.guest;
 
 import com.uteshop.dao.DanhMucDAO;
 import com.uteshop.dao.SanPhamDAO;
+import com.uteshop.dao.SanPhamYeuThichDAO;
 import com.uteshop.entity.DanhMuc;
+import com.uteshop.entity.NguoiDung;
 import com.uteshop.entity.SanPham;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @WebServlet({"/guest/home"})
@@ -16,6 +20,7 @@ public class HomeController extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final SanPhamDAO sanPhamDAO = new SanPhamDAO();
     private final DanhMucDAO danhMucDAO = new DanhMucDAO();
+    private final SanPhamYeuThichDAO sanPhamYeuThichDAO = new SanPhamYeuThichDAO();
     private static final int PAGE_SIZE = 8; // số sản phẩm mỗi trang
 
     @Override
@@ -76,10 +81,19 @@ public class HomeController extends HttpServlet {
                         .stream().map(SanPham::getMaSP).collect(Collectors.toList());
             }
 
+            // --- Lấy danh sách sản phẩm yêu thích của người dùng ---
+            HttpSession session = req.getSession(false);
+            NguoiDung user = (session != null) ? (NguoiDung) session.getAttribute("user") : null;
+            Set<Integer> favoriteProductIds = Collections.emptySet();
+            if (user != null) {
+                favoriteProductIds = sanPhamYeuThichDAO.getFavoriteProductIdsByUserId(user.getMaND());
+            }
+
             // --- Gửi dữ liệu sang JSP ---
             req.setAttribute("products", products);
             req.setAttribute("categories", categories);
             req.setAttribute("hotProductIds", hotProductIds);
+            req.setAttribute("favoriteProductIds", favoriteProductIds); // Gửi danh sách ID sản phẩm yêu thích
             req.setAttribute("totalProducts", totalProducts);
             req.setAttribute("totalPages", totalPages);
             req.setAttribute("currentPage", currentPage);

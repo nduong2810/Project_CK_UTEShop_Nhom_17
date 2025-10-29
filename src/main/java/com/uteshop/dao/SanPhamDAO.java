@@ -61,24 +61,18 @@ public class SanPhamDAO {
 
 			// ----- Bộ lọc giá -----
 			if (price != null && !price.isBlank()) {
-				price = price.replace("₫", "").replace(",", "").replace(" ", "").toLowerCase();
-
-				if (price.contains("0-100000") || price.contains("duoi100000")) {
+				if ("0-100000".equals(price)) {
 					max = new BigDecimal("100000");
 					jpql.append(" AND s.donGia < :max");
-
-				} else if (price.contains("100000-500000")) {
+				} else if ("100000-500000".equals(price)) {
 					min = new BigDecimal("100000");
 					max = new BigDecimal("500000");
-					jpql.append(" AND s.donGia BETWEEN :min AND :max");
-
-				} else if (price.contains("500000-1000000")) {
+					jpql.append(" AND s.donGia >= :min AND s.donGia < :max");
+				} else if ("500000-1000000".equals(price)) {
 					min = new BigDecimal("500000");
 					max = new BigDecimal("1000000");
-					jpql.append(" AND s.donGia BETWEEN :min AND :max");
-
-				} else if (price.contains("1000000") || price.contains("tren1000000")
-						|| price.contains("over1000000")) {
+					jpql.append(" AND s.donGia >= :min AND s.donGia < :max");
+				} else if ("1000000-".equals(price)) {
 					min = new BigDecimal("1000000");
 					jpql.append(" AND s.donGia >= :min");
 				}
@@ -86,7 +80,7 @@ public class SanPhamDAO {
 
 			// ----- Lọc danh mục -----
 			if (categoryId != null && categoryId > 0) {
-				jpql.append(" AND s.maDM = :categoryId");
+				jpql.append(" AND s.danhMuc.maDM = :categoryId");
 			}
 
 			// ----- Lọc sản phẩm bán chạy -----
@@ -137,31 +131,25 @@ public class SanPhamDAO {
 		BigDecimal max = null;
 
 		if (priceRange != null && !priceRange.isBlank()) {
-			priceRange = priceRange.replace("₫", "").replace(",", "").replace(" ", "").toLowerCase();
-
-			if (priceRange.contains("0-100000") || priceRange.contains("duoi100000")) {
+			if ("0-100000".equals(priceRange)) {
 				max = new BigDecimal("100000");
 				jpql.append(" AND s.donGia < :max");
-
-			} else if (priceRange.contains("100000-500000")) {
+			} else if ("100000-500000".equals(priceRange)) {
 				min = new BigDecimal("100000");
 				max = new BigDecimal("500000");
-				jpql.append(" AND s.donGia BETWEEN :min AND :max");
-
-			} else if (priceRange.contains("500000-1000000")) {
+				jpql.append(" AND s.donGia >= :min AND s.donGia < :max");
+			} else if ("500000-1000000".equals(priceRange)) {
 				min = new BigDecimal("500000");
 				max = new BigDecimal("1000000");
-				jpql.append(" AND s.donGia BETWEEN :min AND :max");
-
-			} else if (priceRange.contains("1000000") || priceRange.contains("tren1000000")
-					|| priceRange.contains("over1000000")) {
+				jpql.append(" AND s.donGia >= :min AND s.donGia < :max");
+			} else if ("1000000-".equals(priceRange)) {
 				min = new BigDecimal("1000000");
 				jpql.append(" AND s.donGia >= :min");
 			}
 		}
 
 		if (categoryId != null && categoryId > 0)
-			jpql.append(" AND s.maDM = :categoryId");
+			jpql.append(" AND s.danhMuc.maDM = :categoryId");
 		if ("bestseller".equalsIgnoreCase(sortBy))
 			jpql.append(" AND s.soLuongBan > 10");
 
@@ -719,4 +707,5 @@ public class SanPhamDAO {
 			em.close();
 		}
 	}
+
 }
