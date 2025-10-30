@@ -379,6 +379,24 @@
                                        </a>
                                    </li>
                                </c:if>
+                               <c:if test="${sessionScope.userRole == 'SHIPPER'}">
+                                   <li><hr class="dropdown-divider"></li>
+                                   <li>
+                                       <h6 class="dropdown-header">
+                                           <i class="fas fa-motorcycle me-2"></i>Quản lý Giao hàng
+                                       </h6>
+                                   </li>
+                                   <li>
+                                       <a class="dropdown-item" href="${pageContext.request.contextPath}/shipper/orders">
+                                           <i class="fas fa-box-open me-2"></i>Đơn hàng được giao
+                                       </a>
+                                   </li>
+                                   <li>
+                                       <a class="dropdown-item" href="${pageContext.request.contextPath}/shipper/orders?action=statistics">
+                                           <i class="fas fa-chart-bar me-2"></i>Thống kê giao hàng
+                                       </a>
+                                   </li>
+                               </c:if>
                                <li><hr class="dropdown-divider"></li>
                                <li>
                                    <a class="dropdown-item" href="${pageContext.request.contextPath}/user/settings">

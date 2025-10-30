@@ -1,6 +1,7 @@
 <%@page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
 <%@taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
+<%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <style>
 /* ===== Layout admin chung (tương thích sidebar hiện có) ===== */
 :root {
@@ -50,139 +51,206 @@
 	padding: 0 10px;
 	background: #fff
 }
-/* ===== Grid cards ===== */
-.grid {
-	display: grid;
-	gap: 24px;
-	grid-template-columns: repeat(12, 1fr)
+
+/* Product Card */
+.product-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid #e0e0e0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
 }
-.card {
-	grid-column: span 4;
-	background: var(--card);
-	border-radius: 20px;
-	overflow: hidden;
-	box-shadow: var(--shadow);
-	border: 1px solid #eef2ff
+
+.product-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
 }
-@media ( max-width :1280px) {
-	.card {
-		grid-column: span 6
-	}
+
+.product-image-container {
+    height: 220px; /* Adjusted from 300px to fit admin context */
+    position: relative;
+    overflow: hidden;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-@media ( max-width :768px) {
-	.card {
-		grid-column: span 12
-	}
+
+.product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform 0.3s ease;
 }
-.card-hd {
-	position: relative;
-	background: #f7f7fb;
-	height: 220px;
-	display: flex;
-	align-items: center;
-	justify-content: center
+
+.product-card:hover .product-image {
+    transform: scale(1.05);
 }
-.card-hd img {
-	max-width: 80%;
-	max-height: 80%;
-	object-fit: contain
+
+.badge-hot {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: linear-gradient(45deg, #ff3f6c, #ff6b81);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 2;
 }
-.badge {
-	position: absolute;
-	top: 14px;
-	left: 14px;
-	background: #ff5a5f;
-	color: #fff;
-	padding: 6px 10px;
-	border-radius: 999px;
-	font-weight: 800;
-	font-size: 12px
+
+.btn-favorite {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 3;
+    backdrop-filter: blur(5px);
 }
-.favorite {
-	position: absolute;
-	top: 10px;
-	right: 14px;
-	width: 36px;
-	height: 36px;
-	border-radius: 999px;
-	background: #fff;
-	display: grid;
-	place-items: center;
-	border: 1px solid #e5e7eb;
-	cursor: pointer
+
+.btn-favorite:hover {
+    background-color: white;
+    transform: scale(1.1);
+    color: #ff3f6c;
 }
-.card-bd {
-	padding: 18px
+
+.btn-favorite.active {
+    background-color: #ff3f6c;
+    color: white;
 }
-.title {
-	font-size: 18px;
-	font-weight: 700;
-	line-height: 1.4;
-	height: 48px;
-	display: -webkit-box;
-	-webkit-line-clamp: 2;
-	-webkit-box-orient: vertical;
-	overflow: hidden
+
+.btn-favorite.active .fa-heart {
+    font-weight: 900; /* Solid heart */
 }
-.row {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-top: 10px
+
+.product-card .card-body {
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
 }
-.price {
-	font-size: 24px;
-	font-weight: 900;
-	color: #1a56db
+
+.product-card .card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.4;
+    margin-bottom: 15px;
+    color: #333;
+    min-height: 50px;
+    flex-grow: 1;
 }
-.sold {
-	color: var(--muted)
+
+.product-card .card-title a {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.3s ease;
 }
-.actions {
-	display: flex;
-	gap: 10px;
-	margin-top: 14px
+
+.product-card .card-title a:hover {
+    color: #2874f0;
 }
-.btn {
-	flex: 1;
-	height: 44px;
-	border-radius: 12px;
-	border: 1px solid var(--admin-border);
-	background: #fff;
-	font-weight: 800;
-	cursor: pointer
+
+.product-card .price {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #2874f0;
+    margin-bottom: 10px;
+    white-space: nowrap;
 }
-.btn-cart {
-	background: var(--primary);
-	color: #fff;
-	border-color: transparent
+
+.product-card .sold-count {
+    color: #878787;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
-.btn-buy {
-	background: var(--accent);
-	color: #fff;
-	border-color: transparent
+
+.price-line {
+    flex-wrap: wrap;
+    gap: 5px;
 }
-/* ===== Pagination ===== */
-.pagination {
-	display: flex;
-	gap: 8px;
-	justify-content: center;
-	align-items: center;
-	margin: 22px 0
+
+.product-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
 }
-.p-btn {
-	min-width: 42px;
-	height: 40px;
-	border: 1px solid var(--admin-border);
-	background: #fff;
-	border-radius: 8px;
-	cursor: pointer
+
+.btn-add-to-cart, .btn-buy-now {
+    flex: 1;
+    padding: 12px 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-.p-btn.active {
-	background: var(--primary);
-	color: #fff;
-	border-color: transparent
+
+.btn-add-to-cart {
+    background: linear-gradient(45deg, #2874f0, #1a5fce);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(40, 116, 240, 0.3);
 }
+
+.btn-add-to-cart:hover {
+    background: linear-gradient(45deg, #1a5fce, #2874f0);
+    box-shadow: 0 6px 20px rgba(40, 116, 240, 0.4);
+    transform: translateY(-3px);
+}
+
+.btn-buy-now {
+    background: linear-gradient(45deg, #ff9f00, #ff5f00);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(255, 159, 0, 0.3);
+}
+
+.btn-buy-now:hover {
+    background: linear-gradient(45deg, #ff5f00, #ff9f00);
+    box-shadow: 0 6px 20px rgba(255, 159, 0, 0.4);
+    transform: translateY(-3px);
+}
+
+/* Alert Styles */
+.alert {
+    border-radius: 12px;
+    border: none;
+}
+
+.alert-danger {
+    background: #fff5f5;
+    color: #c53030;
+}
+
+.alert-secondary {
+    background: #f7fafc;
+    color: #4a5568;
+}
+
+.alert-warning {
+    background-color: #fffbeb;
+    color: #b45309;
+}
+
 .muted {
 	color: var(--muted)
 }
@@ -207,24 +275,18 @@
 				<div class="muted">Tổng: ${totalProducts} sản phẩm</div>
 				<form method="get" class="right">
 					<input type="text" name="q" class="input"
-						placeholder="Tìm theo tên/mã..." value="${param.q}" /> <select
-						name="pageSize" class="select" onchange="this.form.submit()">
-						<option value="8" ${pageSize==8  ? 'selected':''}>8 /
-							trang</option>
-						<option value="10" ${pageSize==10 ? 'selected':''}>10 /
-							trang</option>
-						<option value="12" ${pageSize==12 ? 'selected':''}>12 /
-							trang</option>
-					</select> <select name="sort" class="select" onchange="this.form.submit()">
+						placeholder="Tìm theo tên/mã..." value="${param.q}" />
+					<select name="pageSize" class="select" onchange="this.form.submit()">
+						<option value="8" ${pageSize==8  ? 'selected':''}>8 / trang</option>
+						<option value="16" ${pageSize==16 ? 'selected':''}>16 / trang</option>
+						<option value="24" ${pageSize==24 ? 'selected':''}>24 / trang</option>
+					</select>
+					<select name="sort" class="select" onchange="this.form.submit()">
 						<option value="">Sắp xếp</option>
-						<option value="price_asc" ${param.sort=='price_asc'?'selected':''}>Giá
-							tăng dần</option>
-						<option value="price_desc"
-							${param.sort=='price_desc'?'selected':''}>Giá giảm dần</option>
-						<option value="sold_desc" ${param.sort=='sold_desc'?'selected':''}>Bán
-							chạy</option>
-						<option value="newest" ${param.sort=='newest'?'selected':''}>Mới
-							nhất</option>
+						<option value="price_asc" ${param.sort=='price_asc'?'selected':''}>Giá tăng dần</option>
+						<option value="price_desc" ${param.sort=='price_desc'?'selected':''}>Giá giảm dần</option>
+						<option value="sold_desc" ${param.sort=='sold_desc'?'selected':''}>Bán chạy</option>
+						<option value="newest" ${param.sort=='newest'?'selected':''}>Mới nhất</option>
 					</select>
 				</form>
 			</div>
@@ -234,74 +296,89 @@
 					<div class="empty">Chưa có sản phẩm nào.</div>
 				</c:when>
 				<c:otherwise>
-					<div class="grid">
+					<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
 						<c:forEach var="p" items="${products}">
-							<div class="card">
-								<div class="card-hd">
-									<span class="badge">HOT</span>
-									<button class="favorite" title="Yêu thích">♡</button>
-									<c:choose>
-										<c:when test="${not empty p.hinhAnh}">
-											<img src="${pageContext.request.contextPath}/assets/img/${p.hinhAnh}"
-												alt="${p.tenSP}" />
-										</c:when>
-										<c:otherwise>
-											<img
-												src="${pageContext.request.contextPath}/assets/img/placeholder-product.png"
-												alt="${p.tenSP}" />
-										</c:otherwise>
-									</c:choose>
-								</div>
-								<div class="card-bd">
-									<div class="title">${p.tenSP}</div>
-									<div class="row">
-										<div class="price">
-											<fmt:formatNumber value="${p.donGia}" type="number" />
-											đ
-										</div>
-										<div class="sold">🛒 ${p.soLuongBan} đã bán</div>
+							<div class="col">
+								<div class="product-card">
+									<div class="product-image-container">
+										<span class="badge-hot">HOT</span>
+										<button class="btn-favorite" title="Yêu thích">
+											<i class="far fa-heart"></i>
+										</button>
+										<c:choose>
+											<c:when test="${not empty p.hinhAnh}">
+												<img src="${pageContext.request.contextPath}/assets/img/${p.hinhAnh}"
+													alt="${p.tenSP}" class="product-image"
+													onerror="this.onerror=null;this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png';" />
+											</c:when>
+											<c:otherwise>
+												<img
+													src="${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png"
+													alt="${p.tenSP}" class="product-image" />
+											</c:otherwise>
+										</c:choose>
 									</div>
-									<div class="actions">
-										<button class="btn btn-cart"
-											onclick="location.href='${pageContext.request.contextPath}/admin/products/edit?id=${p.maSP}'">
-											Quản lý</button>
-										<button class="btn btn-buy"
-											onclick="location.href='${pageContext.request.contextPath}/admin/products/view?id=${p.maSP}'">
-											Xem chi tiết</button>
+									<div class="card-body">
+										<h5 class="card-title">
+											<a href="${pageContext.request.contextPath}/admin/products/view?id=${p.maSP}">${p.tenSP}</a>
+										</h5>
+										<div class="d-flex justify-content-between align-items-center price-line">
+											<span class="price">
+												<fmt:formatNumber value="${p.donGia}" type="number" />₫
+											</span>
+											<span class="sold-count">🛒 ${p.soLuongBan} đã bán</span>
+										</div>
+										<div class="product-buttons">
+											<button class="btn btn-add-to-cart"
+												onclick="location.href='${pageContext.request.contextPath}/admin/products/edit?id=${p.maSP}'">
+												<i class="fas fa-edit me-2"></i>Quản lý
+											</button>
+											<button class="btn btn-buy-now"
+												onclick="location.href='${pageContext.request.contextPath}/admin/products/view?id=${p.maSP}'">
+												<i class="fas fa-eye me-2"></i>Xem chi tiết
+											</button>
+										</div>
 									</div>
 								</div>
 							</div>
 						</c:forEach>
 					</div>
 					<!-- PHÂN TRANG -->
-					<div class="pagination">
-						<form method="get" style="display: inline">
-							<input type="hidden" name="q" value="${param.q}" /> <input
-								type="hidden" name="sort" value="${param.sort}" /> <input
-								type="hidden" name="pageSize" value="${pageSize}" />
-							<button type="submit" class="p-btn" name="page"
-								value="${currentPage-1}"
-								<c:if test="${currentPage<=1}">disabled</c:if>>Trước</button>
-						</form>
-						<c:forEach var="i" begin="1" end="${totalPages}">
-							<form method="get" style="display: inline">
-								<input type="hidden" name="q" value="${param.q}" /> <input
-									type="hidden" name="sort" value="${param.sort}" /> <input
-									type="hidden" name="pageSize" value="${pageSize}" />
-								<button type="submit"
-									class="p-btn <c:if test='${i==currentPage}'>active</c:if>"
-									name="page" value="${i}">${i}</button>
-							</form>
-						</c:forEach>
-						<form method="get" style="display: inline">
-							<input type="hidden" name="q" value="${param.q}" /> <input
-								type="hidden" name="sort" value="${param.sort}" /> <input
-								type="hidden" name="pageSize" value="${pageSize}" />
-							<button type="submit" class="p-btn" name="page"
-								value="${currentPage+1}"
-								<c:if test="${currentPage>=totalPages}">disabled</c:if>>Sau</button>
-						</form>
-					</div>
+					<nav aria-label="Product Pagination" class="mt-5">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                                <c:url var="prevUrl" value="/admin/products">
+                                    <c:param name="page" value="${currentPage - 1}"/>
+                                    <c:if test="${not empty param.q}"><c:param name="q" value="${param.q}"/></c:if>
+                                    <c:if test="${not empty param.sort}"><c:param name="sort" value="${param.sort}"/></c:if>
+                                    <c:if test="${not empty param.pageSize}"><c:param name="pageSize" value="${param.pageSize}"/></c:if>
+                                </c:url>
+                                <a class="page-link" href="${prevUrl}" tabindex="-1" aria-disabled="${currentPage == 1}">Trước</a>
+                            </li>
+
+                            <c:forEach begin="1" end="${totalPages}" var="i">
+                                <li class="page-item ${i == currentPage ? 'active' : ''}">
+                                    <c:url var="pageUrl" value="/admin/products">
+                                        <c:param name="page" value="${i}"/>
+                                        <c:if test="${not empty param.q}"><c:param name="q" value="${param.q}"/></c:if>
+                                        <c:if test="${not empty param.sort}"><c:param name="sort" value="${param.sort}"/></c:if>
+                                        <c:if test="${not empty param.pageSize}"><c:param name="pageSize" value="${param.pageSize}"/></c:if>
+                                    </c:url>
+                                    <a class="page-link" href="${pageUrl}">${i}</a>
+                                </li>
+                            </c:forEach>
+
+                            <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
+                                <c:url var="nextUrl" value="/admin/products">
+                                    <c:param name="page" value="${currentPage + 1}"/>
+                                    <c:if test="${not empty param.q}"><c:param name="q" value="${param.q}"/></c:if>
+                                    <c:if test="${not empty param.sort}"><c:param name="sort" value="${param.sort}"/></c:if>
+                                    <c:if test="${not empty param.pageSize}"><c:param name="pageSize" value="${param.pageSize}"/></c:if>
+                                </c:url>
+                                <a class="page-link" href="${nextUrl}">Sau</a>
+                            </li>
+                        </ul>
+                    </nav>
 				</c:otherwise>
 			</c:choose>
 		</div>

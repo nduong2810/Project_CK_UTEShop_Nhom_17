@@ -88,6 +88,9 @@
             width: 22px;
             height: 22px;
             margin-right: 15px;
+            cursor: pointer;
+            position: relative;
+            z-index: 10;
         }
         
         .payment-icon {
@@ -426,6 +429,7 @@
             font-size: 1.3rem;
         }
         
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -443,6 +447,147 @@
             border-radius: 5px;
             font-size: 0.75rem;
             color: white;
+        }
+        
+        /* Shipping Provider Styles */
+        .shipping-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .shipping-selector:hover {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.05);
+        }
+        
+        .shipping-selector.has-selection {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.05);
+        }
+        
+        .shipping-icon {
+            font-size: 2rem;
+            color: #667eea;
+        }
+        
+        .shipping-info {
+            flex: 1;
+        }
+        
+        .shipping-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+        
+        .shipping-selected-text {
+            color: #28a745;
+            font-size: 0.9rem;
+        }
+        
+        .shipping-panel {
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            margin: 15px 0;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+            animation: slideDown 0.3s ease;
+        }
+        
+        .shipping-panel-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 15px 20px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+        
+        .shipping-panel-header h6 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .shipping-panel-body {
+            padding: 20px;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+        
+        .shipping-item-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .shipping-item-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            transform: translateX(5px);
+        }
+        
+        .shipping-item-card.selected {
+            border-color: #28a745;
+            background: rgba(40, 167, 69, 0.05);
+        }
+        
+        .shipping-item-card input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            margin-top: 5px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+        
+        .shipping-item-content {
+            flex: 1;
+        }
+        
+        .shipping-provider-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .shipping-provider-desc {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        
+        .shipping-fee-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .shipping-estimate {
+            color: #28a745;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
     </style>
 </head>
@@ -515,6 +660,92 @@
                                 </div>
                             </c:otherwise>
                         </c:choose>
+                    </div>
+                    
+                    <!-- Đơn vị vận chuyển -->
+                    <div class="section-card">
+                        <div class="section-title mb-3">
+                            <i class="fas fa-shipping-fast me-2"></i>Đơn vị vận chuyển
+                        </div>
+                        
+                        <div class="shipping-selector ${not empty defaultShipping ? 'has-selection' : ''}" 
+                             id="shippingSelector" 
+                             onclick="toggleShippingPanel()">
+                            <div class="shipping-icon">
+                                <i class="fas fa-truck"></i>
+                            </div>
+                            <div class="shipping-info">
+                                <div class="shipping-name" id="selectedShippingName">
+                                    <c:choose>
+                                        <c:when test="${not empty defaultShipping}">
+                                            ${defaultShipping.tenDonVi}
+                                        </c:when>
+                                        <c:otherwise>
+                                            Chọn đơn vị vận chuyển
+                                        </c:otherwise>
+                                    </c:choose>
+                                </div>
+                                <div class="shipping-selected-text" id="selectedShippingInfo">
+                                    <c:if test="${not empty defaultShipping}">
+                                        Phí vận chuyển: <fmt:formatNumber value="${defaultShipping.phiVanChuyen}" type="number" groupingUsed="true"/>₫
+                                    </c:if>
+                                </div>
+                            </div>
+                            <div>
+                                <i class="fas fa-chevron-down" id="shippingChevron"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Panel chọn đơn vị vận chuyển -->
+                        <div class="shipping-panel" id="shippingPanel" style="display: none;">
+                            <div class="shipping-panel-header">
+                                <h6><i class="fas fa-truck me-2"></i>Chọn đơn vị vận chuyển</h6>
+                                <button type="button" class="btn-close btn-close-white" onclick="closeShippingPanel()"></button>
+                            </div>
+                            <div class="shipping-panel-body">
+                                <c:choose>
+                                    <c:when test="${empty shippingProviders}">
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            Hiện tại chưa có đơn vị vận chuyển nào khả dụng.
+                                        </div>
+                                    </c:when>
+                                    <c:otherwise>
+                                        <c:forEach var="provider" items="${shippingProviders}" varStatus="status">
+                                            <div class="shipping-item-card ${provider.maVC == defaultShipping.maVC ? 'selected' : ''}" 
+                                                 id="shippingCard${provider.maVC}"
+                                                 onclick="selectShipping(${provider.maVC}, '${provider.tenDonVi}', ${provider.phiVanChuyen})">
+                                                <input type="radio" 
+                                                       name="shippingProviderId" 
+                                                       value="${provider.maVC}" 
+                                                       ${provider.maVC == defaultShipping.maVC ? 'checked' : ''}
+                                                       onchange="selectShipping(${provider.maVC}, '${provider.tenDonVi}', ${provider.phiVanChuyen})">
+                                                <div class="shipping-item-content">
+                                                    <div class="shipping-provider-name">
+                                                        <i class="fas fa-shipping-fast text-primary me-2"></i>
+                                                        ${provider.tenDonVi}
+                                                    </div>
+                                                    <div>
+                                                        <span class="shipping-fee-badge">
+                                                            <i class="fas fa-money-bill-wave me-1"></i>
+                                                            <fmt:formatNumber value="${provider.phiVanChuyen}" type="number" groupingUsed="true"/>₫
+                                                        </span>
+                                                    </div>
+                                                    <div class="shipping-estimate">
+                                                        <i class="fas fa-clock"></i>
+                                                        <span>Giao hàng trong 2-5 ngày</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </c:forEach>
+                                    </c:otherwise>
+                                </c:choose>
+                            </div>
+                        </div>
+                        
+                        <!-- Hidden input to store selected shipping ID -->
+                        <input type="hidden" name="shippingId" id="shippingId" 
+                               value="${not empty defaultShipping ? defaultShipping.maVC : ''}" required>
                     </div>
                     
                     <!-- Sản phẩm -->
@@ -616,8 +847,8 @@
                                             <div class="product-quantity">Số lượng: ${item.soLuong}</div>
                                         </div>
                                         <div class="product-price">
-                                            <fmt:formatNumber value="${item.thanhTien}" type="currency" 
-                                                            currencySymbol="₫" groupingUsed="true"/>
+                                            <fmt:formatNumber value="${item.thanhTien}" type="number"
+                                                    groupingUsed="true" maxFractionDigits="0"/>₫
                                         </div>
                                     </div>
                                 </c:forEach>
@@ -630,8 +861,8 @@
                                         <c:forEach var="item" items="${storeEntry.value}">
                                             <c:set var="storeTotal" value="${storeTotal + item.thanhTien}"/>
                                         </c:forEach>
-                                        <fmt:formatNumber value="${storeTotal}" type="currency" 
-                                                        currencySymbol="₫" groupingUsed="true"/>
+                                        <fmt:formatNumber value="${storeTotal}" type="number" 
+                                                        groupingUsed="true" maxFractionDigits="0"/>₫
                                     </strong>
                                 </div>
                                 
@@ -651,7 +882,7 @@
                         </div>
                         
                         <!-- COD - Tiền mặt -->
-                        <div class="payment-method" onclick="selectPayment(this, 'COD')">
+                        <div class="payment-method" onclick="selectPayment(this, 'COD', event)">
                             <div class="d-flex align-items-center">
                                 <input type="radio" name="paymentMethod" value="COD" checked required>
                                 <i class="fas fa-money-bill-wave payment-icon"></i>
@@ -669,7 +900,7 @@
                         </div>
                         
                         <!-- Chuyển khoản Ngân hàng -->
-                        <div class="payment-method" onclick="selectPayment(this, 'BANK_TRANSFER')">
+                        <div class="payment-method" onclick="selectPayment(this, 'BANK_TRANSFER', event)">
                             <div class="d-flex align-items-center">
                                 <input type="radio" name="paymentMethod" value="BANK_TRANSFER" required>
                                 <i class="fas fa-university payment-icon"></i>
@@ -715,8 +946,9 @@
                                             <c:if test="${not empty storeEntry.key.bankQR}">
                                                 <div class="qr-code-container">
                                                     <p class="fw-bold mb-3">Quét mã QR để thanh toán</p>
-                                                    <img src="${pageContext.request.contextPath}/assets/img/qr/${storeEntry.key.bankQR}" 
-                                                         alt="Bank QR Code">
+                                                    <img src="${pageContext.request.contextPath}/assets/img/${storeEntry.key.bankQR}" 
+                                                         alt="Bank QR Code"
+                                                         style="max-width: 250px; height: auto;">
                                                 </div>
                                             </c:if>
                                         </div>
@@ -726,7 +958,7 @@
                         </div>
                         
                         <!-- MoMo -->
-                        <div class="payment-method" onclick="selectPayment(this, 'MOMO')">
+                        <div class="payment-method" onclick="selectPayment(this, 'MOMO', event)">
                             <div class="d-flex align-items-center">
                                 <input type="radio" name="paymentMethod" value="MOMO" required>
                                 <i class="fab fa-cc-amazon-pay payment-icon" style="color: #d82d8b;"></i>
@@ -768,8 +1000,9 @@
                                             <c:if test="${not empty storeEntry.key.momoQR}">
                                                 <div class="qr-code-container">
                                                     <p class="fw-bold mb-3">Quét mã QR để thanh toán</p>
-                                                    <img src="${pageContext.request.contextPath}/assets/img/qr/${storeEntry.key.momoQR}" 
-                                                         alt="MoMo QR Code">
+                                                    <img src="${pageContext.request.contextPath}/assets/img/${storeEntry.key.momoQR}" 
+                                                         alt="MoMo QR Code"
+                                                         style="max-width: 250px; height: auto;">
                                                 </div>
                                             </c:if>
                                         </div>
@@ -805,28 +1038,29 @@
                             <!-- Chi tiết giá -->
                             <div class="summary-row">
                                 <span>Tạm tính:</span>
-                                <strong><fmt:formatNumber value="${subtotal}" type="currency" 
-                                        currencySymbol="₫" groupingUsed="true"/></strong>
+                                <strong><fmt:formatNumber value="${subtotal}" type="number" 
+                                        groupingUsed="true" maxFractionDigits="0"/>₫</strong>
                             </div>
                             
                             <div class="summary-row">
                                 <span>Phí vận chuyển:</span>
-                                <strong><fmt:formatNumber value="${shippingFee}" type="currency" 
-                                        currencySymbol="₫" groupingUsed="true"/></strong>
+                                <strong><fmt:formatNumber value="${shippingFee}" type="number" 
+                                        groupingUsed="true" maxFractionDigits="0"/>₫</strong>
                             </div>
                             
+                            <!-- Dòng giảm giá (sẽ được thêm động bằng JavaScript) -->
                             <c:if test="${discountAmount != null && discountAmount > 0}">
-                                <div class="summary-row text-danger">
+                                <div class="summary-row text-danger" id="discountRow">
                                     <span><i class="fas fa-tag me-2"></i>Giảm giá:</span>
-                                    <strong>-<fmt:formatNumber value="${discountAmount}" type="currency" 
-                                            currencySymbol="₫" groupingUsed="true"/></strong>
+                                    <strong id="discountAmountText">-<fmt:formatNumber value="${discountAmount}" type="number" 
+                                            groupingUsed="true" maxFractionDigits="0"/>₫</strong>
                                 </div>
                             </c:if>
                             
                             <div class="summary-row">
                                 <span>Tổng thanh toán:</span>
-                                <strong><fmt:formatNumber value="${totalAmount}" type="currency" 
-                                        currencySymbol="₫" groupingUsed="true"/></strong>
+                                <strong id="totalAmountText"><fmt:formatNumber value="${totalAmount}" type="number" 
+                                        groupingUsed="true" maxFractionDigits="0"/>₫</strong>
                             </div>
                             
                             <button type="submit" class="btn-place-order" 
@@ -843,36 +1077,98 @@
                     </div>
                 </div>
             </div>
+            
         </form>
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // === KHỞI TẠO ===
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-show payment details cho COD (method mặc định)
+            const selectedPayment = document.querySelector('.payment-method input[type="radio"]:checked');
+            if (selectedPayment && selectedPayment.value === 'COD') {
+                const paymentMethod = selectedPayment.closest('.payment-method');
+                paymentMethod.classList.add('selected');
+                paymentMethod.querySelector('.payment-details').classList.add('active');
+            }
+        });
+        
+        // === HÀM XỬ LÝ THANH TOÁN (ĐÃ SỬA LỖI) ===
+        function selectPayment(element, method, event) {
+            // Ngăn chặn event bubbling nếu click trực tiếp vào radio button
+            if (event && event.target.tagName === 'INPUT') {
+                return; // Để radio button tự xử lý
+            }
+            
+            console.log('🔵 selectPayment called - method:', method);
+            
+            // Bước 1: Xóa CSS selected khỏi tất cả
+            document.querySelectorAll('.payment-method').forEach(item => {
+                item.classList.remove('selected');
+                const details = item.querySelector('.payment-details');
+                if (details) {
+                    details.classList.remove('active');
+                }
+            });
+            
+            // Bước 2: Thêm selected CSS
+            element.classList.add('selected');
+            
+            // Bước 3: CHECK RADIO BUTTON
+            const radioButton = element.querySelector('input[type="radio"][value="' + method + '"]');
+            if (radioButton) {
+                radioButton.checked = true;
+                console.log('✅ Radio button checked:', method, '- Verified:', radioButton.checked);
+            } else {
+                console.error('❌ Radio button NOT FOUND for method:', method);
+            }
+            
+            // Bước 4: Hiển thị chi tiết thanh toán
+            const details = element.querySelector('.payment-details');
+            if (details) {
+                details.classList.add('active');
+            }
+            
+            // Debug: In ra giá trị hiện tại của form
+            setTimeout(() => {
+                const checkedRadio = document.querySelector('input[name="paymentMethod"]:checked');
+                console.log('🔍 After 100ms - Checked payment method:', checkedRadio ? checkedRadio.value : 'NONE');
+            }, 100);
+        }
+        
+        // Thêm event listener cho radio buttons để cập nhật UI khi click trực tiếp
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.payment-method input[type="radio"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const method = this.value;
+                    const paymentMethodDiv = this.closest('.payment-method');
+                    
+                    // Xóa selected khỏi tất cả
+                    document.querySelectorAll('.payment-method').forEach(item => {
+                        item.classList.remove('selected');
+                        const details = item.querySelector('.payment-details');
+                        if (details) {
+                            details.classList.remove('active');
+                        }
+                    });
+                    
+                    // Thêm selected cho cái được chọn
+                    paymentMethodDiv.classList.add('selected');
+                    const details = paymentMethodDiv.querySelector('.payment-details');
+                    if (details) {
+                        details.classList.add('active');
+                    }
+                });
+            });
+        });
+        
+        // === CÁC HÀM KHÁC ===
         function selectAddress(element, addressId) {
-            // Remove selected class from all addresses
             document.querySelectorAll('.address-item').forEach(item => {
                 item.classList.remove('selected');
             });
-            
-            // Add selected class to clicked address
             element.classList.add('selected');
-            
-            // Check the radio button
-            element.querySelector('input[type="radio"]').checked = true;
-        }
-        
-        function selectPayment(element, method) {
-            // Remove selected class from all payment methods
-            document.querySelectorAll('.payment-method').forEach(item => {
-                item.classList.remove('selected');
-                item.querySelector('.payment-details').classList.remove('active');
-            });
-            
-            // Add selected class to clicked method
-            element.classList.add('selected');
-            element.querySelector('.payment-details').classList.add('active');
-            
-            // Check the radio button
             element.querySelector('input[type="radio"]').checked = true;
         }
         
@@ -882,19 +1178,30 @@
             });
         }
         
-        // Toggle hiển thị panel mã giảm giá
         function toggleDiscountPanel(storeId) {
+            console.log('🎁 toggleDiscountPanel called - storeId:', storeId);
+            
             const panel = document.getElementById('discountPanel-' + storeId);
-            if (panel.style.display === 'none') {
+            console.log('📦 Panel element:', panel);
+            
+            if (!panel) {
+                console.error('❌ Panel not found! ID:', 'discountPanel-' + storeId);
+                return;
+            }
+            
+            const currentDisplay = panel.style.display;
+            console.log('👀 Current display:', currentDisplay);
+            
+            if (currentDisplay === 'none' || currentDisplay === '') {
                 panel.style.display = 'block';
+                console.log('✅ Panel opened');
             } else {
                 panel.style.display = 'none';
+                console.log('✅ Panel closed');
             }
         }
         
-        // Áp dụng mã giảm giá cho cửa hàng
         function applyStoreDiscount(storeId, checkbox) {
-            // Bỏ chọn các checkbox khác trong cùng cửa hàng (chỉ cho phép chọn 1 mã)
             const allCheckboxes = document.querySelectorAll('input[name="storeDiscount-' + storeId + '"]');
             allCheckboxes.forEach(cb => {
                 if (cb !== checkbox) {
@@ -903,14 +1210,12 @@
             });
             
             if (checkbox.checked) {
-                // Lấy thông tin mã giảm giá
                 const discountCode = checkbox.getAttribute('data-code');
                 const discountType = checkbox.getAttribute('data-type');
                 const discountValue = parseFloat(checkbox.getAttribute('data-value'));
                 const minOrder = checkbox.getAttribute('data-min');
                 const maxDiscount = checkbox.getAttribute('data-max');
                 
-                // Tính tổng tiền của cửa hàng
                 const storeGroup = document.querySelector('.store-group[data-store-id="' + storeId + '"]');
                 const productItems = storeGroup.querySelectorAll('.product-item');
                 let storeTotal = 0;
@@ -921,7 +1226,6 @@
                     storeTotal += price;
                 });
                 
-                // Kiểm tra điều kiện đơn hàng tối thiểu
                 if (minOrder && minOrder !== 'null') {
                     const minOrderValue = parseFloat(minOrder);
                     if (storeTotal < minOrderValue) {
@@ -931,7 +1235,6 @@
                     }
                 }
                 
-                // Tính số tiền giảm
                 let discountAmount = 0;
                 if (discountType === 'PERCENT' || discountType === 'percent') {
                     discountAmount = storeTotal * (discountValue / 100);
@@ -945,186 +1248,295 @@
                     discountAmount = discountValue;
                 }
                 
-                // Không được giảm quá tổng tiền
                 if (discountAmount > storeTotal) {
                     discountAmount = storeTotal;
                 }
                 
-                // Cập nhật hiển thị
-                const newTotal = storeTotal - discountAmount;
-                document.getElementById('storeSubtotal-' + storeId).textContent = 
-                    newTotal.toLocaleString('vi-VN') + '₫';
+                const newStoreTotal = storeTotal - discountAmount;
+                const storeSubtotalEl = document.getElementById('storeSubtotal-' + storeId);
+                if (storeSubtotalEl) {
+                    storeSubtotalEl.textContent = newStoreTotal.toLocaleString('vi-VN') + '₫';
+                }
                 
-                // Hiển thị badge mã đã áp dụng
                 document.getElementById('appliedBadge-' + storeId).style.display = 'flex';
                 document.getElementById('appliedCode-' + storeId).textContent = discountCode;
                 document.getElementById('appliedAmount-' + storeId).textContent = 
                     '(-' + discountAmount.toLocaleString('vi-VN') + '₫)';
                 
-                // Lưu vào hidden input
                 document.getElementById('selectedDiscountCode-' + storeId).value = discountCode;
                 document.getElementById('selectedDiscountAmount-' + storeId).value = discountAmount;
                 
-                // Đóng panel
                 toggleDiscountPanel(storeId);
-                
-                // Cập nhật tổng đơn hàng
                 updateOrderTotal();
                 
             } else {
-                // Bỏ áp dụng mã
                 removeStoreDiscount(storeId);
             }
         }
         
-        // Bỏ áp dụng mã giảm giá của cửa hàng
         function removeStoreDiscount(storeId) {
-            // Reset hiển thị
             const storeGroup = document.querySelector('.store-group[data-store-id="' + storeId + '"]');
             const productItems = storeGroup.querySelectorAll('.product-item');
             let storeTotal = 0;
-            
             productItems.forEach(item => {
                 const priceText = item.querySelector('.product-price').textContent;
                 const price = parseFloat(priceText.replace(/[^\d]/g, ''));
                 storeTotal += price;
             });
             
-            document.getElementById('storeSubtotal-' + storeId).textContent = 
-                storeTotal.toLocaleString('vi-VN') + '₫';
+            const storeSubtotalEl = document.getElementById('storeSubtotal-' + storeId);
+            if (storeSubtotalEl) {
+                storeSubtotalEl.textContent = storeTotal.toLocaleString('vi-VN') + '₫';
+            }
             
-            // Ẩn badge
             document.getElementById('appliedBadge-' + storeId).style.display = 'none';
-            
-            // Xóa hidden input
             document.getElementById('selectedDiscountCode-' + storeId).value = '';
             document.getElementById('selectedDiscountAmount-' + storeId).value = '0';
             
-            // Cập nhật tổng đơn hàng
             updateOrderTotal();
         }
         
         // Cập nhật tổng đơn hàng
         function updateOrderTotal() {
-            // Tính tổng tất cả cửa hàng (đã trừ discount)
-            let grandTotal = 0;
+            // --- 1. TÍNH TOÁN ---
+            
+            // Tính tổng Tạm tính (lấy từ "Tổng cộng" bên trái, đã giảm)
+            // và tính tổng số tiền Giảm giá
+            let subtotal = 0;
             let totalDiscount = 0;
             const allStoreGroups = document.querySelectorAll('.store-group');
             
             allStoreGroups.forEach(group => {
                 const subtotalText = group.querySelector('.store-subtotal-amount').textContent;
-                const subtotal = parseFloat(subtotalText.replace(/[^\d]/g, ''));
-                grandTotal += subtotal;
+                const storeAmount = parseFloat(subtotalText.replace(/[^\d]/g, ''));
+                subtotal += storeAmount;
                 
                 // Lấy số tiền giảm của cửa hàng này
                 const storeId = group.getAttribute('data-store-id');
                 const discountInput = document.getElementById('selectedDiscountAmount-' + storeId);
                 if (discountInput && discountInput.value) {
-                    totalDiscount += parseFloat(discountInput.value);
+                    const discount = parseFloat(discountInput.value);
+                    if (!isNaN(discount) && discount > 0) {
+                        totalDiscount += discount;
+                    }
                 }
             });
+    
+            // Lấy phí vận chuyển
+            let shippingFee = 0;
+            const selectedShippingRadio = document.querySelector('input[name="shippingProviderId"]:checked');
+            if (selectedShippingRadio) {
+                const shippingCard = selectedShippingRadio.closest('.shipping-item-card');
+                if (shippingCard) {
+                    const feeText = shippingCard.querySelector('.shipping-fee-badge').textContent;
+                    shippingFee = parseFloat(feeText.replace(/[^\d]/g, ''));
+                }
+            }
             
-            // ✅ FIX: Tính tổng gốc (chưa giảm giá)
-            const originalSubtotal = grandTotal + totalDiscount;
+            // Tính tổng thanh toán: Tạm tính (đã giảm) + Phí ship
+            const finalTotal = subtotal + shippingFee;
+    
+            // --- 2. CẬP NHẬT GIAO DIỆN ---
             
-            // Thêm phí vận chuyển
-            const shippingFee = 30000;
-            const finalTotal = grandTotal + shippingFee;
-            
-            // ✅ FIX: Cập nhật hiển thị bên phải
+            // Cập nhật "Tạm tính" (Dòng 1)
             const summaryRows = document.querySelectorAll('.summary-row');
-            
-            // Cập nhật "Tạm tính" (sau khi đã trừ discount)
-            if (summaryRows[0]) {
-                summaryRows[0].querySelector('strong').textContent = 
-                    grandTotal.toLocaleString('vi-VN') + '₫';
+            if (summaryRows[0] && summaryRows[0].querySelector('strong')) {
+                summaryRows[0].querySelector('strong').textContent = subtotal.toLocaleString('vi-VN') + '₫';
             }
             
-            // Cập nhật "Phí vận chuyển" (giữ nguyên)
-            if (summaryRows[1]) {
-                summaryRows[1].querySelector('strong').textContent = 
-                    shippingFee.toLocaleString('vi-VN') + '₫';
+            // Cập nhật "Phí vận chuyển" (Dòng 2)
+            if (summaryRows[1] && summaryRows[1].querySelector('strong')) {
+                summaryRows[1].querySelector('strong').textContent = shippingFee.toLocaleString('vi-VN') + '₫';
             }
+    
+            // Cập nhật "Giảm giá" (Tìm hoặc Tạo)
+            let discountRow = document.getElementById('discountRow');
             
-            // Cập nhật "Giảm giá" nếu có
-            let discountRowIndex = 2;
             if (totalDiscount > 0) {
-                // Kiểm tra xem đã có dòng giảm giá chưa
-                let discountRow = document.querySelector('.summary-row.text-danger');
+                // Nếu chưa có, tạo mới
                 if (!discountRow) {
-                    // Tạo mới dòng giảm giá
-                    const summaryDiv = document.querySelector('.order-summary .section-card');
-                    const totalRow = summaryRows[summaryRows.length - 1];
-                    
                     discountRow = document.createElement('div');
+                    discountRow.id = 'discountRow';
                     discountRow.className = 'summary-row text-danger';
-                    discountRow.innerHTML = `
-                        <span><i class="fas fa-tag me-2"></i>Giảm giá:</span>
-                        <strong>-${totalDiscount.toLocaleString('vi-VN')}₫</strong>
-                    `;
-                    totalRow.parentNode.insertBefore(discountRow, totalRow);
-                } else {
-                    // Cập nhật giá trị
-                    discountRow.querySelector('strong').textContent = 
-                        '-' + totalDiscount.toLocaleString('vi-VN') + '₫';
+                    
+                    // Chèn trước dòng "Tổng thanh toán" (dòng có id 'totalAmountText')
+                    const totalAmountRow = document.getElementById('totalAmountText').closest('.summary-row');
+                    if (totalAmountRow) {
+                        totalAmountRow.parentNode.insertBefore(discountRow, totalAmountRow);
+                    }
                 }
-                discountRowIndex = 3;
+                
+                // Cập nhật nội dung và hiển thị
+                discountRow.innerHTML = `
+                    <span><i class="fas fa-tag me-2"></i>Giảm giá:</span>
+                    <strong>-${totalDiscount.toLocaleString('vi-VN')}₫</strong>
+                `;
+                discountRow.style.display = 'flex'; // Dùng 'flex' vì .summary-row là flex
+    
             } else {
-                // Xóa dòng giảm giá nếu không có discount
-                const discountRow = document.querySelector('.summary-row.text-danger');
+                // Nếu có, ẩn đi
                 if (discountRow) {
-                    discountRow.remove();
+                    discountRow.style.display = 'none';
                 }
             }
-            
-            // Cập nhật "Tổng thanh toán"
-            const totalRow = summaryRows[summaryRows.length - 1];
-            if (totalRow) {
-                totalRow.querySelector('strong').textContent = 
-                    finalTotal.toLocaleString('vi-VN') + '₫';
+    
+            // Cập nhật "Tổng thanh toán" (Dùng ID cho chắc chắn)
+            const totalAmountElement = document.getElementById('totalAmountText');
+            if (totalAmountElement) {
+                totalAmountElement.textContent = finalTotal.toLocaleString('vi-VN') + '₫';
             }
             
             console.log('✅ Updated Order Total:', {
-                originalSubtotal: originalSubtotal,
+                subtotal: subtotal,
                 discount: totalDiscount,
-                subtotalAfterDiscount: grandTotal,
                 shipping: shippingFee,
                 finalTotal: finalTotal
             });
         }
         
-        // Auto-show payment details for selected method on load
-        document.addEventListener('DOMContentLoaded', function() {
-            const selectedPayment = document.querySelector('.payment-method input[type="radio"]:checked');
-            if (selectedPayment) {
-                const paymentMethod = selectedPayment.closest('.payment-method');
-                paymentMethod.classList.add('selected');
-                paymentMethod.querySelector('.payment-details').classList.add('active');
-            }
-        });
-        
         // Form validation before submit
         document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+            console.log('🚀 Form submitting...');
+            
             const addressSelected = document.querySelector('input[name="addressId"]:checked');
             const paymentSelected = document.querySelector('input[name="paymentMethod"]:checked');
+            const shippingSelected = document.getElementById('shippingId').value;
+            
+            console.log('📋 Validation check:');
+            console.log('  - Address:', addressSelected ? addressSelected.value : 'NOT SELECTED');
+            console.log('  - Payment:', paymentSelected ? paymentSelected.value : 'NOT SELECTED ❌');
+            console.log('  - Shipping:', shippingSelected || 'NOT SELECTED');
             
             if (!addressSelected) {
                 e.preventDefault();
                 alert('Vui lòng chọn địa chỉ giao hàng');
+                console.error('❌ Form blocked: No address selected');
+                return false;
+            }
+            
+            if (!shippingSelected) {
+                e.preventDefault();
+                alert('Vui lòng chọn đơn vị vận chuyển');
+                console.error('❌ Form blocked: No shipping selected');
                 return false;
             }
             
             if (!paymentSelected) {
                 e.preventDefault();
-                alert('Vui lòng chọn phương thức thanh toán');
+                alert('❌ LỖI: Vui lòng chọn phương thức thanh toán!\n\nNếu bạn đã click vào Bank/MoMo, vui lòng thử lại hoặc chọn COD.');
+                console.error('❌ Form blocked: No payment method selected');
+                
+                // Debug: Liệt kê tất cả radio buttons
+                const allRadios = document.querySelectorAll('input[name="paymentMethod"]');
+                console.log('📻 All payment radio buttons:');
+                allRadios.forEach(radio => {
+                    console.log('  -', radio.value, ':', radio.checked ? 'CHECKED ✅' : 'not checked');
+                });
+                
                 return false;
             }
+            
+            console.log('✅ Form validation passed! Submitting with payment:', paymentSelected.value);
             
             // Show loading
             const submitBtn = this.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Đang xử lý...';
         });
+        
+        // ========== SHIPPING PROVIDER FUNCTIONS ==========
+        
+        // Toggle shipping panel
+        function toggleShippingPanel() {
+            const panel = document.getElementById('shippingPanel');
+            const chevron = document.getElementById('shippingChevron');
+            
+            if (panel.style.display === 'none') {
+                panel.style.display = 'block';
+                chevron.classList.remove('fa-chevron-down');
+                chevron.classList.add('fa-chevron-up');
+            } else {
+                panel.style.display = 'none';
+                chevron.classList.remove('fa-chevron-up');
+                chevron.classList.add('fa-chevron-down');
+            }
+        }
+        
+        // Close shipping panel
+        function closeShippingPanel() {
+            const panel = document.getElementById('shippingPanel');
+            const chevron = document.getElementById('shippingChevron');
+            panel.style.display = 'none';
+            chevron.classList.remove('fa-chevron-up');
+            chevron.classList.add('fa-chevron-down');
+        }
+        
+        // Select shipping provider
+        function selectShipping(shippingId, shippingName, shippingFee) {
+            // Cập nhật UI selector
+            document.getElementById('selectedShippingName').textContent = shippingName;
+            document.getElementById('selectedShippingInfo').textContent = 
+                'Phí vận chuyển: ' + shippingFee.toLocaleString('vi-VN') + '₫';
+            
+            // Đánh dấu has-selection
+            const selector = document.getElementById('shippingSelector');
+            selector.classList.add('has-selection');
+            
+            // Lưu giá trị vào hidden input
+            document.getElementById('shippingId').value = shippingId;
+            
+            // Bỏ selected class khỏi tất cả cards
+            document.querySelectorAll('.shipping-item-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Thêm selected class vào card được chọn
+            const selectedCard = document.getElementById('shippingCard' + shippingId);
+            if (selectedCard) {
+                selectedCard.classList.add('selected');
+            }
+            
+            // Cập nhật tổng tiền đơn hàng với phí ship mới
+            updateShippingFee(shippingFee);
+            
+            // Đóng panel sau khi chọn
+            setTimeout(() => {
+                closeShippingPanel();
+            }, 300);
+            
+            console.log('✅ Selected shipping:', {
+                id: shippingId,
+                name: shippingName,
+                fee: shippingFee
+            });
+        }
+        
+        // Update shipping fee in order summary
+        function updateShippingFee(newShippingFee) {
+            const summaryRows = document.querySelectorAll('.summary-row');
+            let shippingRowIndex = -1;
+            
+            // Tìm dòng "Phí vận chuyển"
+            summaryRows.forEach((row, index) => {
+                const labelText = row.querySelector('span:first-child')?.textContent;
+                if (labelText && labelText.includes('Phí vận chuyển')) {
+                    shippingRowIndex = index;
+                }
+            });
+            
+            // Cập nhật phí vận chuyển
+            if (shippingRowIndex !== -1) {
+                const shippingRow = summaryRows[shippingRowIndex];
+                // An toàn hơn khi tìm 'strong' thay vì 'span:last-child'
+                const feeElement = shippingRow.querySelector('strong');
+                if (feeElement) {
+                    feeElement.textContent = newShippingFee.toLocaleString('vi-VN') + '₫';
+                }
+            }
+            
+            // Tính lại tổng thanh toán
+            updateOrderTotal();
+        }
     </script>
 </body>
 </html>

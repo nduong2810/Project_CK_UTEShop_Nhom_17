@@ -322,6 +322,7 @@
                                            </c:when>
                                            <c:otherwise>https://via.placeholder.com/40x40?text=U</c:otherwise>
                                          </c:choose>"
+<<<<<<< Updated upstream
 									class="user-avatar me-2" alt="Avatar"> <span
 									class="d-none d-md-inline">${sessionScope.user.hoTen}</span>
 							</button>
@@ -442,6 +443,127 @@
 			</div>
 		</div>
 	</div>
+=======
+                                    class="user-avatar me-2" alt="Avatar">
+                               <span class="d-none d-md-inline">${sessionScope.user.hoTen}</span>
+                           </button>
+                           <ul class="dropdown-menu dropdown-menu-end">
+                               <!-- Role-based menu items -->
+                               <li>
+                                   <h6 class="dropdown-header">
+                                       <i class="fas fa-user-circle me-2"></i>
+                                       ${sessionScope.user.hoTen}
+                                       <small class="d-block text-muted">${sessionScope.userRole}</small>
+                                   </h6>
+                               </li>
+                               <li><hr class="dropdown-divider"></li>
+                               <!-- Common user features -->
+                               <li>
+                                   <a class="dropdown-item" href="${pageContext.request.contextPath}/user/profile">
+                                       <i class="fas fa-user-edit me-2"></i>Hồ sơ cá nhân
+                                   </a>
+                               </li>
+                               <li>
+                                   <a class="dropdown-item" href="${pageContext.request.contextPath}/user/orders">
+                                       <i class="fas fa-shopping-bag me-2"></i>Đơn hàng của tôi
+                                   </a>
+                               </li>
+                               <li>
+                                   <a class="dropdown-item" href="${pageContext.request.contextPath}/user/favorites">
+                                       <i class="fas fa-heart me-2"></i>Sản phẩm yêu thích
+                                   </a>
+                               </li>
+                               <li>
+                                   <a class="dropdown-item" href="${pageContext.request.contextPath}/user/viewed">
+                                       <i class="fas fa-heart me-2"></i>Sản phẩm đã xem
+                                   </a>
+                               </li>
+                               <li>
+                                   <a class="dropdown-item" href="${pageContext.request.contextPath}/user/address-form">
+                                       <i class="fas fa-map-marker-alt me-2"></i>Địa chỉ giao hàng
+                                   </a>
+                               </li>
+                               <li>
+                                   <a class="dropdown-item" href="${pageContext.request.contextPath}/chat">
+                                       <i class="fas fa-comments me-2"></i>Tin nhắn
+                                       <span class="badge bg-danger ms-2" id="chatUnreadBadge" style="display: none;">0</span>
+                                   </a>
+                               </li>
+                               <!-- Vendor-specific features -->
+                               <c:if test="${sessionScope.userRole == 'VENDOR'}">
+                                   <li><hr class="dropdown-divider"></li>
+                                   <li>
+                                       <h6 class="dropdown-header">
+                                           <i class="fas fa-store me-2"></i>Quản lý Shop
+                                       </h6>
+                                   </li>
+                                   <li>
+                                       <a class="dropdown-item" href="${pageContext.request.contextPath}/vendor/dashboard">
+                                           <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                                       </a>
+                               </c:if>
+                               <!-- Admin-specific features -->
+                               <c:if test="${sessionScope.userRole == 'ADMIN'}">
+                                   <li><hr class="dropdown-divider"></li>
+                                   <li>
+                                       <h6 class="dropdown-header">
+                                           <i class="fas fa-crown me-2"></i>Quản trị
+                                       </h6>
+                                   </li>
+                                   <li>
+                                       <a class="dropdown-item" href="${pageContext.request.contextPath}/admin/home">
+                                           <i class="fas fa-chart-line me-2"></i>Dashboard Admin
+                                       </a>
+                                   </li>
+                               </c:if>
+                               <c:if test="${sessionScope.userRole == 'SHIPPER'}">
+                                   <li><hr class="dropdown-divider"></li>
+                                   <li>
+                                       <h6 class="dropdown-header">
+                                           <i class="fas fa-motorcycle me-2"></i>Quản lý Giao hàng
+                                       </h6>
+                                   </li>
+                                   <li>
+                                       <a class="dropdown-item" href="${pageContext.request.contextPath}/shipper/orders">
+                                           <i class="fas fa-box-open me-2"></i>Đơn hàng được giao
+                                       </a>
+                                   </li>
+                                   <li>
+                                       <a class="dropdown-item" href="${pageContext.request.contextPath}/shipper/orders?action=statistics">
+                                           <i class="fas fa-chart-bar me-2"></i>Thống kê giao hàng
+                                       </a>
+                                   </li>
+                               </c:if>
+                               <li><hr class="dropdown-divider"></li>
+                               <li>
+                                   <a class="dropdown-item" href="${pageContext.request.contextPath}/user/settings">
+                                       <i class="fas fa-cog me-2"></i>Cài đặt
+                                   </a>
+                               </li>
+                               <li>
+                                   <a class="dropdown-item" href="${pageContext.request.contextPath}/auth/logout">
+                                       <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                                   </a>
+                               </li>
+                           </ul>
+                       </div>
+                   </c:when>
+                   <c:otherwise>
+                       <!-- User is not logged in - Show login/register buttons -->
+                       <a href="${pageContext.request.contextPath}/auth/login" class="btn btn-outline">
+                           <i class="fas fa-sign-in-alt me-1"></i>
+                           <span class="d-none d-md-inline">Đăng nhập</span>
+                       </a>
+                       <a href="${pageContext.request.contextPath}/auth/register" class="btn btn-warning">
+                           <i class="fas fa-user-plus me-1"></i>
+                           <span class="d-none d-md-inline">Đăng ký</span>
+                       </a>
+                   </c:otherwise>
+               </c:choose>
+           </div>
+       </div>
+   </div>
+>>>>>>> Stashed changes
 </nav>
 <script>
 // Navbar scroll effect

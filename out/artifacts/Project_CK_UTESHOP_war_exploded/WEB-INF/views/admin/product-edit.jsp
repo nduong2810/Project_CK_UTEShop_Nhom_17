@@ -9,7 +9,6 @@
 	--card: #fff;
 	--muted: #6b7280;
 	--primary: #1a73e8;
-	--danger: #ef4444;
 	--radius: 16px
 }
 
@@ -90,7 +89,7 @@ textarea {
 	gap: 10px
 }
 
-.row .input {
+.row .field {
 	flex: 1
 }
 
@@ -162,6 +161,11 @@ textarea {
 	color: #991b1b;
 	border: 1px solid #fecaca
 }
+
+.muted {
+	color: var(--muted);
+	font-size: 12px
+}
 </style>
 
 <div class="admin-shell">
@@ -179,14 +183,19 @@ textarea {
 			<c:if test="${param.msg=='error'}">
 				<div class="alert alert-err">Có lỗi khi lưu. Thử lại.</div>
 			</c:if>
+			<c:if test="${param.msg=='notfound'}">
+				<div class="alert alert-err">Không tìm thấy sản phẩm.</div>
+			</c:if>
 
+			<!-- QUAN TRỌNG: multipart/form-data để upload -->
 			<form method="post"
-				action="${pageContext.request.contextPath}/admin/products/edit">
+				action="${pageContext.request.contextPath}/admin/products/edit"
+				enctype="multipart/form-data">
 				<input type="hidden" name="maSP" value="${p.maSP}" />
 
 				<div class="form-card">
 
-					<!-- Cột trái: Hình & mô tả -->
+					<!-- Cột trái: Ảnh & mô tả -->
 					<div class="section">
 						<div class="sec-title">Hình ảnh & Mô tả</div>
 
@@ -205,11 +214,21 @@ textarea {
 							</c:choose>
 						</div>
 
+						<!-- Chọn file từ máy -->
 						<div class="field">
-							<label>Đường dẫn hình ảnh</label> <input class="input"
+							<label>Chọn ảnh từ máy</label> <input class="input" type="file"
+								name="fileImage" accept="image/*" onchange="previewFile(this)" />
+							<small class="muted">Nếu không chọn, hệ thống sẽ giữ ảnh
+								hiện tại.</small>
+						</div>
+
+						<!-- (Tuỳ chọn) Gõ tay tên file – ưu tiên file upload nếu có -->
+						<div class="field">
+							<label>Đường dẫn / tên ảnh</label> <input class="input"
 								type="text" name="hinhAnh" value="${p.hinhAnh}"
-								oninput="previewChange(this.value)" /> <small class="muted">Ví
-								dụ: <code>uploads/products/x1.png</code>
+								oninput="previewByText(this.value)" /> <small class="muted">Chỉ
+								cần lưu <code>tên file</code> (vd: <code>abc.jpg</code>). Ảnh sẽ
+								hiển thị từ <code>${pageContext.request.contextPath}/assets/img/</code>.
 							</small>
 						</div>
 
@@ -219,7 +238,7 @@ textarea {
 						</div>
 					</div>
 
-					<!-- Cột phải: Thông tin cơ bản -->
+					<!-- Cột phải: Thông tin sản phẩm -->
 					<div class="section">
 						<div class="sec-title">Thông tin sản phẩm</div>
 
@@ -229,18 +248,18 @@ textarea {
 						</div>
 
 						<div class="row">
-							<div class="field" style="flex: 1">
+							<div class="field">
 								<label>Giá bán (VNĐ)</label> <input class="input" type="number"
 									name="donGia" min="0" step="100" value="${p.donGia}" />
 							</div>
-							<div class="field" style="flex: 1">
+							<div class="field">
 								<label>Kho còn</label> <input class="input" type="number"
 									name="soLuongTon" min="0" step="1" value="${p.soLuongTon}" />
 							</div>
 						</div>
 
 						<div class="row">
-							<div class="field" style="flex: 1">
+							<div class="field">
 								<label>Danh mục</label> <select name="maDM" class="input"
 									required>
 									<c:forEach var="c" items="${categories}">
@@ -248,7 +267,8 @@ textarea {
 									</c:forEach>
 								</select>
 							</div>
-							<div class="field" style="flex: 1">
+
+							<div class="field">
 								<label>Đang bán</label> <label
 									style="display: flex; align-items: center; gap: 8px"> <input
 									type="checkbox" name="trangThai"
@@ -273,16 +293,19 @@ textarea {
 </div>
 
 <script>
-	function previewChange(val) {
+	function previewFile(input) {
 		const img = document.getElementById('imgPreview');
-		if (!img)
-			return;
+		if (input.files && input.files[0])
+			img.src = URL.createObjectURL(input.files[0]);
+	}
+	function previewByText(val) {
+		const img = document.getElementById('imgPreview');
 		if (!val) {
 			img.src = '${pageContext.request.contextPath}/assets/img/placeholder-product.png';
 			return;
 		}
-		img.src = (val.startsWith('/') ? ''
-				: '${pageContext.request.contextPath}/')
-				+ val;
+		const base = '${pageContext.request.contextPath}/assets/img/';
+		const name = val.split(/[\\/]/).pop(); // chỉ lấy tên file
+		img.src = base + name;
 	}
 </script>
