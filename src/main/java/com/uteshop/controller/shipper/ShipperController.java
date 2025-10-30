@@ -30,7 +30,7 @@ public class ShipperController extends HttpServlet {
     public void init() throws ServletException {
         super.init();
         try {
-            JPAUtil.getEntityManager().close(); // Chỉ để kiểm tra khởi tạo
+            // Kiểm tra JPA đã sẵn sàng hay chưa, không cần đóng EntityManager
             log("JPA EntityManagerFactory is ready.");
         } catch (Exception e) {
             log("❌ Lỗi khởi tạo JPA trong ShipperController:", e);
@@ -77,6 +77,10 @@ public class ShipperController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        
+        // ✨ Cải tiến: Bắt buộc đặt mã hóa cho request để xử lý tiếng Việt từ form POST
+        request.setCharacterEncoding("UTF-8"); 
+        
         String action = request.getParameter("action");
         if ("updateStatus".equals(action)) {
             handleUpdateStatus(request, response);
@@ -103,7 +107,9 @@ public class ShipperController extends HttpServlet {
             request.getRequestDispatcher("/WEB-INF/views/shipper/order-statistics.jsp").forward(request, response);
         } catch (Exception e) {
             log("Lỗi tải Dashboard Shipper:", e);
-            response.sendRedirect(request.getContextPath() + "/guest/home?error=Lỗi tải dữ liệu Dashboard.");
+            // ✨ Cải tiến: Chuyển hướng về chính dashboard thay vì trang guest/home
+            String error = URLEncoder.encode("Lỗi tải dữ liệu Dashboard.", StandardCharsets.UTF_8);
+            response.sendRedirect(request.getContextPath() + "/shipper/dashboard?error=" + error);
         }
     }
 
@@ -115,7 +121,8 @@ public class ShipperController extends HttpServlet {
             request.getRequestDispatcher("/WEB-INF/views/shipper/assigned-orders.jsp").forward(request, response);
         } catch (Exception e) {
             log("Lỗi tải danh sách đơn hàng:", e);
-            response.sendRedirect(request.getContextPath() + "/shipper/dashboard?error=Lỗi tải danh sách đơn hàng.");
+            String error = URLEncoder.encode("Lỗi tải danh sách đơn hàng.", StandardCharsets.UTF_8);
+            response.sendRedirect(request.getContextPath() + "/shipper/dashboard?error=" + error);
         }
     }
 
@@ -127,7 +134,8 @@ public class ShipperController extends HttpServlet {
             request.getRequestDispatcher("/WEB-INF/views/shipper/history.jsp").forward(request, response);
         } catch (Exception e) {
             log("Lỗi tải lịch sử giao hàng:", e);
-            response.sendRedirect(request.getContextPath() + "/shipper/dashboard?error=Lỗi tải lịch sử giao hàng.");
+            String error = URLEncoder.encode("Lỗi tải lịch sử giao hàng.", StandardCharsets.UTF_8);
+            response.sendRedirect(request.getContextPath() + "/shipper/dashboard?error=" + error);
         }
     }
 
@@ -139,7 +147,8 @@ public class ShipperController extends HttpServlet {
             request.getRequestDispatcher("/WEB-INF/views/shipper/pickup-orders.jsp").forward(request, response);
         } catch (Exception e) {
             log("Lỗi tải danh sách đơn hàng chờ lấy:", e);
-            response.sendRedirect(request.getContextPath() + "/shipper/dashboard?error=Không thể tải danh sách đơn hàng.");
+            String error = URLEncoder.encode("Không thể tải danh sách đơn hàng.", StandardCharsets.UTF_8);
+            response.sendRedirect(request.getContextPath() + "/shipper/dashboard?error=" + error);
         }
     }
 
@@ -148,17 +157,27 @@ public class ShipperController extends HttpServlet {
     private void handleUpdateStatus(HttpServletRequest request, HttpServletResponse response) throws IOException {
         Integer maPC = null;
         try {
+            // Lệnh request.setCharacterEncoding("UTF-8"); đã được thêm vào doPost
             maPC = Integer.parseInt(request.getParameter("maPC"));
             String newStatus = request.getParameter("newStatus");
+            
             LocalDateTime ngayHoanThanh = null;
             if ("HOAN_THANH".equals(newStatus) || "TRA_HANG".equals(newStatus)) {
                 ngayHoanThanh = LocalDateTime.now();
             }
+            
             orderRepo.updateDeliveryStatus(maPC, newStatus, ngayHoanThanh);
-            response.sendRedirect(request.getContextPath() + "/shipper/orders?message=Cập nhật trạng thái thành công!");
+
+            // Đã có xử lý mã hóa URL cho tiếng Việt
+            String message = URLEncoder.encode("Cập nhật trạng thái đơn hàng thành công!", StandardCharsets.UTF_8);
+            response.sendRedirect(request.getContextPath() + "/shipper/orders?message=" + message);
+            
         } catch (Exception e) {
             log("Lỗi khi cập nhật trạng thái cho MaPC=" + maPC, e);
-            response.sendRedirect(request.getContextPath() + "/shipper/orders?error=Cập nhật thất bại.");
+            
+            // Đã có xử lý mã hóa URL cho tiếng Việt
+            String error = URLEncoder.encode("Cập nhật trạng thái thất bại. Đã có lỗi xảy ra.", StandardCharsets.UTF_8);
+            response.sendRedirect(request.getContextPath() + "/shipper/orders?error=" + error);
         }
     }
 
@@ -170,18 +189,18 @@ public class ShipperController extends HttpServlet {
             maDH = Integer.parseInt(request.getParameter("maDH"));
 
             log("INFO: Shipper MaND=" + shipperMaND + " đang xác nhận lấy đơn hàng MaDH=" + maDH);
+            // Giả định orderRepo.assignOrderToShipper cũng cập nhật trạng thái đơn hàng (DonHang)
+            // từ 'SẴN SÀNG LẤY' sang 'ĐANG GIAO' (hoặc tương đương)
             boolean success = orderRepo.assignOrderToShipper(maDH, shipperMaND);
 
             if (success) {
-                // =======================================================
-                // SỬA LỖI: MÃ HÓA (URL ENCODE) THÔNG BÁO TIẾNG VIỆT
-                // =======================================================
-                String message = URLEncoder.encode("Đã xác nhận lấy đơn hàng #" + maDH + " thành công!", StandardCharsets.UTF_8);
+                // Đã có xử lý mã hóa URL cho tiếng Việt
+                String message = URLEncoder.encode("Đã xác nhận lấy đơn hàng #" + maDH + " thành công! Vui lòng bắt đầu giao.", StandardCharsets.UTF_8);
                 String redirectURL = request.getContextPath() + "/shipper/pickup?message=" + message;
                 response.sendRedirect(redirectURL);
                 
             } else {
-                // Cũng nên mã hóa thông báo lỗi
+                // Đã có xử lý mã hóa URL cho tiếng Việt
                 String error = URLEncoder.encode("Xác nhận thất bại! Đơn hàng có thể đã được người khác nhận.", StandardCharsets.UTF_8);
                 String redirectURL = request.getContextPath() + "/shipper/pickup?error=" + error;
                 response.sendRedirect(redirectURL);
