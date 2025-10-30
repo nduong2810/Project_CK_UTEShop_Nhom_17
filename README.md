@@ -846,16 +846,16 @@ in the Software without restriction...
 
 ### Team Members
 
-| Thành viên | MSSV | Vai trò | Email | GitHub |
-|------------|------|---------|-------|--------|
-| **Nguyễn Văn A** | 21110XXX | Team Leader, Backend Dev | nguyenvana@student.hcmute.edu.vn | [@nguyenvana](https://github.com/nguyenvana) |
-| **Trần Thị B** | 21110XXX | Frontend Dev, UI/UX | tranthib@student.hcmute.edu.vn | [@tranthib](https://github.com/tranthib) |
-| **Lê Văn C** | 21110XXX | Backend Dev, Database | levanc@student.hcmute.edu.vn | [@levanc](https://github.com/levanc) |
-| **Phạm Thị D** | 21110XXX | Tester, Documentation | phamthid@student.hcmute.edu.vn | [@phamthid](https://github.com/phamthid) |
+| Thành viên | MSSV | Email | GitHub |
+|------------|------|-------|--------|
+| **Bùi Nhật Dương** | 21110198 |  21110198@student.hcmute.edu.vn | [@BuiNhatDuong](https://github.com/nduong2810) |
+| **Hoàng Văn Đông** | 21110093 | 21110093@student.hcmute.edu.vn | [@HoangVanDong](https://github.com/HoangDongDong) |
+| **Phạm Ngọc Mạnh** | 21110262 |  21110262@student.hcmute.edu.vn | [@PhamNgocManh](https://github.com/ngocmanhp667) |
+| **Trương Tấn Sang** | 21110300 | 21110300@student.hcmute.edu.vn | [@TruongTanSang](https://github.com/sangdeptrailoitaiai) |
 
 ### Giảng viên hướng dẫn
 
-- **TS. Nguyễn Văn X** - Khoa Công nghệ Thông tin, UTE
+- **ThS. Nguyễn Hữu Trung** - Khoa Công nghệ Thông tin, UTE
 
 ### Contributors
 
@@ -882,10 +882,7 @@ Nếu bạn gặp vấn đề hoặc có câu hỏi:
 3. **Create Issue**: Tạo issue mới với mô tả chi tiết
 4. **Email**: uteshop.team17@gmail.com
 
-### Social Media
 
-- **Facebook**: [UTESHOP Nhóm 17](https://facebook.com/uteshop)
-- **LinkedIn**: [UTESHOP Project](https://linkedin.com/company/uteshop)
 
 ---
 
@@ -950,14 +947,8 @@ Nếu bạn gặp vấn đề hoặc có câu hỏi:
 
 ---
 
-## 🏆 Achievements
 
-- 🥇 **Best Project Award** - UTE Web Development Course 2024
-- ⭐ **4.8/5.0** - Average rating from users
-- 📊 **95%** - Test coverage
-- 🚀 **< 2s** - Average page load time
 
----
 
 ## 📊 Statistics
 
@@ -1002,7 +993,7 @@ Cảm ơn bạn đã quan tâm đến project **UTESHOP**! Nếu project này h�
 [![GitHub](https://img.shields.io/badge/GitHub-nduong2810-black?style=flat&logo=github)](https://github.com/nduong2810)
 [![Email](https://img.shields.io/badge/Email-uteshop.team17%40gmail.com-red?style=flat&logo=gmail)](mailto:uteshop.team17@gmail.com)
 
-**© 2024 UTESHOP. All rights reserved.**
+**© 2025 UTESHOP. All rights reserved.**
 
 [⬆ Back to top](#-uteshop---hệ-thống-thương-mại-điện-tử)
 
