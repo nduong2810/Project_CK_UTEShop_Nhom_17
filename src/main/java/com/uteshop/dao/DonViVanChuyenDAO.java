@@ -215,6 +215,16 @@ public class DonViVanChuyenDAO {
 	private boolean notBlank(String s) {
 		return s != null && !s.trim().isEmpty();
 	}
-
+	// Trong lớp DonViVanChuyenDAO (nếu bạn có)
+	public List<DonViVanChuyen> findAllActive() {
+	    EntityManager em = JPAUtil.getEntityManager();
+	    try {
+	        String jpql = "SELECT d FROM DonViVanChuyen d"; // Thêm WHERE clause nếu cần
+	        TypedQuery<DonViVanChuyen> query = em.createQuery(jpql, DonViVanChuyen.class);
+	        return query.getResultList();
+	    } finally {
+	        em.close();
+	    }
+	}
 	
 }

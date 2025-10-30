@@ -500,4 +500,36 @@ public class NguoiDungDAO {
 		default -> "id_desc";
 		};
 	}
+	// Ví dụ trong NguoiDungDAO.java
+	public void saveOrUpdate(NguoiDung user) {
+	    EntityManager em = JPAUtil.getEntityManager();
+	    EntityTransaction transaction = em.getTransaction();
+	    try {
+	        transaction.begin();
+	        
+	        // Logic quan trọng dựa trên ràng buộc CHECK
+	        if (user.getVaiTro() != NguoiDung.VaiTro.SHIPPER) {
+	            // Nếu không phải Shipper, đảm bảo donViVanChuyen là NULL
+	            user.setDonViVanChuyen(null); 
+	        } else if (user.getDonViVanChuyen() == null) {
+	            // Nếu là Shipper nhưng chưa có đơn vị vận chuyển, ném lỗi
+	            throw new IllegalArgumentException("Shipper phải được gán một đơn vị vận chuyển.");
+	        }
+	        
+	        if (user.getMaND() == null) {
+	            em.persist(user); // Tạo mới
+	        } else {
+	            em.merge(user); // Cập nhật
+	        }
+	        
+	        transaction.commit();
+	    } catch (Exception e) {
+	        if (transaction.isActive()) {
+	            transaction.rollback();
+	        }
+	        throw new RuntimeException("Lưu người dùng thất bại", e);
+	    } finally {
+	        em.close();
+	    }
+	}
 }

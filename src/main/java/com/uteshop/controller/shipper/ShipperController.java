@@ -119,41 +119,38 @@ public class ShipperController extends HttpServlet {
     private void showOrders(HttpServletRequest request, HttpServletResponse response, Integer shipperMaND)
             throws ServletException, IOException {
         try {
-            // 1. Lấy tất cả đơn hàng được phân công
-            List<PhanCongGiaoHang> assignedOrders = orderRepo.findAssignedOrdersByShipperId(shipperMaND);
-            
-            // 2. Lọc ra các đơn hàng đang giao (chưa hoàn thành/trả hàng)
-            List<PhanCongGiaoHang> pendingOrders = assignedOrders.stream()
-                    .filter(pc -> !("HOAN_THANH".equals(pc.getTrangThai()) || "TRA_HANG".equals(pc.getTrangThai())))
-                    .collect(Collectors.toList());
-            
+            // THAY ĐỔI: Gọi trực tiếp phương thức đã được tối ưu hóa trong DAO.
+            // Phương thức này sử dụng "JOIN FETCH" để tải cả thông tin Đơn Hàng,
+            // tránh được lỗi LazyInitializationException.
+            List<PhanCongGiaoHang> pendingOrders = orderRepo.findPendingOrdersByShipperId(shipperMaND);
+
+            // BỎ ĐI: Không cần lấy tất cả rồi lọc trong bộ nhớ nữa.
+            // List<PhanCongGiaoHang> assignedOrders = orderRepo.findAssignedOrdersByShipperId(shipperMaND);
+            // List<PhanCongGiaoHang> pendingOrders = assignedOrders.stream()
+            //       .filter(pc -> !("HOAN_THANH".equals(pc.getTrangThai()) || "TRA_HANG".equals(pc.getTrangThai())))
+            //       .collect(Collectors.toList());
+
             request.setAttribute("pendingOrders", pendingOrders);
             request.setAttribute("viewTitle", "Danh Sách Đơn Hàng Cần Giao");
-            
-            // Forward tới view danh sách đơn hàng
+
             request.getRequestDispatcher("/WEB-INF/views/shipper/assigned-orders.jsp").forward(request, response);
-            
         } catch (Exception e) {
             log("Lỗi tải danh sách đơn hàng:", e);
-            response.sendRedirect(request.getContextPath() + "/shipper/dashboard?error=Lỗi tải danh sách đơn hàng."); 
+            // DÒNG NÀY VÀ CÁC DÒNG DƯỚI ĐÂY CẦN GÕ LẠI
+            response.sendRedirect(request.getContextPath() + "/shipper/dashboard?error=Lỗi tải danh sách đơn hàng.");
         }
     }
-    
+ // Trong lớp ShipperController.java
+
     private void showHistory(HttpServletRequest request, HttpServletResponse response, Integer shipperMaND)
-            throws ServletException, IOException {
+            throws ServletException, IOException { // Giữ lại dòng này
         try {
-            // 1. Lấy tất cả đơn hàng được phân công
-            List<PhanCongGiaoHang> assignedOrders = orderRepo.findAssignedOrdersByShipperId(shipperMaND);
-            
-            // 2. Lọc ra các đơn hàng đã HOAN_THANH hoặc TRA_HANG
-            List<PhanCongGiaoHang> historyOrders = assignedOrders.stream()
-                    .filter(pc -> "HOAN_THANH".equals(pc.getTrangThai()) || "TRA_HANG".equals(pc.getTrangThai()))
-                    .collect(Collectors.toList());
+            // Gọi trực tiếp phương thức DAO đã được tối ưu cho việc lấy lịch sử
+            List<PhanCongGiaoHang> historyOrders = orderRepo.findHistoryOrdersByShipperId(shipperMaND);
             
             request.setAttribute("historyOrders", historyOrders);
             request.setAttribute("viewTitle", "Lịch Sử Giao Hàng");
             
-            // Forward tới view lịch sử giao hàng
             request.getRequestDispatcher("/WEB-INF/views/shipper/history.jsp").forward(request, response);
             
         } catch (Exception e) {

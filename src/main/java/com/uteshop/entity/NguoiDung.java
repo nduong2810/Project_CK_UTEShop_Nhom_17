@@ -36,7 +36,7 @@ public class NguoiDung implements Serializable {
     private String diaChi;
 
     @Column(name = "GioiTinh", length = 10)
-    private String gioiTinh; // Cột mới thêm
+    private String gioiTinh;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "VaiTro", nullable = false, length = 20)
@@ -52,6 +52,14 @@ public class NguoiDung implements Serializable {
     @Column(name = "NgayCapNhat")
     @Temporal(TemporalType.TIMESTAMP)
     private Date ngayCapNhat;
+
+    // ============================================================
+    // THAY ĐỔI: Bổ sung mối quan hệ với DonViVanChuyen
+    // ============================================================
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaVC", nullable = true) // nullable=true vì chỉ Shipper mới có MaVC
+    private DonViVanChuyen donViVanChuyen;
+    // ============================================================
 
     public enum VaiTro {
         ADMIN, USER, VENDOR, SHIPPER
@@ -166,6 +174,18 @@ public class NguoiDung implements Serializable {
     public void setNgayCapNhat(Date ngayCapNhat) {
         this.ngayCapNhat = ngayCapNhat;
     }
+
+    // ============================================================
+    // THAY ĐỔI: Bổ sung Getters & Setters cho donViVanChuyen
+    // ============================================================
+    public DonViVanChuyen getDonViVanChuyen() {
+        return donViVanChuyen;
+    }
+
+    public void setDonViVanChuyen(DonViVanChuyen donViVanChuyen) {
+        this.donViVanChuyen = donViVanChuyen;
+    }
+    // ============================================================
 
     @PreUpdate
     public void preUpdate() {
