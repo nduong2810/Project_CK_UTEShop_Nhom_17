@@ -25,6 +25,10 @@
         <class>com.uteshop.entity.SanPhamYeuThich</class>
         <class>com.uteshop.entity.HoiThoai</class>
         <class>com.uteshop.entity.TinNhan</class>
+        <class>com.uteshop.entity.KhieuNaiCuaHang</class>
+        <class>com.uteshop.entity.KhieuNaiNguoiDung</class>
+        <class>com.uteshop.entity.DonViVanChuyen</class>
+        <class>com.uteshop.entity.PhanCongGiaoHang</class>
         
         <properties>
             <!-- Database connection properties (used by HikariCP) -->

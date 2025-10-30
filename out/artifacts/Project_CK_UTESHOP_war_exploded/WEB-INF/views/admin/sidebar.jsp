@@ -2,7 +2,6 @@
 <%
 String ctx = request.getContextPath();
 String uri = request.getRequestURI();
-
 boolean aHome = uri.endsWith("/admin") || uri.endsWith("/admin/") || uri.contains("/admin/home");
 boolean aProducts = uri.contains("/admin/products");
 boolean aOrders = uri.contains("/admin/orders");
@@ -11,9 +10,9 @@ boolean aSuppliers = uri.contains("/admin/suppliers");
 boolean aCats = uri.contains("/admin/categories");
 boolean aShip = uri.contains("/admin/shipping");
 boolean aCoupons = uri.contains("/admin/coupons");
+boolean aShopComplaints = uri.contains("/admin/shop-complaints");
 %>
 
-<!-- ======= CSS chỉ cho khu vực admin (scoped bằng prefix .admin-) ======= -->
 <style>
 :root {
 	--admin-sidebar-w: 240px;
@@ -127,7 +126,7 @@ boolean aCoupons = uri.contains("/admin/coupons");
 	text-overflow: ellipsis;
 }
 
-/* Ẩn chữ khi thu gọn */
+/* ẩn chữ khi thu gọn */
 .admin-sidebar.collapsed .admin-lbl {
 	display: none;
 }
@@ -181,7 +180,6 @@ boolean aCoupons = uri.contains("/admin/coupons");
 }
 </style>
 
-<!-- ======= Sidebar Markup ======= -->
 <aside class="admin-sidebar" id="adminSidebar">
 	<div class="admin-brand">
 		<button class="admin-hamburger" type="button"
@@ -203,22 +201,24 @@ boolean aCoupons = uri.contains("/admin/coupons");
 			href="<%=ctx%>/admin/customers"><span class="admin-ico">👥</span><span
 				class="admin-lbl">Khách hàng</span></a></li>
 		<li><a class="<%=aSuppliers ? "active" : ""%>"
-			href="<%=ctx%>/admin/suppliers"><span class="admin-ico">🏪</span><span
+			href="<%=ctx%>/admin/suppliers"><span class="admin-ico">🏭</span><span
 				class="admin-lbl">Nhà cung cấp</span></a></li>
 		<li><a class="<%=aCats ? "active" : ""%>"
-			href="<%=ctx%>/admin/categories"><span class="admin-ico">🗂</span><span
+			href="<%=ctx%>/admin/categories"><span class="admin-ico">🗂️</span><span
 				class="admin-lbl">Danh mục</span></a></li>
 		<li><a class="<%=aShip ? "active" : ""%>"
 			href="<%=ctx%>/admin/shipping"><span class="admin-ico">🚚</span><span
 				class="admin-lbl">Vận chuyển</span></a></li>
 		<li><a class="<%=aCoupons ? "active" : ""%>"
-			href="<%=ctx%>/admin/coupons"><span class="admin-ico">🏷</span><span
+			href="<%=ctx%>/admin/coupons"><span class="admin-ico">🎟️</span><span
 				class="admin-lbl">Mã giảm giá</span></a></li>
+		<li><a class="<%=aShopComplaints ? "active" : ""%>"
+			href="<%=ctx%>/admin/shop-complaints"><span class="admin-ico">🚨</span><span
+				class="admin-lbl">Khiếu nại cửa hàng</span></a></li>
 		
 	</ul>
 </aside>
 
-<!-- ======= JS toggle + nhớ trạng thái ======= -->
 <script>
 	(function() {
 		const KEY = 'admin.sidebar.collapsed';

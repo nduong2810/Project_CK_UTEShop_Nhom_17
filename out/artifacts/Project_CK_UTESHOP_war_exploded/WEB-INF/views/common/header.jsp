@@ -361,6 +361,13 @@
 										class="badge bg-danger ms-2" id="chatUnreadBadge"
 										style="display: none;">0</span>
 								</a></li>
+								<li>
+								    <a class="dropdown-item" 
+								       href="${pageContext.request.contextPath}/user/shop-complaints">
+								        <i class="fas fa-comments me-2"></i>Khiếu nại cửa hàng
+								    </a>
+								</li>
+
 								<!-- Vendor-specific features -->
 								<c:if test="${sessionScope.userRole == 'VENDOR'}">
 									<li><hr class="dropdown-divider"></li>
@@ -383,8 +390,8 @@
 										</h6>
 									</li>
 									<li><a class="dropdown-item"
-										href="${pageContext.request.contextPath}/admin/home">
-											<i class="fas fa-chart-line me-2"></i>Dashboard Admin
+										href="${pageContext.request.contextPath}/admin/home"> <i
+											class="fas fa-chart-line me-2"></i>Dashboard Admin
 									</a></li>
 								</c:if>
 								<%-- Trong file header.jsp, tìm menu của SHIPPER và thêm dòng mới --%>
@@ -395,12 +402,10 @@
 											<i class="fas fa-motorcycle me-2"></i>Quản lý Giao hàng
 										</h6>
 									</li>
-									<%-- THÊM LIÊN KẾT MỚI NÀY --%>
 									<li><a class="dropdown-item"
 										href="${pageContext.request.contextPath}/shipper/pickup">
 											<i class="fas fa-warehouse me-2"></i>Nhận Đơn Tại Kho
 									</a></li>
-									<%-- Các liên kết cũ --%>
 									<li><a class="dropdown-item"
 										href="${pageContext.request.contextPath}/shipper/dashboard">
 											<i class="fas fa-tachometer-alt me-2"></i>Dashboard & Thống
@@ -412,7 +417,13 @@
 									</a></li>
 									<li><a class="dropdown-item"
 										href="${pageContext.request.contextPath}/shipper/history">
-											<i class="fas fa-history me-2"></i>Lịch sử giao hàng
+											<i class="fas fa-clipboard-check me-2"></i>Đơn hàng thành
+											công
+									</a></li>
+
+									<li><a class="dropdown-item"
+										href="${pageContext.request.contextPath}/shipper/returned">
+											<i class="fas fa-undo-alt me-2"></i>Đơn hàng bị trả
 									</a></li>
 								</c:if>
 								<li><hr class="dropdown-divider"></li>
