@@ -1028,13 +1028,18 @@ public class DonHangDAO {
 			em.close();
 		}
 	}
+	// Trong file DonHangDAO.java
+
 	public List<DonHang> findOrdersReadyForPickup() {
 	    EntityManager em = JPAUtil.getEntityManager();
 	    try {
-	        // Lấy tất cả đơn hàng có trạng thái DANG_CHUAN_BI
-	        String jpql = "SELECT d FROM DonHang d WHERE d.trangThai = :status ORDER BY d.ngayDat ASC";
+	        // SỬA LẠI: Truy vấn các đơn hàng có trạng thái DA_XAC_NHAN hoặc DANG_CHUAN_BI
+	        String jpql = "SELECT d FROM DonHang d WHERE d.trangThai IN (:status1, :status2) ORDER BY d.ngayDat ASC";
+	        
 	        TypedQuery<DonHang> query = em.createQuery(jpql, DonHang.class);
-	        query.setParameter("status", DonHang.TrangThaiDonHang.DANG_CHUAN_BI);
+	        query.setParameter("status1", DonHang.TrangThaiDonHang.DA_XAC_NHAN);
+	        query.setParameter("status2", DonHang.TrangThaiDonHang.DANG_CHUAN_BI);
+	        
 	        return query.getResultList();
 	    } finally {
 	        em.close();
