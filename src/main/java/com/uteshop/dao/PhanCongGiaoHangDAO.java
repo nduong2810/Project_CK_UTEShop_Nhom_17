@@ -135,31 +135,35 @@ public class PhanCongGiaoHangDAO {
             em.close();
         }
     }
+ // Trong file PhanCongGiaoHangDAO.java
+
     public boolean assignOrderToShipper(Integer maDH, Integer shipperMaND) {
         EntityManager em = JPAUtil.getEntityManager();
         EntityTransaction transaction = em.getTransaction();
         try {
             transaction.begin();
 
-            // 1. Lấy thông tin DonHang và NguoiDung (Shipper)
             DonHang donHang = em.find(DonHang.class, maDH);
             NguoiDung shipper = em.find(NguoiDung.class, shipperMaND);
 
-            // Kiểm tra xem đơn hàng và shipper có tồn tại không
-            if (donHang == null || shipper == null || donHang.getTrangThai() != DonHang.TrangThaiDonHang.DANG_CHUAN_BI) {
+            // SỬA LẠI: Kiểm tra xem đơn hàng có ở trạng thái hợp lệ để nhận không
+            if (donHang == null || shipper == null ||
+                (donHang.getTrangThai() != DonHang.TrangThaiDonHang.DA_XAC_NHAN &&
+                 donHang.getTrangThai() != DonHang.TrangThaiDonHang.DANG_CHUAN_BI)) {
+                
                 transaction.rollback();
                 return false; // Đơn hàng không hợp lệ để nhận
             }
 
-            // 2. Tạo bản ghi phân công mới
+            // Tạo bản ghi phân công mới
             PhanCongGiaoHang phanCong = new PhanCongGiaoHang();
             phanCong.setDonHang(donHang);
             phanCong.setNguoiGiao(shipper);
             phanCong.setNgayGiao(LocalDateTime.now());
             phanCong.setTrangThai("DANG_GIAO");
-            em.persist(phanCong); // Lưu bản ghi phân công
+            em.persist(phanCong);
 
-            // 3. Cập nhật trạng thái của DonHang
+            // Cập nhật trạng thái của DonHang thành DANG_GIAO
             donHang.setTrangThai(DonHang.TrangThaiDonHang.DANG_GIAO);
             em.merge(donHang);
 
