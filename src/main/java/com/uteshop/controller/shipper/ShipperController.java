@@ -18,7 +18,8 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@WebServlet(urlPatterns = {"/shipper/dashboard", "/shipper/orders", "/shipper/history", "/shipper/pickup"})
+//Sửa lại dòng annotation ở đầu file
+@WebServlet(urlPatterns = {"/shipper/dashboard", "/shipper/orders", "/shipper/history", "/shipper/pickup", "/shipper/returned"})
 public class ShipperController extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -66,6 +67,9 @@ public class ShipperController extends HttpServlet {
                 break;
             case "/shipper/pickup":
                 showPickupList(request, response, shipperMaND);
+                break;
+            case "/shipper/returned":
+                showReturnedOrders(request, response, shipperMaND);
                 break;
             case "/shipper/dashboard":
             default:
@@ -126,16 +130,21 @@ public class ShipperController extends HttpServlet {
         }
     }
 
-    private void showHistory(HttpServletRequest request, HttpServletResponse response, Integer shipperMaND) throws ServletException, IOException {
+ // Trong file ShipperController.java
+
+    private void showHistory(HttpServletRequest request, HttpServletResponse response, Integer shipperMaND)
+            throws ServletException, IOException {
         try {
             List<PhanCongGiaoHang> historyOrders = orderRepo.findHistoryOrdersByShipperId(shipperMaND);
+            
             request.setAttribute("historyOrders", historyOrders);
-            request.setAttribute("viewTitle", "Lịch Sử Giao Hàng");
+            
+            request.setAttribute("viewTitle", "Đơn Hàng Đã Giao Thành Công"); 
+            
             request.getRequestDispatcher("/WEB-INF/views/shipper/history.jsp").forward(request, response);
         } catch (Exception e) {
-            log("Lỗi tải lịch sử giao hàng:", e);
-            String error = URLEncoder.encode("Lỗi tải lịch sử giao hàng.", StandardCharsets.UTF_8);
-            response.sendRedirect(request.getContextPath() + "/shipper/dashboard?error=" + error);
+            log("Lỗi tải lịch sử giao hàng thành công:", e);
+            response.sendRedirect(request.getContextPath() + "/shipper/dashboard?error=Lỗi tải lịch sử giao hàng.");
         }
     }
 
@@ -209,6 +218,25 @@ public class ShipperController extends HttpServlet {
             log("FATAL: Lỗi khi xác nhận lấy đơn MaDH=" + maDH, e);
             String error = URLEncoder.encode("Hệ thống đã gặp lỗi nghiêm trọng.", StandardCharsets.UTF_8);
             response.sendRedirect(request.getContextPath() + "/shipper/pickup?error=" + error);
+        }
+    }
+ // Thêm phương thức mới này vào cuối file ShipperController.java
+
+    private void showReturnedOrders(HttpServletRequest request, HttpServletResponse response, Integer shipperMaND)
+            throws ServletException, IOException {
+        try {
+            // Gọi phương thức DAO mới để lấy danh sách đơn hàng bị trả
+            List<PhanCongGiaoHang> returnedOrders = orderRepo.findReturnedOrdersByShipperId(shipperMaND);
+            
+            request.setAttribute("returnedOrders", returnedOrders);
+            request.setAttribute("viewTitle", "Danh Sách Đơn Hàng Bị Trả");
+            
+            // Forward tới file JSP mới sẽ tạo ở bước sau
+            request.getRequestDispatcher("/WEB-INF/views/shipper/returned-orders.jsp").forward(request, response);
+            
+        } catch (Exception e) {
+            log("Lỗi tải danh sách đơn hàng bị trả:", e);
+            response.sendRedirect(request.getContextPath() + "/shipper/dashboard?error=Không thể tải danh sách đơn hàng bị trả.");
         }
     }
 }
