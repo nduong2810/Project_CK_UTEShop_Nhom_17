@@ -119,6 +119,68 @@
                     </div>
                 </div>
 
+                <!-- Complaint Button (for logged-in users) -->
+                <c:if test="${not empty sessionScope.user}">
+                    <div class="card mb-4 border-warning">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-1"><i class="bi bi-flag text-warning"></i> Có vấn đề với cửa hàng này?</h5>
+                                    <p class="text-muted mb-0">Gửi khiếu nại nếu bạn gặp bất kỳ vấn đề gì với cửa hàng</p>
+                                </div>
+                                <a href="${pageContext.request.contextPath}/user/shop-complaint-form?shopId=${supplier.maCH}" 
+                                   class="btn btn-warning">
+                                    <i class="bi bi-flag-fill"></i> Gửi khiếu nại
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User's Complaints about this shop -->
+                    <c:if test="${not empty userComplaints}">
+                        <div class="card mb-4 border-info">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="bi bi-inbox"></i> Khiếu nại của bạn về cửa hàng này</h5>
+                            </div>
+                            <div class="card-body">
+                                <c:forEach var="complaint" items="${userComplaints}">
+                                    <div class="border rounded p-3 mb-3">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="fw-bold mb-0">${complaint.tieuDe}</h6>
+                                            <span class="badge bg-${complaint.trangThai == 'PENDING' ? 'warning' : complaint.trangThai == 'APPROVED' ? 'success' : complaint.trangThai == 'REJECTED' ? 'danger' : 'secondary'}">
+                                                ${complaint.trangThai}
+                                            </span>
+                                        </div>
+                                        <p class="text-muted mb-2">${complaint.noiDung}</p>
+                                        <small class="text-muted">
+                                            <i class="bi bi-calendar"></i> 
+                                            <fmt:formatDate value="${complaint.ngayGui}" pattern="dd/MM/yyyy HH:mm"/>
+                                        </small>
+                                        
+                                        <c:if test="${not empty complaint.ghiChu}">
+                                            <div class="alert alert-light mt-2 mb-0">
+                                                <strong>Phản hồi:</strong> ${complaint.ghiChu}
+                                            </div>
+                                        </c:if>
+                                        
+                                        <!-- Edit/Delete buttons only for PENDING complaints -->
+                                        <c:if test="${complaint.trangThai == 'PENDING'}">
+                                            <div class="mt-2">
+                                                <button class="btn btn-sm btn-outline-primary" onclick="editComplaint(${complaint.maKNCH}, '${complaint.tieuDe}', '${complaint.noiDung}')">
+                                                    <i class="bi bi-pencil"></i> Sửa
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger" onclick="deleteComplaint(${complaint.maKNCH})">
+                                                    <i class="bi bi-trash"></i> Xóa
+                                                </button>
+                                            </div>
+                                        </c:if>
+                                    </div>
+                                </c:forEach>
+                            </div>
+                        </div>
+                    </c:if>
+                </c:if>
+
                 <!-- Products Section -->
                 <section>
                     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -215,5 +277,71 @@
 <jsp:include page="/WEB-INF/views/components/chat-float-button.jsp">
     <jsp:param name="storeId" value="${supplier.maCH}" />
 </jsp:include>
+
+<!-- Edit Complaint Modal -->
+<div class="modal fade" id="editComplaintModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil"></i> Sửa khiếu nại</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editComplaintForm" method="post" action="${pageContext.request.contextPath}/user/shop-complaint-edit">
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="editComplaintId">
+                    <input type="hidden" name="shopId" value="${supplier.maCH}">
+                    
+                    <div class="mb-3">
+                        <label for="editTitle" class="form-label">Tiêu đề</label>
+                        <input type="text" class="form-control" id="editTitle" name="title" required maxlength="255">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editContent" class="form-label">Nội dung</label>
+                        <textarea class="form-control" id="editContent" name="content" rows="5" required maxlength="2000"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function editComplaint(id, title, content) {
+        document.getElementById('editComplaintId').value = id;
+        document.getElementById('editTitle').value = title;
+        document.getElementById('editContent').value = content;
+        
+        var modal = new bootstrap.Modal(document.getElementById('editComplaintModal'));
+        modal.show();
+    }
+    
+    function deleteComplaint(id) {
+        if (confirm('Bạn có chắc chắn muốn xóa khiếu nại này?')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '${pageContext.request.contextPath}/user/shop-complaint-delete';
+            
+            const idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            idInput.name = 'id';
+            idInput.value = id;
+            
+            const shopIdInput = document.createElement('input');
+            shopIdInput.type = 'hidden';
+            shopIdInput.name = 'shopId';
+            shopIdInput.value = '${supplier.maCH}';
+            
+            form.appendChild(idInput);
+            form.appendChild(shopIdInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>
 
 </body>

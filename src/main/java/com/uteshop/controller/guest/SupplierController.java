@@ -2,8 +2,11 @@ package com.uteshop.controller.guest;
 
 import com.uteshop.dao.CuaHangDAO;
 import com.uteshop.dao.SanPhamDAO;
+import com.uteshop.dao.KhieuNaiCuaHangDAO;
 import com.uteshop.entity.CuaHang;
 import com.uteshop.entity.SanPham;
+import com.uteshop.entity.KhieuNaiCuaHang;
+import com.uteshop.entity.NguoiDung;
 
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebServlet;
@@ -16,6 +19,7 @@ import java.util.List;
 public class SupplierController extends HttpServlet {
     private final CuaHangDAO cuaHangDAO = new CuaHangDAO();
     private final SanPhamDAO sanPhamDAO = new SanPhamDAO();
+    private final KhieuNaiCuaHangDAO khieuNaiDAO = new KhieuNaiCuaHangDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -88,6 +92,15 @@ public class SupplierController extends HttpServlet {
             
             // Lấy sản phẩm của cửa hàng
             List<SanPham> products = sanPhamDAO.findByStoreId(supplierId);
+            
+            // Kiểm tra nếu user đã đăng nhập, load khiếu nại của user về cửa hàng này
+            HttpSession session = request.getSession(false);
+            if (session != null && session.getAttribute("user") != null) {
+                NguoiDung user = (NguoiDung) session.getAttribute("user");
+                // Lấy khiếu nại của user về cửa hàng này (chỉ lấy PENDING để có thể sửa/xóa)
+                List<KhieuNaiCuaHang> userComplaints = khieuNaiDAO.findPaged(1, 100, null, null, user.getMaND(), supplierId, "date_desc");
+                request.setAttribute("userComplaints", userComplaints);
+            }
             
             request.setAttribute("supplier", supplier);
             request.setAttribute("products", products);

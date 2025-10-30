@@ -361,6 +361,13 @@
 										class="badge bg-danger ms-2" id="chatUnreadBadge"
 										style="display: none;">0</span>
 								</a></li>
+								<li>
+								    <a class="dropdown-item" 
+								       href="${pageContext.request.contextPath}/user/shop-complaints">
+								        <i class="fas fa-comments me-2"></i>Khiếu nại cửa hàng
+								    </a>
+								</li>
+
 								<!-- Vendor-specific features -->
 								<c:if test="${sessionScope.userRole == 'VENDOR'}">
 									<li><hr class="dropdown-divider"></li>
