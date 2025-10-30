@@ -77,7 +77,7 @@ public class SubmitReviewController extends HttpServlet {
             review.setDonHang(donHang);
 
             // Handle file uploads
-            String uploadPath = getServletContext().getRealPath("") + "/assets/uploads/reviews";
+            String uploadPath = getServletContext().getRealPath("/assets/uploads/reviews");
             Path uploadDir = Paths.get(uploadPath);
             if (!Files.exists(uploadDir)) {
                 Files.createDirectories(uploadDir);
@@ -85,16 +85,10 @@ public class SubmitReviewController extends HttpServlet {
 
             Part imagePart = request.getPart("reviewImages");
             if (imagePart != null && imagePart.getSize() > 0) {
-                String imageFileName = Paths.get(imagePart.getSubmittedFileName()).getFileName().toString();
-                imagePart.write(uploadPath + "/" + imageFileName);
+                String imageFileName = System.currentTimeMillis() + "_" + Paths.get(imagePart.getSubmittedFileName()).getFileName().toString();
+                imagePart.write(uploadPath + java.io.File.separator + imageFileName);
                 review.setHinhAnh(imageFileName);
-            }
-
-            Part videoPart = request.getPart("reviewVideo");
-            if (videoPart != null && videoPart.getSize() > 0) {
-                String videoFileName = Paths.get(videoPart.getSubmittedFileName()).getFileName().toString();
-                videoPart.write(uploadPath + "/" + videoFileName);
-                review.setVideo(videoFileName);
+                System.out.println("✅ Review image saved to: " + uploadPath + java.io.File.separator + imageFileName);
             }
 
             danhGiaSanPhamDAO.addReview(review);

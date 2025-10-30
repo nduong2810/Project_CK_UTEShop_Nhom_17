@@ -56,8 +56,18 @@ public class ProductController extends HttpServlet {
                 
                 request.setAttribute("product", product);
                 
-                List<DanhGiaSanPham> reviews = danhGiaSanPhamDAO.getReviewsByProduct(productId, 0, 10);
+                // Get all reviews for the product
+                List<DanhGiaSanPham> reviews = danhGiaSanPhamDAO.getAllReviewsByProduct(productId);
                 request.setAttribute("reviews", reviews);
+                request.setAttribute("reviewCount", reviews != null ? reviews.size() : 0);
+                
+                // Get current user's review for this product (if exists)
+                if (loggedInUser != null) {
+                    List<DanhGiaSanPham> userReviews = danhGiaSanPhamDAO.getUserReviewsForProduct(loggedInUser.getMaND(), productId);
+                    if (userReviews != null && !userReviews.isEmpty()) {
+                        request.setAttribute("userReview", userReviews.get(0)); // Get the first review
+                    }
+                }
 
                 if (product.getCuaHang() != null) {
                     Integer storeId = product.getCuaHang().getMaCH();

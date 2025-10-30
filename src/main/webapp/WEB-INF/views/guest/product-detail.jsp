@@ -280,22 +280,100 @@
                 </div>
                 <div class="tab-pane fade" id="reviews">
                     <div class="p-4">
-                        <h5>Đánh giá của khách hàng</h5>
-                        <c:if test="${empty reviews}">
-                            <p>Chưa có đánh giá nào cho sản phẩm này.</p>
-                        </c:if>
-                        <c:forEach var="review" items="${reviews}">
-                            <div class="review-item border-bottom pb-3 mb-3">
-                                <div class="d-flex justify-content-between">
-                                    <strong>${review.nguoiDung.hoTen}</strong>
+                        <div class="mb-4">
+                            <h5>Đánh giá của khách hàng</h5>
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="text-center">
+                                    <h2 class="mb-0 text-warning">
+                                        <fmt:formatNumber value="${product.diemDanhGiaTrungBinh}" maxFractionDigits="1"/>
+                                    </h2>
                                     <div class="text-warning">
                                         <c:forEach begin="1" end="5" varStatus="loop">
-                                            <i class="${loop.index <= review.diemDanhGia ? 'fas' : 'far'} fa-star"></i>
+                                            <i class="${loop.index <= product.diemDanhGiaTrungBinh ? 'fas' : 'far'} fa-star"></i>
                                         </c:forEach>
                                     </div>
+                                    <small class="text-muted">${product.soLuongDanhGia} đánh giá</small>
                                 </div>
-                                <p class="mb-1">${review.noiDung}</p>
-                                <small class="text-muted"><fmt:formatDate value="${review.ngayDanhGia}" pattern="dd/MM/yyyy" /></small>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4"/>
+                        
+                        <!-- User's Review Section -->
+                        <c:if test="${not empty sessionScope.user && not empty userReview}">
+                            <div class="mb-4">
+                                <h6 class="mb-3"><i class="fas fa-user-edit me-2"></i>Đánh giá của bạn</h6>
+                                <div class="review-item border rounded p-3" style="background-color: #fff3cd;">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <strong class="text-primary">${sessionScope.user.hoTen}</strong>
+                                            <div class="text-warning mt-1">
+                                                <c:forEach begin="1" end="5" varStatus="loop">
+                                                    <i class="${loop.index <= userReview.diemDanhGia ? 'fas' : 'far'} fa-star"></i>
+                                                </c:forEach>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <button class="btn btn-sm btn-outline-primary me-2" onclick="openEditReviewModal(${userReview.maDG}, ${userReview.diemDanhGia}, '${userReview.noiDung}', '${userReview.hinhAnh}')">
+                                                <i class="fas fa-edit"></i> Chỉnh sửa
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="confirmDeleteReview(${userReview.maDG}, ${product.maSP})">
+                                                <i class="fas fa-trash"></i> Xóa
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <p class="mb-2" style="white-space: pre-line;">${userReview.noiDung}</p>
+                                    <c:if test="${not empty userReview.hinhAnh}">
+                                        <div class="mb-2">
+                                            <img src="${pageContext.request.contextPath}/assets/uploads/reviews/${userReview.hinhAnh}" 
+                                                 alt="Review image" 
+                                                 style="max-width: 200px; max-height: 200px; border-radius: 8px;"
+                                                 onerror="this.style.display='none'">
+                                        </div>
+                                    </c:if>
+                                    <small class="text-muted">
+                                        <i class="far fa-clock me-1"></i>
+                                        <fmt:formatDate value="${userReview.ngayDanhGia}" pattern="dd/MM/yyyy HH:mm" />
+                                    </small>
+                                </div>
+                                <hr class="my-4"/>
+                            </div>
+                        </c:if>
+                        
+                        <h6 class="mb-3">Tất cả đánh giá (${reviewCount})</h6>
+                        
+                        <c:if test="${empty reviews}">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Chưa có đánh giá nào cho sản phẩm này. Hãy là người đầu tiên đánh giá!
+                            </div>
+                        </c:if>
+                        
+                        <c:forEach var="review" items="${reviews}">
+                            <div class="review-item border rounded p-3 mb-3" style="background-color: #f8f9fa;">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <strong class="text-primary">${review.nguoiDung.hoTen}</strong>
+                                        <div class="text-warning mt-1">
+                                            <c:forEach begin="1" end="5" varStatus="loop">
+                                                <i class="${loop.index <= review.diemDanhGia ? 'fas' : 'far'} fa-star"></i>
+                                            </c:forEach>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">
+                                        <i class="far fa-clock me-1"></i>
+                                        <fmt:formatDate value="${review.ngayDanhGia}" pattern="dd/MM/yyyy HH:mm" />
+                                    </small>
+                                </div>
+                                <p class="mb-2" style="white-space: pre-line;">${review.noiDung}</p>
+                                <c:if test="${not empty review.hinhAnh}">
+                                    <div class="mb-2">
+                                        <img src="${pageContext.request.contextPath}/assets/uploads/reviews/${review.hinhAnh}" 
+                                             alt="Review image" 
+                                             style="max-width: 200px; max-height: 200px; border-radius: 8px;"
+                                             onerror="this.style.display='none'">
+                                    </div>
+                                </c:if>
                             </div>
                         </c:forEach>
 
@@ -339,14 +417,6 @@
                                         <div class="mb-3">
                                             <label for="reviewText" class="form-label">Nội dung đánh giá</label>
                                             <textarea class="form-control" id="reviewText" name="reviewText" rows="3"></textarea>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="reviewImages" class="form-label">Thêm ảnh</label>
-                                            <input class="form-control" type="file" id="reviewImages" name="reviewImages" accept="image/*" multiple>
-                                        </div>
-                                        <div class="mb-3">
-                                            <label for="reviewVideo" class="form-label">Thêm video</label>
-                                            <input class="form-control" type="file" id="reviewVideo" name="reviewVideo" accept="video/*">
                                         </div>
                                         <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
                                     </form>
@@ -630,7 +700,116 @@
         }
         return true;
     }
+
+    // Edit review functions
+    let currentEditRating = 0;
+    
+    function openEditReviewModal(reviewId, currentRating, currentContent, currentImage) {
+        document.getElementById('editReviewId').value = reviewId;
+        document.getElementById('editReviewText').value = currentContent || '';
+        currentEditRating = currentRating;
+        
+        // Update stars display
+        updateEditStars(currentRating);
+        
+        // Show current image if exists
+        const currentImageDiv = document.getElementById('currentReviewImage');
+        if (currentImage && currentImage !== 'null' && currentImage !== '') {
+            currentImageDiv.innerHTML = '<p class="text-muted">Ảnh hiện tại:</p><img src="${pageContext.request.contextPath}/assets/uploads/reviews/' + currentImage + '" style="max-width: 150px; border-radius: 8px;">';
+            currentImageDiv.style.display = 'block';
+        } else {
+            currentImageDiv.style.display = 'none';
+        }
+        
+        const modal = new bootstrap.Modal(document.getElementById('editReviewModal'));
+        modal.show();
+    }
+
+    function updateEditStars(rating) {
+        const stars = document.querySelectorAll('#editReviewModal .star-icon');
+        stars.forEach(star => {
+            const starRating = parseInt(star.getAttribute('data-rating'));
+            if (starRating <= rating) {
+                star.style.color = '#ffc107';
+            } else {
+                star.style.color = '#e4e5e9';
+            }
+        });
+        document.getElementById('editRatingValue').value = rating;
+    }
+
+    function confirmDeleteReview(reviewId, productId) {
+        if (confirm('Bạn có chắc chắn muốn xóa đánh giá này không?')) {
+            window.location.href = '${pageContext.request.contextPath}/user/delete-review?reviewId=' + reviewId + '&productId=' + productId;
+        }
+    }
+
+    // Handle success/error messages
+    window.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('success') === 'updated') {
+            alert('Đánh giá của bạn đã được cập nhật thành công!');
+            window.history.replaceState({}, document.title, window.location.pathname + '?id=${product.maSP}');
+        } else if (urlParams.get('success') === 'deleted') {
+            alert('Đánh giá của bạn đã được xóa thành công!');
+            window.history.replaceState({}, document.title, window.location.pathname + '?id=${product.maSP}');
+        } else if (urlParams.get('error') === 'update_failed') {
+            alert('Không thể cập nhật đánh giá. Vui lòng thử lại!');
+        } else if (urlParams.get('error') === 'delete_failed') {
+            alert('Không thể xóa đánh giá. Vui lòng thử lại!');
+        }
+    });
 </script>
+
+<!-- Edit Review Modal -->
+<div class="modal fade" id="editReviewModal" tabindex="-1" aria-labelledby="editReviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editReviewModalLabel">Chỉnh sửa đánh giá</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="${pageContext.request.contextPath}/user/update-review" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input type="hidden" name="reviewId" id="editReviewId">
+                    <input type="hidden" name="productId" value="${product.maSP}">
+                    <input type="hidden" name="rating" id="editRatingValue">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Đánh giá của bạn <span class="text-danger">*</span></label>
+                        <div class="rating-stars d-flex justify-content-center gap-2" style="font-size: 2rem;">
+                            <i class="fas fa-star star-icon" data-rating="1" onclick="updateEditStars(1)" style="cursor: pointer;"></i>
+                            <i class="fas fa-star star-icon" data-rating="2" onclick="updateEditStars(2)" style="cursor: pointer;"></i>
+                            <i class="fas fa-star star-icon" data-rating="3" onclick="updateEditStars(3)" style="cursor: pointer;"></i>
+                            <i class="fas fa-star star-icon" data-rating="4" onclick="updateEditStars(4)" style="cursor: pointer;"></i>
+                            <i class="fas fa-star star-icon" data-rating="5" onclick="updateEditStars(5)" style="cursor: pointer;"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="editReviewText" class="form-label fw-bold">Nhận xét của bạn</label>
+                        <textarea class="form-control" id="editReviewText" name="reviewText" rows="4" 
+                                  placeholder="Chia sẻ trải nghiệm của bạn về sản phẩm này..."></textarea>
+                    </div>
+                    
+                    <div id="currentReviewImage" class="mb-3"></div>
+                    
+                    <div class="mb-3">
+                        <label for="editReviewImages" class="form-label">Thay đổi hình ảnh (tùy chọn)</label>
+                        <input class="form-control" type="file" id="editReviewImages" name="reviewImages" accept="image/*">
+                        <small class="text-muted">Để trống nếu không muốn thay đổi ảnh</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <!-- Chat Floating Button -->
 <jsp:include page="/WEB-INF/views/components/chat-float-button.jsp">

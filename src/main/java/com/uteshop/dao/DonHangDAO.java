@@ -6,6 +6,7 @@ import com.uteshop.util.JPAUtil;
 import com.uteshop.entity.ChiTietDonHang;
 import com.uteshop.entity.ChiTietDonHangPK;
 import com.uteshop.entity.NguoiDung;
+import com.uteshop.entity.SanPham;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -209,9 +210,14 @@ public class DonHangDAO {
 			// Lấy Entity DonHang và cập nhật trạng thái
 			DonHang dh = em.find(DonHang.class, maDH);
 			if (dh != null) {
+				DonHang.TrangThaiDonHang oldStatus = dh.getTrangThai();
 				dh.setTrangThai(newStatus);
-				// merge() không bắt buộc nếu Entity còn trong Persistence Context, nhưng là
-				// cách an toàn
+				
+				// Nếu đơn hàng chuyển sang trạng thái HOAN_THANH, cập nhật số lượng đã bán
+				if (newStatus == DonHang.TrangThaiDonHang.HOAN_THANH && oldStatus != DonHang.TrangThaiDonHang.HOAN_THANH) {
+					updateProductSoldQuantity(em, dh);
+				}
+				
 				em.merge(dh);
 				trans.commit();
 				return true;
@@ -224,6 +230,27 @@ public class DonHangDAO {
 			return false;
 		} finally {
 			em.close();
+		}
+	}
+
+	// Helper method to update product sold quantity when order is completed
+	private void updateProductSoldQuantity(EntityManager em, DonHang donHang) {
+		try {
+			if (donHang.getChiTietDonHangs() != null) {
+				for (ChiTietDonHang ctdh : donHang.getChiTietDonHangs()) {
+					SanPham sanPham = ctdh.getSanPham();
+					if (sanPham != null) {
+						Integer currentSold = sanPham.getSoLuongBan() != null ? sanPham.getSoLuongBan() : 0;
+						sanPham.setSoLuongBan(currentSold + ctdh.getSoLuong());
+						em.merge(sanPham);
+						System.out.println("✅ Updated sold quantity for product #" + sanPham.getMaSP() + 
+							": +" + ctdh.getSoLuong() + " (total: " + sanPham.getSoLuongBan() + ")");
+					}
+				}
+			}
+		} catch (Exception e) {
+			System.err.println("❌ Error updating product sold quantity: " + e.getMessage());
+			e.printStackTrace();
 		}
 	}
 	// Trong DonHangDAO.java (Phiên bản JPA)
@@ -622,15 +649,31 @@ public class DonHangDAO {
 				return false; // Đơn hàng không thuộc cửa hàng này
 			}
 
-			// Cập nhật trạng thái
-			String updateJpql = "UPDATE DonHang dh SET dh.trangThai = :newStatus, dh.ngayCapNhat = CURRENT_TIMESTAMP "
-					+ "WHERE dh.maDH = :maDH";
+			// Get current order to check old status
+			DonHang dh = em.find(DonHang.class, maDH);
+			if (dh != null) {
+				DonHang.TrangThaiDonHang oldStatus = dh.getTrangThai();
+				
+				// Cập nhật trạng thái
+				String updateJpql = "UPDATE DonHang dh SET dh.trangThai = :newStatus, dh.ngayCapNhat = CURRENT_TIMESTAMP "
+						+ "WHERE dh.maDH = :maDH";
 
-			int updated = em.createQuery(updateJpql).setParameter("newStatus", newStatus).setParameter("maDH", maDH)
-					.executeUpdate();
+				int updated = em.createQuery(updateJpql).setParameter("newStatus", newStatus).setParameter("maDH", maDH)
+						.executeUpdate();
 
-			em.getTransaction().commit();
-			return updated > 0;
+				// Nếu đơn hàng chuyển sang trạng thái HOAN_THANH, cập nhật số lượng đã bán
+				if (updated > 0 && newStatus == DonHang.TrangThaiDonHang.HOAN_THANH && oldStatus != DonHang.TrangThaiDonHang.HOAN_THANH) {
+					// Refresh to get latest data
+					em.refresh(dh);
+					updateProductSoldQuantity(em, dh);
+				}
+
+				em.getTransaction().commit();
+				return updated > 0;
+			} else {
+				em.getTransaction().rollback();
+				return false;
+			}
 		} catch (Exception e) {
 			if (em.getTransaction().isActive()) {
 				em.getTransaction().rollback();
