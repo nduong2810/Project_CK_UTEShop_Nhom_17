@@ -275,7 +275,15 @@
 				<div class="muted">Tổng: ${totalProducts} sản phẩm</div>
 				<form method="get" class="right">
 					<input type="text" name="q" class="input"
-						placeholder="Tìm theo tên/mã..." value="${param.q}" />
+						placeholder="Tìm theo tên" value="${param.q}" />
+					<select name="cat" class="select" onchange="this.form.submit()">
+						<option value="">Tất cả danh mục</option>
+						<c:forEach var="category" items="${categories}">
+							<option value="${category.maDM}" ${param.cat == category.maDM.toString() ? 'selected' : ''}>
+								${category.tenDM}
+							</option>
+						</c:forEach>
+					</select>
 					<select name="pageSize" class="select" onchange="this.form.submit()">
 						<option value="8" ${pageSize==8  ? 'selected':''}>8 / trang</option>
 						<option value="16" ${pageSize==16 ? 'selected':''}>16 / trang</option>
@@ -302,8 +310,7 @@
 								<div class="product-card">
 									<div class="product-image-container">
 										<span class="badge-hot">HOT</span>
-										<button class="btn-favorite" title="Yêu thích">
-											<i class="far fa-heart"></i>
+
 										</button>
 										<c:choose>
 											<c:when test="${not empty p.hinhAnh}">
@@ -350,6 +357,7 @@
                                 <c:url var="prevUrl" value="/admin/products">
                                     <c:param name="page" value="${currentPage - 1}"/>
                                     <c:if test="${not empty param.q}"><c:param name="q" value="${param.q}"/></c:if>
+                                    <c:if test="${not empty param.cat}"><c:param name="cat" value="${param.cat}"/></c:if>
                                     <c:if test="${not empty param.sort}"><c:param name="sort" value="${param.sort}"/></c:if>
                                     <c:if test="${not empty param.pageSize}"><c:param name="pageSize" value="${param.pageSize}"/></c:if>
                                 </c:url>
@@ -361,6 +369,7 @@
                                     <c:url var="pageUrl" value="/admin/products">
                                         <c:param name="page" value="${i}"/>
                                         <c:if test="${not empty param.q}"><c:param name="q" value="${param.q}"/></c:if>
+                                        <c:if test="${not empty param.cat}"><c:param name="cat" value="${param.cat}"/></c:if>
                                         <c:if test="${not empty param.sort}"><c:param name="sort" value="${param.sort}"/></c:if>
                                         <c:if test="${not empty param.pageSize}"><c:param name="pageSize" value="${param.pageSize}"/></c:if>
                                     </c:url>
@@ -372,6 +381,7 @@
                                 <c:url var="nextUrl" value="/admin/products">
                                     <c:param name="page" value="${currentPage + 1}"/>
                                     <c:if test="${not empty param.q}"><c:param name="q" value="${param.q}"/></c:if>
+                                    <c:if test="${not empty param.cat}"><c:param name="cat" value="${param.cat}"/></c:if>
                                     <c:if test="${not empty param.sort}"><c:param name="sort" value="${param.sort}"/></c:if>
                                     <c:if test="${not empty param.pageSize}"><c:param name="pageSize" value="${param.pageSize}"/></c:if>
                                 </c:url>

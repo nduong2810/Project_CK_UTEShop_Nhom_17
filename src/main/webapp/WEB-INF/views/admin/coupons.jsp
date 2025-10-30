@@ -184,9 +184,7 @@
 						<option ${pageSize==50 ? 'selected' : ''} value="50">50</option>
 					</select>
 					<button class="btn">Lọc</button>
-					<button class="btn btn-primary" type="button"
-						onclick="location.href='${ctx}/admin/coupons/edit'">+ Tạo
-						mã giảm giá</button>
+
 				</form>
 
 				<div style="overflow: auto">

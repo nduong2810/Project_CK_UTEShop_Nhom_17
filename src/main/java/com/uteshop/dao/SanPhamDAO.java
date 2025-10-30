@@ -420,8 +420,58 @@ public class SanPhamDAO {
 
 	/** Dành cho AdminProductsController (giữ chữ ký cũ) */
 	public List<SanPham> findPaged(int page, int pageSize, String q, Integer catId, String sort) {
-		int offset = Math.max(0, (page - 1)) * pageSize;
-		return findAll(offset, pageSize, sort, null, catId);
+		EntityManager em = getEntityManager();
+		List<SanPham> result = new ArrayList<>();
+
+		try {
+			StringBuilder jpql = new StringBuilder("SELECT s FROM SanPham s WHERE s.trangThai = TRUE");
+
+			// Lọc theo từ khóa tìm kiếm
+			if (q != null && !q.isBlank()) {
+				jpql.append(" AND LOWER(s.tenSP) LIKE :kw");
+			}
+
+			// Lọc theo danh mục
+			if (catId != null && catId > 0) {
+				jpql.append(" AND s.danhMuc.maDM = :categoryId");
+			}
+
+			// Sắp xếp
+			if ("price_asc".equalsIgnoreCase(sort)) {
+				jpql.append(" ORDER BY s.donGia ASC");
+			} else if ("price_desc".equalsIgnoreCase(sort)) {
+				jpql.append(" ORDER BY s.donGia DESC");
+			} else if ("sold_desc".equalsIgnoreCase(sort)) {
+				jpql.append(" ORDER BY s.soLuongBan DESC");
+			} else if ("newest".equalsIgnoreCase(sort)) {
+				jpql.append(" ORDER BY s.ngayTao DESC");
+			} else {
+				jpql.append(" ORDER BY s.maSP DESC");
+			}
+
+			TypedQuery<SanPham> query = em.createQuery(jpql.toString(), SanPham.class);
+
+			if (q != null && !q.isBlank()) {
+				query.setParameter("kw", "%" + q.toLowerCase() + "%");
+			}
+			if (catId != null && catId > 0) {
+				query.setParameter("categoryId", catId);
+			}
+
+			int offset = Math.max(0, (page - 1)) * pageSize;
+			query.setFirstResult(offset);
+			query.setMaxResults(pageSize);
+
+			result = query.getResultList();
+
+		} catch (Exception e) {
+			System.err.println("Error in SanPhamDAO.findPaged: " + e.getMessage());
+			e.printStackTrace();
+		} finally {
+			em.close();
+		}
+
+		return result;
 	}
 
 	/** Dành cho ProductController (giữ tương thích cũ) */

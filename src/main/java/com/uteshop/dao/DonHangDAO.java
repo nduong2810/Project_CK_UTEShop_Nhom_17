@@ -850,14 +850,53 @@ public class DonHangDAO {
 				tx.rollback();
 				return false;
 			}
+			
+			// Lưu trạng thái cũ để so sánh
+			TrangThaiDonHang oldStatus = d.getTrangThai();
+			
+			// Cập nhật trạng thái mới
 			d.setTrangThai(newStatus);
 			d.setNgayCapNhat(new Date());
 			em.merge(d);
+			
+			// ✅ Nếu đơn hàng chuyển sang HOÀN THÀNH lần đầu, cập nhật số lượng đã bán
+			if (newStatus == TrangThaiDonHang.HOAN_THANH && oldStatus != TrangThaiDonHang.HOAN_THANH) {
+				// Lấy chi tiết đơn hàng với eager loading
+				String jpql = "SELECT DISTINCT dh FROM DonHang dh " +
+							  "LEFT JOIN FETCH dh.chiTietDonHangs ctdh " +
+							  "LEFT JOIN FETCH ctdh.sanPham sp " +
+							  "WHERE dh.maDH = :id";
+				DonHang dhWithDetails = em.createQuery(jpql, DonHang.class)
+										  .setParameter("id", maDH)
+										  .getSingleResult();
+				
+				// Cập nhật soLuongBan cho từng sản phẩm trong đơn hàng
+				if (dhWithDetails.getChiTietDonHangs() != null) {
+					for (ChiTietDonHang ctdh : dhWithDetails.getChiTietDonHangs()) {
+						if (ctdh.getSanPham() != null) {
+							int soLuongMua = ctdh.getSoLuong();
+							int soLuongBanHienTai = ctdh.getSanPham().getSoLuongBan() != null 
+													? ctdh.getSanPham().getSoLuongBan() 
+													: 0;
+							
+							// Cập nhật số lượng đã bán
+							ctdh.getSanPham().setSoLuongBan(soLuongBanHienTai + soLuongMua);
+							em.merge(ctdh.getSanPham());
+							
+							System.out.println("✅ Đã cập nhật sản phẩm [" + ctdh.getSanPham().getTenSP() + 
+											   "] - Số lượng bán: " + (soLuongBanHienTai + soLuongMua));
+						}
+					}
+				}
+			}
+			
 			tx.commit();
 			return true;
 		} catch (Exception e) {
 			if (tx.isActive())
 				tx.rollback();
+			System.err.println("❌ Lỗi khi cập nhật trạng thái đơn hàng: " + e.getMessage());
+			e.printStackTrace();
 			throw e;
 		} finally {
 			em.close();
