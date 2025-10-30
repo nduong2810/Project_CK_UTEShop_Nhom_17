@@ -15,28 +15,6 @@
 </div>
 
 ---
-
-## 📋 Mục lục
-
-- [Giới thiệu](#giới-thiệu)
-- [Tính năng chính](#tính-năng-chính)
-- [Công nghệ sử dụng](#công-nghệ-sử-dụng)
-- [Kiến trúc hệ thống](#kiến-trúc-hệ-thống)
-- [Yêu cầu hệ thống](#yêu-cầu-hệ-thống)
-- [Bắt đầu nhanh](#bắt-đầu-nhanh)
-- [Cấu trúc thư mục](#cấu-trúc-thư-mục)
-- [Cấu hình](#cấu-hình)
-- [Tài liệu](#tài-liệu)
-- [Screenshots](#screenshots)
-- [API Reference](#api-reference)
-- [Testing](#testing)
-- [Deployment](#deployment)
-- [Contributing](#contributing)
-- [License](#license)
-- [Nhóm phát triển](#nhóm-phát-triển)
-
----
-
 ## 🎯 Giới thiệu
 
 **UTESHOP** là một nền tảng thương mại điện tử toàn diện được xây dựng với Jakarta EE 10 và Hibernate ORM. Hệ thống hỗ trợ đa vai trò người dùng (Khách hàng, Vendor, Admin, Shipper) với đầy đủ tính năng quản lý sản phẩm, đơn hàng, thanh toán và giao tiếp real-time.
@@ -83,7 +61,7 @@
 - 🏷️ **Mã giảm giá**: Tạo và quản lý voucher
 - 💬 **Chat**: Trả lời tin nhắn khách hàng
 - 📈 **Báo cáo**: Doanh thu theo thời gian, sản phẩm bán chạy
-- ⚙️ **Cài đặt**: Thông tin cửa hàng, thanh toán
+
 
 ### 👨‍💼 Admin
 
@@ -96,14 +74,12 @@
 - 🚚 **Đơn vị vận chuyển**: Quản lý đối tác vận chuyển
 - 🏷️ **Mã giảm giá**: Tạo mã giảm giá hệ thống
 - 🚩 **Khiếu nại**: Xử lý khiếu nại về cửa hàng và người dùng
-- ⚙️ **Cài đặt**: Cấu hình hệ thống
 
 ### 🚚 Shipper
 
 - 📦 **Đơn hàng pickup**: Nhận đơn cần lấy hàng
 - 🚚 **Đang giao**: Quản lý đơn đang giao
 - ✅ **Lịch sử**: Xem đơn đã hoàn thành
-- 📍 **Theo dõi**: GPS tracking (planned)
 
 ---
 
@@ -622,34 +598,6 @@ ws://localhost:8080/Project_CK_UTESHOP/chat/{conversationId}
 
 ---
 
-## 🖼️ Screenshots
-
-### Homepage
-![Homepage](docs/screenshots/home.png)
-
-### Product Detail
-![Product Detail](docs/screenshots/product-detail.png)
-
-### Shopping Cart
-![Cart](docs/screenshots/cart.png)
-
-### Checkout
-![Checkout](docs/screenshots/checkout.png)
-
-### User Dashboard
-![User Dashboard](docs/screenshots/user-dashboard.png)
-
-### Admin Panel
-![Admin Panel](docs/screenshots/admin-panel.png)
-
-### Vendor Dashboard
-![Vendor Dashboard](docs/screenshots/vendor-dashboard.png)
-
-### Real-time Chat
-![Chat](docs/screenshots/chat.png)
-
----
-
 ## 🧪 Testing
 
 ### Chạy Unit Tests
@@ -688,150 +636,6 @@ Report sẽ được tạo tại: `target/site/jacoco/index.html`
 4. Gửi tin nhắn và kiểm tra real-time update
 
 ---
-
-## 🚢 Deployment
-
-### Production Build
-
-```bash
-# Build production WAR
-mvn clean package -Pprod
-
-# WAR file sẽ được tạo tại
-target/Project_CK_UTESHOP-1.1.war
-```
-
-### Deploy lên Server
-
-#### Option 1: Tomcat Manager
-
-1. Truy cập Tomcat Manager: `http://server:8080/manager`
-2. Upload WAR file
-3. Deploy và start application
-
-#### Option 2: Manual Copy
-
-```bash
-# Copy WAR to server
-scp target/Project_CK_UTESHOP-1.1.war user@server:/opt/tomcat/webapps/
-
-# Restart Tomcat
-ssh user@server
-sudo systemctl restart tomcat
-```
-
-### Environment Variables (Production)
-
-```bash
-# Database
-export DB_URL="jdbc:sqlserver://production-db:1433;databaseName=UTESHOP"
-export DB_USER="sa"
-export DB_PASSWORD="strong-password"
-
-# JWT
-export JWT_SECRET="production-secret-key-very-long-and-secure"
-
-# Email
-export EMAIL_USER="noreply@uteshop.com"
-export EMAIL_PASSWORD="app-password"
-```
-
-### Nginx Reverse Proxy (Optional)
-
-```nginx
-server {
-    listen 80;
-    server_name uteshop.com;
-
-    location / {
-        proxy_pass http://localhost:8080/Project_CK_UTESHOP/;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /chat {
-        proxy_pass http://localhost:8080/Project_CK_UTESHOP/chat;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-}
-```
-
----
-
-## 🤝 Contributing
-
-Chúng tôi hoan nghênh mọi đóng góp! Để contribute:
-
-### 1. Fork the Project
-
-```bash
-git clone https://github.com/YOUR_USERNAME/Project_CK_UTEShop_Nhom_17.git
-```
-
-### 2. Create Feature Branch
-
-```bash
-git checkout -b feature/AmazingFeature
-```
-
-### 3. Commit Changes
-
-```bash
-git commit -m "Add some AmazingFeature"
-```
-
-### 4. Push to Branch
-
-```bash
-git push origin feature/AmazingFeature
-```
-
-### 5. Open Pull Request
-
-Tạo Pull Request trên GitHub với mô tả chi tiết về changes.
-
-### Coding Standards
-
-- **Java**: Follow Google Java Style Guide
-- **JSP**: Indent với 4 spaces
-- **JavaScript**: ESLint configuration
-- **SQL**: Uppercase keywords, lowercase identifiers
-- **Comments**: Tiếng Việt hoặc English đều được
-
-### Commit Message Convention
-
-```
-feat: Thêm tính năng mới
-fix: Sửa bug
-docs: Cập nhật documentation
-style: Format code
-refactor: Refactor code
-test: Thêm tests
-chore: Update dependencies
-```
-
----
-
-## 📄 License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
-```
-MIT License
-
-Copyright (c) 2024 UTESHOP - Nhóm 17
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction...
-```
-
----
-
 ## 👥 Nhóm phát triển
 
 ### Team Members
