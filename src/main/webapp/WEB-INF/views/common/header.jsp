@@ -387,8 +387,7 @@
 											<i class="fas fa-chart-line me-2"></i>Dashboard Admin
 									</a></li>
 								</c:if>
-								<%-- Tìm đoạn code của SHIPPER trong header.jsp và SỬA LẠI như sau --%>
-
+								<%-- Trong file header.jsp, tìm menu của SHIPPER và thêm dòng mới --%>
 								<c:if test="${sessionScope.userRole == 'SHIPPER'}">
 									<li><hr class="dropdown-divider"></li>
 									<li>
@@ -396,27 +395,25 @@
 											<i class="fas fa-motorcycle me-2"></i>Quản lý Giao hàng
 										</h6>
 									</li>
-									<li>
-										<%-- SỬA LẠI: URL cho Thống kê (Dashboard) --%> <a
-										class="dropdown-item"
+									<%-- THÊM LIÊN KẾT MỚI NÀY --%>
+									<li><a class="dropdown-item"
+										href="${pageContext.request.contextPath}/shipper/pickup">
+											<i class="fas fa-warehouse me-2"></i>Nhận Đơn Tại Kho
+									</a></li>
+									<%-- Các liên kết cũ --%>
+									<li><a class="dropdown-item"
 										href="${pageContext.request.contextPath}/shipper/dashboard">
-											<i class="fas fa-tachometer-alt me-2"></i>Dashboard & Thống kê
-									</a>
-									</li>
-									<li>
-										<%-- URL cho Danh sách đơn hàng (giữ nguyên) --%> <a
-										class="dropdown-item"
+											<i class="fas fa-tachometer-alt me-2"></i>Dashboard & Thống
+											kê
+									</a></li>
+									<li><a class="dropdown-item"
 										href="${pageContext.request.contextPath}/shipper/orders">
 											<i class="fas fa-box-open me-2"></i>Đơn hàng cần giao
-									</a>
-									</li>
-									<li>
-										<%-- SỬA LẠI: URL cho Lịch sử giao hàng --%> <a
-										class="dropdown-item"
+									</a></li>
+									<li><a class="dropdown-item"
 										href="${pageContext.request.contextPath}/shipper/history">
 											<i class="fas fa-history me-2"></i>Lịch sử giao hàng
-									</a>
-									</li>
+									</a></li>
 								</c:if>
 								<li><hr class="dropdown-divider"></li>
 								<li><a class="dropdown-item"

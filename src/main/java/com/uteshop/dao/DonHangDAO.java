@@ -989,4 +989,16 @@ public class DonHangDAO {
 			em.close();
 		}
 	}
+	public List<DonHang> findOrdersReadyForPickup() {
+	    EntityManager em = JPAUtil.getEntityManager();
+	    try {
+	        // Lấy tất cả đơn hàng có trạng thái DANG_CHUAN_BI
+	        String jpql = "SELECT d FROM DonHang d WHERE d.trangThai = :status ORDER BY d.ngayDat ASC";
+	        TypedQuery<DonHang> query = em.createQuery(jpql, DonHang.class);
+	        query.setParameter("status", DonHang.TrangThaiDonHang.DANG_CHUAN_BI);
+	        return query.getResultList();
+	    } finally {
+	        em.close();
+	    }
+	}
 }

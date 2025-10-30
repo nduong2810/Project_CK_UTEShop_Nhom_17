@@ -1,5 +1,7 @@
 package com.uteshop.dao;
 
+import com.uteshop.entity.DonHang;
+import com.uteshop.entity.NguoiDung;
 import com.uteshop.entity.PhanCongGiaoHang;
 import com.uteshop.util.JPAUtil; 
 import jakarta.persistence.EntityManager;
@@ -129,6 +131,46 @@ public class PhanCongGiaoHangDAO {
             TypedQuery<PhanCongGiaoHang> query = em.createQuery(jpql, PhanCongGiaoHang.class);
             query.setParameter("shipperId", shipperMaND);
             return query.getResultList();
+        } finally {
+            em.close();
+        }
+    }
+    public boolean assignOrderToShipper(Integer maDH, Integer shipperMaND) {
+        EntityManager em = JPAUtil.getEntityManager();
+        EntityTransaction transaction = em.getTransaction();
+        try {
+            transaction.begin();
+
+            // 1. Lấy thông tin DonHang và NguoiDung (Shipper)
+            DonHang donHang = em.find(DonHang.class, maDH);
+            NguoiDung shipper = em.find(NguoiDung.class, shipperMaND);
+
+            // Kiểm tra xem đơn hàng và shipper có tồn tại không
+            if (donHang == null || shipper == null || donHang.getTrangThai() != DonHang.TrangThaiDonHang.DANG_CHUAN_BI) {
+                transaction.rollback();
+                return false; // Đơn hàng không hợp lệ để nhận
+            }
+
+            // 2. Tạo bản ghi phân công mới
+            PhanCongGiaoHang phanCong = new PhanCongGiaoHang();
+            phanCong.setDonHang(donHang);
+            phanCong.setNguoiGiao(shipper);
+            phanCong.setNgayGiao(LocalDateTime.now());
+            phanCong.setTrangThai("DANG_GIAO");
+            em.persist(phanCong); // Lưu bản ghi phân công
+
+            // 3. Cập nhật trạng thái của DonHang
+            donHang.setTrangThai(DonHang.TrangThaiDonHang.DANG_GIAO);
+            em.merge(donHang);
+
+            transaction.commit();
+            return true;
+        } catch (Exception e) {
+            if (transaction.isActive()) {
+                transaction.rollback();
+            }
+            e.printStackTrace();
+            return false;
         } finally {
             em.close();
         }

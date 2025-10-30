@@ -1,6 +1,8 @@
 package com.uteshop.controller.shipper;
 
+import com.uteshop.dao.DonHangDAO;
 import com.uteshop.dao.PhanCongGiaoHangDAO;
+import com.uteshop.entity.DonHang;
 import com.uteshop.entity.NguoiDung;
 import com.uteshop.entity.PhanCongGiaoHang;
 import com.uteshop.util.JPAUtil; // Đã thêm import JPAUtil để minh họa việc quản lý EM
@@ -17,10 +19,10 @@ import java.util.stream.Collectors;
  * Bao gồm: Dashboard (Thống kê), Quản lý đơn hàng cần giao, và Lịch sử giao hàng.
  * URL Patterns: /shipper/dashboard, /shipper/orders, /shipper/history
  */
-@WebServlet(urlPatterns = {"/shipper/dashboard", "/shipper/orders", "/shipper/history"})
+@WebServlet(urlPatterns = {"/shipper/dashboard", "/shipper/orders", "/shipper/history", "/shipper/pickup"})
 public class ShipperController extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    
+    private DonHangDAO donHangDAO = new DonHangDAO();
     // Khởi tạo DAO (Giả định đã sửa đổi để sử dụng JPAUtil)
     private PhanCongGiaoHangDAO orderRepo = new PhanCongGiaoHangDAO();
     
@@ -67,9 +69,18 @@ public class ShipperController extends HttpServlet {
             case "/shipper/orders":
                 showOrders(request, response, shipperMaND); // Danh sách đơn hàng cần giao
                 break;
+                
             case "/shipper/history":
                 showHistory(request, response, shipperMaND); // Lịch sử đã giao/hủy
                 break;
+            
+            // =======================================================
+            // THÊM CASE MỚI NÀY ĐỂ XỬ LÝ TRANG NHẬN ĐƠN TẠI KHO
+            // =======================================================
+            case "/shipper/pickup":
+                showPickupList(request, response, shipperMaND);
+                break;
+                
             case "/shipper/dashboard":
             default:
                 showDashboard(request, response, shipperMaND); // Thống kê + Dashboard mặc định
@@ -80,12 +91,15 @@ public class ShipperController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Xử lý tất cả các thao tác cập nhật (POST)
         String action = request.getParameter("action");
         if ("updateStatus".equals(action)) {
             handleUpdateStatus(request, response);
-        } else {
-            // Nếu không có action POST hợp lệ, redirect lại trang hiển thị
+        } 
+        // THÊM ELSE IF MỚI
+        else if ("confirmPickup".equals(action)) {
+            handleConfirmPickup(request, response);
+        } 
+        else {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Yêu cầu POST không hợp lệ.");
         }
     }
@@ -194,6 +208,42 @@ public class ShipperController extends HttpServlet {
         } catch (Exception e) {
             log("Lỗi không xác định khi cập nhật trạng thái Shipper", e);
             response.sendRedirect(request.getContextPath() + "/shipper/orders?error=Cập nhật thất bại. Lỗi không xác định.");
+        }
+    }
+    private void showPickupList(HttpServletRequest request, HttpServletResponse response, Integer shipperMaND)
+            throws ServletException, IOException {
+        try {
+            List<DonHang> readyOrders = donHangDAO.findOrdersReadyForPickup();
+            request.setAttribute("readyOrders", readyOrders);
+            request.setAttribute("viewTitle", "Xác Nhận Lấy Đơn Hàng Tại Kho");
+            request.getRequestDispatcher("/WEB-INF/views/shipper/pickup-orders.jsp").forward(request, response);
+        } catch (Exception e) {
+            log("Lỗi tải danh sách đơn hàng chờ lấy:", e);
+            response.sendRedirect(request.getContextPath() + "/shipper/dashboard?error=Không thể tải danh sách đơn hàng.");
+        }
+    }
+
+    private void handleConfirmPickup(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        try {
+            // Lỗi có thể xảy ra ở đây:
+            Integer maDH = Integer.parseInt(request.getParameter("maDH")); // 1. Tham số "maDH" có null hoặc không phải số?
+            
+            NguoiDung shipper = (NguoiDung) request.getSession().getAttribute("user"); // 2. Session có user không?
+            Integer shipperMaND = shipper.getMaND();
+
+            // Hoặc lỗi xảy ra trong phương thức DAO này:
+            boolean success = orderRepo.assignOrderToShipper(maDH, shipperMaND); // 3. Logic trong DAO có lỗi không?
+
+            if (success) {
+                response.sendRedirect(request.getContextPath() + "/shipper/pickup?message=Đã xác nhận lấy đơn hàng " + maDH + " thành công!");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/shipper/pickup?error=Xác nhận thất bại! Đơn hàng có thể đã được người khác nhận.");
+            }
+        } catch (Exception e) {
+            // Nếu có Exception, nó sẽ rơi vào đây
+            log("Lỗi khi xác nhận lấy đơn hàng:", e); // 4. Dòng log này có xuất hiện trong console không?
+            response.sendRedirect(request.getContextPath() + "/shipper/pickup?error=Đã có lỗi xảy ra.");
         }
     }
 }
