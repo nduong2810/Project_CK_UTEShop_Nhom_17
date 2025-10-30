@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Java](https://img.shields.io/badge/Java-21-orange?style=for-the-badge&logo=java)
+![Java](https://img.shields.io/badge/Java-22-orange?style=for-the-badge&logo=java)
 ![Jakarta EE](https://img.shields.io/badge/Jakarta%20EE-10-blue?style=for-the-badge&logo=eclipse)
 ![Hibernate](https://img.shields.io/badge/Hibernate-6.6.1-green?style=for-the-badge&logo=hibernate)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3.3-purple?style=for-the-badge&logo=bootstrap)
