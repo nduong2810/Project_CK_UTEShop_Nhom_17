@@ -48,7 +48,8 @@ public class HomeController extends HttpServlet {
             }
 
             // --- Lấy tổng sản phẩm theo bộ lọc ---
-            long totalProducts = sanPhamDAO.countProducts(sort, price, categoryId);
+            // === SỬA LỖI 1: Tham số bị sai. Hàm countSearchResults nhận (keyword, categoryId, priceRange) ===
+            long totalProducts = sanPhamDAO.countSearchResults(null, categoryId, price);
             int totalPages = (int) Math.ceil((double) totalProducts / PAGE_SIZE);
             if (totalPages == 0) totalPages = 1;
 
@@ -66,7 +67,9 @@ public class HomeController extends HttpServlet {
             int offset = (currentPage - 1) * PAGE_SIZE;
 
             // --- Truy vấn danh sách sản phẩm ---
-            List<SanPham> products = sanPhamDAO.findAll(offset, PAGE_SIZE, sort, price, categoryId);
+            // === SỬA LỖI 2: Thứ tự tham số bị sai. ===
+            // Hàm searchProducts nhận (keyword, categoryId, priceRange, sort, offset, limit)
+            List<SanPham> products = sanPhamDAO.searchProducts(null, categoryId, price, sort, offset, PAGE_SIZE);
 
             // --- Danh mục ---
             List<DanhMuc> categories = danhMucDAO.getAllCategories();

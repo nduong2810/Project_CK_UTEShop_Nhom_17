@@ -23,7 +23,9 @@ public class SanPhamDAO {
 	public List<SanPham> findTopNProducts(int limit) {
 		EntityManager em = getEntityManager();
 		try {
-			return em.createQuery("SELECT s FROM SanPham s WHERE s.trangThai = TRUE ORDER BY s.soLuongBan DESC",
+			// Sửa lỗi Lazy: Thêm JOIN FETCH cho các quan hệ LAZY (CuaHang, DanhMuc)
+			return em.createQuery(
+					"SELECT s FROM SanPham s JOIN FETCH s.cuaHang JOIN FETCH s.danhMuc WHERE s.trangThai = TRUE ORDER BY s.soLuongBan DESC",
 					SanPham.class).setMaxResults(limit).getResultList();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -36,8 +38,9 @@ public class SanPhamDAO {
 	public List<SanPham> findTopNProductsByCategoryId(int limit, Integer categoryId) {
 		EntityManager em = getEntityManager();
 		try {
+			// Sửa lỗi Lazy: Thêm JOIN FETCH cho các quan hệ LAZY (CuaHang)
 			return em.createQuery(
-					"SELECT s FROM SanPham s WHERE s.trangThai = TRUE AND s.danhMuc.maDM = :cat ORDER BY s.soLuongBan DESC",
+					"SELECT s FROM SanPham s JOIN FETCH s.cuaHang WHERE s.trangThai = TRUE AND s.danhMuc.maDM = :cat ORDER BY s.soLuongBan DESC",
 					SanPham.class).setParameter("cat", categoryId).setMaxResults(limit).getResultList();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -49,30 +52,39 @@ public class SanPhamDAO {
 
 	/* ===================== PAGINATION & FILTER ===================== */
 
-	public List<SanPham> findAll(int offset, int limit, String sort, String price, Integer categoryId) {
+	public List<SanPham> searchProducts(String keyword, Integer categoryId, String priceRange, String sort, int offset, int limit) {
 		EntityManager em = getEntityManager();
 		List<SanPham> result = new ArrayList<>();
 
 		try {
-			StringBuilder jpql = new StringBuilder("SELECT s FROM SanPham s WHERE s.trangThai = TRUE");
+			// ========================= ĐÃ SỬA LỖI =========================
+			// Thêm "JOIN FETCH s.cuaHang JOIN FETCH s.danhMuc" để sửa lỗi LazyInitializationException
+			StringBuilder jpql = new StringBuilder(
+					"SELECT s FROM SanPham s JOIN FETCH s.cuaHang JOIN FETCH s.danhMuc WHERE s.trangThai = TRUE");
+			// =============================================================
+
+			// ----- Lọc từ khóa tìm kiếm -----
+			if (keyword != null && !keyword.isBlank()) {
+				jpql.append(" AND LOWER(s.tenSP) LIKE :keyword");
+			}
 
 			BigDecimal min = null;
 			BigDecimal max = null;
 
 			// ----- Bộ lọc giá -----
-			if (price != null && !price.isBlank()) {
-				if ("0-100000".equals(price)) {
+			if (priceRange != null && !priceRange.isBlank()) {
+				if ("0-100000".equals(priceRange)) {
 					max = new BigDecimal("100000");
 					jpql.append(" AND s.donGia < :max");
-				} else if ("100000-500000".equals(price)) {
+				} else if ("100000-500000".equals(priceRange)) {
 					min = new BigDecimal("100000");
 					max = new BigDecimal("500000");
 					jpql.append(" AND s.donGia >= :min AND s.donGia < :max");
-				} else if ("500000-1000000".equals(price)) {
+				} else if ("500000-1000000".equals(priceRange)) {
 					min = new BigDecimal("500000");
 					max = new BigDecimal("1000000");
 					jpql.append(" AND s.donGia >= :min AND s.donGia < :max");
-				} else if ("1000000-".equals(price)) {
+				} else if ("1000000-".equals(priceRange)) {
 					min = new BigDecimal("1000000");
 					jpql.append(" AND s.donGia >= :min");
 				}
@@ -101,6 +113,10 @@ public class SanPhamDAO {
 
 			TypedQuery<SanPham> query = em.createQuery(jpql.toString(), SanPham.class);
 
+			// ----- Set tham số -----
+			if (keyword != null && !keyword.isBlank()) {
+				query.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
+			}
 			if (min != null)
 				query.setParameter("min", min);
 			if (max != null)
@@ -114,7 +130,7 @@ public class SanPhamDAO {
 			result = query.getResultList();
 
 		} catch (Exception e) {
-			System.err.println("Error in SanPhamDAO.findAll: " + e.getMessage());
+			System.err.println("Error in SanPhamDAO.searchProducts: " + e.getMessage());
 			e.printStackTrace();
 		} finally {
 			em.close();
@@ -123,10 +139,15 @@ public class SanPhamDAO {
 		return result;
 	}
 
-	public long countProducts(String sortBy, String priceRange, Integer categoryId) {
+	public long countSearchResults(String keyword, Integer categoryId, String priceRange) {
 		EntityManager em = getEntityManager();
 		StringBuilder jpql = new StringBuilder("SELECT COUNT(s) FROM SanPham s WHERE s.trangThai = TRUE");
 
+		// ----- Lọc từ khóa tìm kiếm -----
+		if (keyword != null && !keyword.isBlank()) {
+			jpql.append(" AND LOWER(s.tenSP) LIKE :keyword");
+		}
+		
 		BigDecimal min = null;
 		BigDecimal max = null;
 
@@ -150,11 +171,16 @@ public class SanPhamDAO {
 
 		if (categoryId != null && categoryId > 0)
 			jpql.append(" AND s.danhMuc.maDM = :categoryId");
-		if ("bestseller".equalsIgnoreCase(sortBy))
-			jpql.append(" AND s.soLuongBan > 10");
+
+		// (Lưu ý: Bỏ logic 'bestseller' ở đây vì hàm đếm không nên phụ thuộc vào 'sort')
 
 		try {
 			TypedQuery<Long> query = em.createQuery(jpql.toString(), Long.class);
+
+			// ----- Set tham số -----
+			if (keyword != null && !keyword.isBlank()) {
+				query.setParameter("keyword", "%" + keyword.toLowerCase() + "%");
+			}
 			if (min != null)
 				query.setParameter("min", min);
 			if (max != null)
@@ -170,7 +196,6 @@ public class SanPhamDAO {
 			em.close();
 		}
 	}
-
 	/* ===================== FIND BY ID/STORE/CATEGORY ===================== */
 
 	public SanPham findById(Integer id) {
@@ -189,8 +214,9 @@ public class SanPhamDAO {
 	public List<SanPham> findByCategoryId(Integer categoryId) {
 		EntityManager em = getEntityManager();
 		try {
+			// Sửa lỗi Lazy: Thêm JOIN FETCH
 			return em.createQuery(
-					"SELECT s FROM SanPham s WHERE s.trangThai = TRUE AND s.danhMuc.maDM = :cat ORDER BY s.soLuongBan DESC",
+					"SELECT s FROM SanPham s JOIN FETCH s.cuaHang WHERE s.trangThai = TRUE AND s.danhMuc.maDM = :cat ORDER BY s.soLuongBan DESC",
 					SanPham.class).setParameter("cat", categoryId).getResultList();
 		} finally {
 			em.close();
@@ -200,7 +226,8 @@ public class SanPhamDAO {
 	public List<SanPham> findByStoreId(int maCH) {
 		EntityManager em = getEntityManager();
 		try {
-			return em.createQuery("SELECT s FROM SanPham s WHERE s.cuaHang.maCH = :store AND s.trangThai = TRUE",
+			// Sửa lỗi Lazy: Thêm JOIN FETCH
+			return em.createQuery("SELECT s FROM SanPham s JOIN FETCH s.danhMuc WHERE s.cuaHang.maCH = :store AND s.trangThai = TRUE",
 					SanPham.class).setParameter("store", maCH).getResultList();
 		} finally {
 			em.close();
@@ -234,6 +261,7 @@ public class SanPhamDAO {
 				if (ch == null)
 					throw new IllegalArgumentException("Cửa hàng (maCH) không tồn tại.");
 				sp.setCuaHang(ch);
+				sp.setMaCH(ch.getMaCH());
 				System.out.println("MaCH after setting managed CuaHang: " + ch.getMaCH());
 			} else {
 				throw new IllegalArgumentException("Thiếu thông tin Cửa hàng.");
@@ -414,8 +442,10 @@ public class SanPhamDAO {
 // ====== LEGACY COMPATIBILITY METHODS ======
 
 	/** Giữ cho các class cũ như ProductTextNormalizerService hoạt động */
+	/** Giữ cho các class cũ như ProductTextNormalizerService hoạt động */
 	public List<SanPham> getAllProducts() {
-		return findAll(0, 1000, "bestseller", null, null);
+		// Sửa lại đúng thứ tự tham số: (keyword, categoryId, priceRange, sort, offset, limit)
+		return searchProducts(null, null, null, "bestseller", 0, 1000); 
 	}
 
 	/** Dành cho AdminProductsController (giữ chữ ký cũ) */
@@ -424,7 +454,11 @@ public class SanPhamDAO {
 		List<SanPham> result = new ArrayList<>();
 
 		try {
-			StringBuilder jpql = new StringBuilder("SELECT s FROM SanPham s WHERE s.trangThai = TRUE");
+			// ========================= ĐÃ SỬA LỖI =========================
+			// Thêm "JOIN FETCH s.cuaHang JOIN FETCH s.danhMuc" để sửa lỗi LazyInitializationException
+			StringBuilder jpql = new StringBuilder(
+					"SELECT s FROM SanPham s JOIN FETCH s.cuaHang JOIN FETCH s.danhMuc WHERE s.trangThai = TRUE");
+			// =============================================================
 
 			// Lọc theo từ khóa tìm kiếm
 			if (q != null && !q.isBlank()) {
@@ -478,8 +512,9 @@ public class SanPhamDAO {
 	public List<SanPham> findByStore(Integer storeId, int limit) {
 		EntityManager em = getEntityManager();
 		try {
+			// Sửa lỗi Lazy: Thêm JOIN FETCH
 			return em.createQuery(
-					"SELECT s FROM SanPham s WHERE s.cuaHang.maCH = :store AND s.trangThai = TRUE ORDER BY s.soLuongBan DESC",
+					"SELECT s FROM SanPham s JOIN FETCH s.danhMuc WHERE s.cuaHang.maCH = :store AND s.trangThai = TRUE ORDER BY s.soLuongBan DESC",
 					SanPham.class).setParameter("store", storeId).setMaxResults(limit).getResultList();
 		} finally {
 			em.close();
@@ -636,7 +671,8 @@ public class SanPhamDAO {
 			Boolean active, String sort) {
 		EntityManager em = JPAUtil.getEntityManager();
 		try {
-			StringBuilder jpql = new StringBuilder("SELECT p FROM SanPham p WHERE p.maCH = :shop ");
+			// Sửa lỗi Lazy: Thêm JOIN FETCH
+			StringBuilder jpql = new StringBuilder("SELECT p FROM SanPham p JOIN FETCH p.danhMuc WHERE p.maCH = :shop ");
 			if (notBlank(q)) {
 				jpql.append(" AND (LOWER(p.tenSP) LIKE :kw OR LOWER(p.moTa) LIKE :kw) ");
 			}
@@ -711,7 +747,10 @@ public class SanPhamDAO {
 	public List<SanPham> findTopSellingByStore(Integer maCH, int limit) {
 		EntityManager em = getEntityManager();
 		try {
-			String jpql = "SELECT s FROM SanPham s " + "WHERE s.cuaHang.maCH = :maCH AND s.trangThai = true "
+			// Sửa lỗi Lazy: Thêm JOIN FETCH
+			String jpql = "SELECT s FROM SanPham s " 
+					+ "JOIN FETCH s.danhMuc "
+					+ "WHERE s.cuaHang.maCH = :maCH AND s.trangThai = true "
 					+ "ORDER BY s.soLuongBan DESC";
 			TypedQuery<SanPham> query = em.createQuery(jpql, SanPham.class);
 			query.setParameter("maCH", maCH);
@@ -737,11 +776,13 @@ public class SanPhamDAO {
 		EntityManager em = getEntityManager();
 		try {
 			String jpql = "SELECT s, COALESCE(SUM(ctdh.soLuong), 0) as totalSold " + "FROM SanPham s "
+					+ "JOIN FETCH s.danhMuc " // Sửa lỗi Lazy
 					+ "LEFT JOIN s.chiTietDonHangs ctdh " + "LEFT JOIN ctdh.donHang dh "
 					+ "WHERE s.cuaHang.maCH = :maCH " + "  AND s.trangThai = true "
 					+ "  AND (dh.trangThai = com.uteshop.entity.DonHang.TrangThaiDonHang.DA_GIAO "
 					+ "       OR dh.trangThai = com.uteshop.entity.DonHang.TrangThaiDonHang.HOAN_THANH "
-					+ "       OR dh.trangThai IS NULL) " + "GROUP BY s " + "ORDER BY totalSold DESC";
+					+ "       OR dh.trangThai IS NULL) " + "GROUP BY s, s.maSP, s.tenSP, s.moTa, s.donGia, s.soLuongTon, s.soLuongBan, s.hinhAnh, s.trangThai, s.ngayTao, s.ngayCapNhat, s.luotXem, s.luotYeuThich, s.diemDanhGiaTrungBinh, s.soLuongDanhGia, s.maDM, s.maCH, s.danhMuc.maDM, s.danhMuc.tenDM, s.danhMuc.hinhAnhDM, s.danhMuc.ngayTao " // Cần GROUP BY tất cả các trường non-aggregated của SanPham VÀ DanhMuc (vì đã JOIN FETCH)
+					+ "ORDER BY totalSold DESC";
 			TypedQuery<Object[]> query = em.createQuery(jpql, Object[].class);
 			query.setParameter("maCH", maCH);
 			query.setMaxResults(limit);

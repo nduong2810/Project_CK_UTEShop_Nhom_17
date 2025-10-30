@@ -44,7 +44,9 @@ public class CategoryController extends HttpServlet {
             }
 
             // Count total products for pagination
-            long totalProducts = sanPhamDAO.countProducts(sortParam, priceParam, categoryId);
+            // === SỬA LỖI 1: Đổi "countProducts" thành "countSearchResults" ===
+            // (Truyền "null" cho tham số "keyword" mới)
+            long totalProducts = sanPhamDAO.countSearchResults(null, categoryId, priceParam);
             int totalPages = (int) Math.ceil((double) totalProducts / PAGINATION_PAGE_SIZE);
             if (totalPages == 0) totalPages = 1;
 
@@ -66,8 +68,10 @@ public class CategoryController extends HttpServlet {
             // Calculate offset
             int currentOffset = (currentPage - 1) * PAGINATION_PAGE_SIZE;
 
-            // Fetch products using the findAll method
-            List<SanPham> products = sanPhamDAO.findAll(currentOffset, PAGINATION_PAGE_SIZE, sortParam, priceParam, categoryId);
+            // Fetch products using the new searchProducts method
+            // === SỬA LỖI 2: Đổi "findAll" thành "searchProducts" ===
+            // (Truyền "null" cho "keyword" và sắp xếp lại tham số cho đúng)
+            List<SanPham> products = sanPhamDAO.searchProducts(null, categoryId, priceParam, sortParam, currentOffset, PAGINATION_PAGE_SIZE);
 
             // Get category info and all categories for the filter dropdown
             List<DanhMuc> allCategories = danhMucDAO.getAllCategories();

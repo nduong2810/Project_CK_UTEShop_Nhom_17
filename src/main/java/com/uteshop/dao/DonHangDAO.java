@@ -1088,4 +1088,34 @@ public class DonHangDAO {
 	        em.close();
 	    }
 	}
+	public boolean delete(Integer orderId) {
+	    EntityManager em = JPAUtil.getEntityManager();
+	    EntityTransaction trans = em.getTransaction();
+	    try {
+	        trans.begin();
+	        DonHang order = em.find(DonHang.class, orderId);
+	        
+	        if (order != null) {
+	            // (Quan trọng: Đảm bảo Entity 'DonHang' của bạn có
+	            // CascadeType.REMOVE hoặc orphanRemoval=true cho chiTietDonHangs
+	            // để các chi tiết đơn hàng cũng bị xóa theo.)
+	            em.remove(order);
+	            trans.commit();
+	            return true;
+	        }
+	        
+	        // Nếu không tìm thấy đơn hàng để xóa
+	        trans.rollback();
+	        return false;
+	        
+	    } catch (Exception e) {
+	        if (trans.isActive()) {
+	            trans.rollback();
+	        }
+	        e.printStackTrace();
+	        return false; // Trả về false nếu có lỗi
+	    } finally {
+	        em.close();
+	    }
+	}
 }

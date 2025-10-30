@@ -278,7 +278,7 @@
                         <div class="product-item">
                             <c:choose>
                                 <c:when test="${not empty item.sanPham.hinhAnh}">
-                                    <img src="${pageContext.request.contextPath}/assets/img/products/${item.sanPham.hinhAnh}" 
+                                    <img src="${pageContext.request.contextPath}/assets/img/${item.sanPham.hinhAnh}" 
                                          alt="${item.sanPham.tenSP}" class="product-image"
                                          onerror="this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png';">
                                 </c:when>
