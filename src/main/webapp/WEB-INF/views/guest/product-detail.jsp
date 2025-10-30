@@ -632,4 +632,9 @@
     }
 </script>
 
+<!-- Chat Floating Button -->
+<jsp:include page="/WEB-INF/views/components/chat-float-button.jsp">
+    <jsp:param name="storeId" value="${product.maCH}" />
+</jsp:include>
+
 </body>

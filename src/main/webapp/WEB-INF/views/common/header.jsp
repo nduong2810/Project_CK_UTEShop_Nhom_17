@@ -346,6 +346,12 @@
                                        <i class="fas fa-map-marker-alt me-2"></i>Địa chỉ giao hàng
                                    </a>
                                </li>
+                               <li>
+                                   <a class="dropdown-item" href="${pageContext.request.contextPath}/chat">
+                                       <i class="fas fa-comments me-2"></i>Tin nhắn
+                                       <span class="badge bg-danger ms-2" id="chatUnreadBadge" style="display: none;">0</span>
+                                   </a>
+                               </li>
                                <!-- Vendor-specific features -->
                                <c:if test="${sessionScope.userRole == 'VENDOR'}">
                                    <li><hr class="dropdown-divider"></li>

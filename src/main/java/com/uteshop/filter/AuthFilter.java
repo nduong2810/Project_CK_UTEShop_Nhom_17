@@ -141,6 +141,7 @@ public class AuthFilter implements Filter {
     private boolean hasAccess(NguoiDung user, String path) {
         NguoiDung.VaiTro role = user.getVaiTro();
         if (path.startsWith("/guest")) return true;
+        if (path.startsWith("/chat")) return true; // Allow chat for all logged-in users
         if (role == NguoiDung.VaiTro.ADMIN) return true;
 
         switch (role) {

@@ -210,4 +210,10 @@
             </main>
         </c:otherwise>
     </c:choose>
+
+<!-- Chat Floating Button -->
+<jsp:include page="/WEB-INF/views/components/chat-float-button.jsp">
+    <jsp:param name="storeId" value="${supplier.maCH}" />
+</jsp:include>
+
 </body>
