@@ -39,5 +39,6 @@ public class AdminController extends HttpServlet {
 		req.setAttribute("recentOrders", recentOrders);
 
 		req.getRequestDispatcher("/WEB-INF/views/admin/home.jsp").forward(req, resp);
+//		sdsadas
 	}
 }
