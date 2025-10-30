@@ -346,7 +346,7 @@
                             <c:if test="${not empty storeEntry.key.bankQR}">
                                 <div class="qr-container">
                                     <p><i class="fas fa-qrcode me-2"></i>Quét mã QR để thanh toán</p>
-                                    <img src="${pageContext.request.contextPath}/assets/img/qr/${storeEntry.key.bankQR}" 
+                                                    <img src="${pageContext.request.contextPath}/assets/img/${storeEntry.key.bankQR}" 
                                          alt="Bank QR Code"
                                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                                     <div style="display: none;" class="alert alert-warning mt-3">
@@ -398,7 +398,7 @@
                             <c:if test="${not empty storeEntry.key.momoQR}">
                                 <div class="qr-container">
                                     <p><i class="fas fa-qrcode me-2"></i>Quét mã QR để thanh toán</p>
-                                    <img src="${pageContext.request.contextPath}/assets/img/qr/${storeEntry.key.momoQR}" 
+                                                    <img src="${pageContext.request.contextPath}/assets/img/${storeEntry.key.momoQR}" 
                                          alt="MoMo QR Code"
                                          onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
                                     <div style="display: none;" class="alert alert-warning mt-3">

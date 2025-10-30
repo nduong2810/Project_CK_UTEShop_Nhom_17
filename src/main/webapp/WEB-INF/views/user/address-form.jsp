@@ -527,8 +527,8 @@
                 success: 'fa-check-circle',
                 info: 'fa-info-circle',
                 warning: 'fa-exclamation-triangle',
-                danger: 'fa-exclamation-circle'
-            };
+                    danger: 'fa-exclamation-circle'
+                };
             var iconClass = iconMap[notificationType] || 'fa-info-circle';
 
             var notification = document.createElement('div');

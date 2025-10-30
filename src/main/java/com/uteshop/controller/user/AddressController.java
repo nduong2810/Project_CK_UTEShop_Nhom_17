@@ -113,9 +113,33 @@ public class AddressController extends HttpServlet {
         
         try {
             int addressId = Integer.parseInt(request.getParameter("id"));
+            System.out.println("DEBUG: Đang cố gắng chỉnh sửa địa chỉ với ID: " + addressId); // Debug 1
+
             DiaChiGiaoHang address = diaChiDAO.findById(addressId);
             
-            if (address == null || address.getNguoiDung().getMaND() != user.getMaND()) {
+            if (address == null) {
+                System.out.println("DEBUG: Không tìm thấy địa chỉ với ID: " + addressId + " trong ứng dụng."); // Debug 2
+                request.setAttribute("error", "Không tìm thấy địa chỉ hoặc bạn không có quyền truy cập");
+                listAddresses(request, response, user);
+                return;
+            }
+
+            // Nếu địa chỉ được tìm thấy, kiểm tra quyền sở hữu
+            // Đảm bảo rằng address.getNguoiDung() không null trước khi gọi getMaND()
+            if (address.getNguoiDung() == null) {
+                System.out.println("DEBUG: Đối tượng NguoiDung liên kết với địa chỉ ID " + addressId + " là null."); // Debug 3a
+                request.setAttribute("error", "Lỗi dữ liệu: Không tìm thấy thông tin người dùng cho địa chỉ này.");
+                listAddresses(request, response, user);
+                return;
+            }
+
+            int addressOwnerId = address.getNguoiDung().getMaND();
+            int loggedInUserId = user.getMaND();
+            System.out.println("DEBUG: ID chủ sở hữu địa chỉ (từ DB): " + addressOwnerId); // Debug 3b
+            System.out.println("DEBUG: ID người dùng đang đăng nhập (từ Session): " + loggedInUserId); // Debug 4
+
+            if (addressOwnerId != loggedInUserId) {
+                System.out.println("DEBUG: Người dùng không có quyền truy cập địa chỉ này. (ID chủ sở hữu: " + addressOwnerId + ", ID đăng nhập: " + loggedInUserId + ")"); // Debug 5
                 request.setAttribute("error", "Không tìm thấy địa chỉ hoặc bạn không có quyền truy cập");
                 listAddresses(request, response, user);
                 return;
@@ -126,7 +150,13 @@ public class AddressController extends HttpServlet {
             request.getRequestDispatcher("/WEB-INF/views/user/address-form.jsp").forward(request, response);
             
         } catch (NumberFormatException e) {
+            System.err.println("ERROR: ID địa chỉ không hợp lệ: " + request.getParameter("id")); // Debug 6
             request.setAttribute("error", "ID địa chỉ không hợp lệ");
+            listAddresses(request, response, user);
+        } catch (Exception e) {
+            System.err.println("ERROR: Lỗi không xác định trong showEditForm: " + e.getMessage());
+            e.printStackTrace();
+            request.setAttribute("error", "Đã xảy ra lỗi: " + e.getMessage());
             listAddresses(request, response, user);
         }
     }
@@ -164,7 +194,15 @@ public class AddressController extends HttpServlet {
                 String idStr = request.getParameter("id");
                 if (idStr != null && !idStr.isEmpty()) {
                     request.setAttribute("isEdit", true);
-                    request.setAttribute("addressId", idStr);
+                    try {
+                        int addressId = Integer.parseInt(idStr);
+                        DiaChiGiaoHang existingAddress = diaChiDAO.findById(addressId);
+                        if (existingAddress != null && existingAddress.getNguoiDung().getMaND() == user.getMaND()) {
+                            request.setAttribute("address", existingAddress);
+                        }
+                    } catch (NumberFormatException e) {
+                        System.err.println("ERROR: ID địa chỉ không hợp lệ khi xử lý lỗi validation: " + idStr);
+                    }
                 } else {
                     request.setAttribute("isEdit", false);
                 }

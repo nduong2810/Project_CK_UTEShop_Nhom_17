@@ -291,12 +291,11 @@
                                     <button class="btn"
                                         onclick="location.href='${pageContext.request.contextPath}/admin/suppliers/edit?id=${s.maCH}'">Sửa</button>
 
-                                    <!-- XÓA: dùng chung /admin/suppliers (op=delete) -->
+                                    <!-- XÓA: dùng chung /admin/suppliers/delete -->
                                     <form method="post"
-                                        action="${pageContext.request.contextPath}/admin/suppliers"
+                                        action="${pageContext.request.contextPath}/admin/suppliers/delete"
                                         onsubmit="return confirm('Xoá cửa hàng #${s.maCH}?');">
-                                        <input type="hidden" name="op" value="delete" /> <input
-                                            type="hidden" name="id" value="${s.maCH}" />
+                                        <input type="hidden" name="id" value="${s.maCH}" />
                                         <button class="btn btn-danger">Xoá</button>
                                     </form>
 

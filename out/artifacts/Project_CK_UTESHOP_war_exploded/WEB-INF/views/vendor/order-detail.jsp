@@ -215,7 +215,7 @@
                                         <div class="col-md-2">
                                             <c:choose>
                                                 <c:when test="${not empty item.sanPham.hinhAnh}">
-                                                    <img src="${pageContext.request.contextPath}/assets/img/products/${item.sanPham.hinhAnh}" 
+                                                    <img src="${pageContext.request.contextPath}/assets/img/${item.sanPham.hinhAnh}" 
                                                          alt="${item.sanPham.tenSP}" class="product-image">
                                                 </c:when>
                                                 <c:otherwise>

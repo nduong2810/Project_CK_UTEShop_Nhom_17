@@ -839,7 +839,7 @@
                                 <!-- Danh sách sản phẩm -->
                                 <c:forEach var="item" items="${storeEntry.value}">
                                     <div class="product-item">
-                                        <img src="${pageContext.request.contextPath}/assets/img/products/${item.sanPham.hinhAnh}" 
+                                        <img src="${pageContext.request.contextPath}/assets/img/${item.sanPham.hinhAnh}" 
                                              alt="${item.sanPham.tenSP}" class="product-image"
                                              onerror="this.src='${pageContext.request.contextPath}/assets/img/Logo_HCMUTE.png';">
                                         <div class="product-info">

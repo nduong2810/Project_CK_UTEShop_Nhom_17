@@ -249,7 +249,7 @@
                     <i class="fas fa-exclamation-circle me-2"></i>${error}
                 </div>
             </c:if>
-
+            
             <!-- Form -->
             <form action="${pageContext.request.contextPath}/user/address" method="post">
                 <input type="hidden" name="action" value="save">
@@ -527,8 +527,8 @@
                 success: 'fa-check-circle',
                 info: 'fa-info-circle',
                 warning: 'fa-exclamation-triangle',
-                danger: 'fa-exclamation-circle'
-            };
+                    danger: 'fa-exclamation-circle'
+                };
             var iconClass = iconMap[notificationType] || 'fa-info-circle';
 
             var notification = document.createElement('div');
