@@ -217,14 +217,14 @@
                 <div class="kpi-card">
                     <div class="kpi-ico">🧾</div>
                     <div class="kpi-meta">
-                        <div class="kpi-title">Đơn hàng</div>
+                        <div class="kpi-title">Đơn hàng hoàn thành</div>
                         <div class="kpi-value">${totalOrders}</div>
                     </div>
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-ico">💰</div>
                     <div class="kpi-meta">
-                        <div class="kpi-title">Doanh thu hôm nay</div>
+                        <div class="kpi-title">Doanh thu</div>
                         <div class="kpi-value">
                             <fmt:formatNumber value="${revenueToday}" type="number" />
                         </div>

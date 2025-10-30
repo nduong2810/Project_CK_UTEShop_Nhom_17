@@ -27,7 +27,7 @@ public class AdminController extends HttpServlet {
 		// DashboardDAO
 		long totalUsers = dao.countUsers();
 		long ordersToday = dao.countOrdersToday();
-		BigDecimal revenueToday = dao.revenueToday();
+		BigDecimal revenueToday = dao.totalPlatformRevenue();
 		long activeProducts = dao.countActiveProducts();
 		List<DonHang> recentOrders = dao.getRecentOrders(5);
 
