@@ -1,7 +1,9 @@
 package com.uteshop.controller.auth;
 
 import com.uteshop.dao.NguoiDungDAO;
+import com.uteshop.dao.DonViVanChuyenDAO;
 import com.uteshop.entity.NguoiDung;
+import com.uteshop.entity.DonViVanChuyen;
 import com.uteshop.util.PasswordUtil;
 import com.uteshop.service.EmailService;
 import com.uteshop.util.JwtUtil;
@@ -10,10 +12,12 @@ import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 import java.io.IOException;
+import java.util.List;
 
 @WebServlet(urlPatterns = {"/auth/login", "/auth/register", "/auth/logout"})
 public class AuthController extends HttpServlet {
     private final NguoiDungDAO nguoiDungDAO = new NguoiDungDAO();
+    private final DonViVanChuyenDAO donViVanChuyenDAO = new DonViVanChuyenDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -141,12 +145,20 @@ public class AuthController extends HttpServlet {
         String confirmPassword = request.getParameter("confirmPassword");
         String gender = request.getParameter("gender");
         String role = request.getParameter("role");
+        String donViVanChuyenId = request.getParameter("donViVanChuyen");
 
         try {
             if (firstName == null || lastName == null || username == null || email == null ||
                     phone == null || address == null || password == null || gender == null ||
                     firstName.trim().isEmpty() || username.trim().isEmpty() || email.trim().isEmpty()) {
                 request.setAttribute("error", "Vui lòng điền đầy đủ thông tin bắt buộc");
+                showRegisterPage(request, response);
+                return;
+            }
+            
+            // Kiểm tra nếu đăng ký là shipper thì phải chọn đơn vị vận chuyển
+            if ("shipper".equalsIgnoreCase(role) && (donViVanChuyenId == null || donViVanChuyenId.trim().isEmpty())) {
+                request.setAttribute("error", "Shipper phải chọn đơn vị vận chuyển");
                 showRegisterPage(request, response);
                 return;
             }
@@ -213,6 +225,26 @@ public class AuthController extends HttpServlet {
             } catch (Exception e) {
                 newUser.setVaiTro(NguoiDung.VaiTro.USER);
             }
+            
+            // Nếu là shipper, gán đơn vị vận chuyển
+            if ("shipper".equalsIgnoreCase(role) && donViVanChuyenId != null && !donViVanChuyenId.trim().isEmpty()) {
+                try {
+                    int maVC = Integer.parseInt(donViVanChuyenId);
+                    DonViVanChuyen donViVanChuyen = donViVanChuyenDAO.findById(maVC);
+                    if (donViVanChuyen != null) {
+                        newUser.setDonViVanChuyen(donViVanChuyen);
+                        System.out.println("✅ Shipper được gán đơn vị vận chuyển: " + donViVanChuyen.getTenDonVi());
+                    } else {
+                        request.setAttribute("error", "Đơn vị vận chuyển không tồn tại");
+                        showRegisterPage(request, response);
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    request.setAttribute("error", "Mã đơn vị vận chuyển không hợp lệ");
+                    showRegisterPage(request, response);
+                    return;
+                }
+            }
 
             boolean success = nguoiDungDAO.save(newUser);
             if (success) {
@@ -276,6 +308,10 @@ public class AuthController extends HttpServlet {
 
     private void showRegisterPage(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        // Load danh sách đơn vị vận chuyển cho shipper
+        List<DonViVanChuyen> danhSachDonViVanChuyen = donViVanChuyenDAO.findAll();
+        request.setAttribute("danhSachDonViVanChuyen", danhSachDonViVanChuyen);
+        
         request.getRequestDispatcher("/WEB-INF/views/auth/register.jsp").forward(request, response);
     }
 
