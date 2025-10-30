@@ -143,14 +143,17 @@ public class ShipperController extends HttpServlet {
  // Trong lớp ShipperController.java
 
     private void showHistory(HttpServletRequest request, HttpServletResponse response, Integer shipperMaND)
-            throws ServletException, IOException { // Giữ lại dòng này
+            throws ServletException, IOException {
         try {
-            // Gọi trực tiếp phương thức DAO đã được tối ưu cho việc lấy lịch sử
+            // KHÔNG CẦN DÒNG NÀY NỮA: Integer shipperMaND = user.getMaND();
+            
+            // Gọi phương thức DAO để lấy các đơn đã hoàn thành hoặc trả lại
             List<PhanCongGiaoHang> historyOrders = orderRepo.findHistoryOrdersByShipperId(shipperMaND);
             
             request.setAttribute("historyOrders", historyOrders);
             request.setAttribute("viewTitle", "Lịch Sử Giao Hàng");
             
+            // Forward tới file JSP mới tạo
             request.getRequestDispatcher("/WEB-INF/views/shipper/history.jsp").forward(request, response);
             
         } catch (Exception e) {

@@ -1,78 +1,69 @@
 package com.uteshop.dao;
 
 import com.uteshop.entity.PhanCongGiaoHang;
-// Phải import JPAUtil nếu nó nằm trong package com.uteshop.util
 import com.uteshop.util.JPAUtil; 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction; // Cần thiết để quản lý transaction
+import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.TypedQuery;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
 public class PhanCongGiaoHangDAO {
 
+    /**
+     * Chỉ lấy lịch sử đơn hàng (đã hoàn thành/trả hàng) của một shipper.
+     * SỬA LẠI: Thêm JOIN FETCH p.nguoiGiao để tải đầy đủ thông tin Shipper.
+     */
+    public List<PhanCongGiaoHang> findHistoryOrdersByShipperId(Integer shipperMaND) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            String jpql = "SELECT p FROM PhanCongGiaoHang p " +
+                          "JOIN FETCH p.donHang " +
+                          "JOIN FETCH p.nguoiGiao " + // THÊM DÒNG NÀY
+                          "WHERE p.nguoiGiao.maND = :shipperId " +
+                          "AND p.trangThai IN ('HOAN_THANH', 'TRA_HANG') " +
+                          "ORDER BY p.ngayHoanThanh DESC";
+                          
+            TypedQuery<PhanCongGiaoHang> query = em.createQuery(jpql, PhanCongGiaoHang.class);
+            query.setParameter("shipperId", shipperMaND);
+            return query.getResultList();
+        } finally {
+            em.close();
+        }
+    }
 
+    /**
+     * Chỉ lấy các đơn hàng đang chờ giao của một shipper.
+     * SỬA LẠI: Thêm JOIN FETCH p.nguoiGiao.
+     */
+    public List<PhanCongGiaoHang> findPendingOrdersByShipperId(Integer shipperMaND) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            String jpql = "SELECT p FROM PhanCongGiaoHang p " +
+                          "JOIN FETCH p.donHang " +
+                          "JOIN FETCH p.nguoiGiao " + // THÊM DÒNG NÀY
+                          "WHERE p.nguoiGiao.maND = :shipperId " +
+                          "AND p.trangThai NOT IN ('HOAN_THANH', 'TRA_HANG') " +
+                          "ORDER BY p.ngayGiao DESC";
+                          
+            TypedQuery<PhanCongGiaoHang> query = em.createQuery(jpql, PhanCongGiaoHang.class);
+            query.setParameter("shipperId", shipperMaND);
+            return query.getResultList();
+        } finally {
+            em.close();
+        }
+    }
 
-	/**
-	 * Chỉ lấy lịch sử đơn hàng (đã hoàn thành/trả hàng) của một shipper.
-	 * Sử dụng JOIN FETCH để tải luôn thông tin DonHang, tránh lỗi lazy loading.
-	 */
-	public List<PhanCongGiaoHang> findHistoryOrdersByShipperId(Integer shipperMaND) {
-	    EntityManager em = JPAUtil.getEntityManager();
-	    try {
-	        String jpql = "SELECT p FROM PhanCongGiaoHang p JOIN FETCH p.donHang " +
-	                      "WHERE p.nguoiGiao.maND = :shipperId " +
-	                      "AND p.trangThai IN ('HOAN_THANH', 'TRA_HANG') " +
-	                      "ORDER BY p.ngayHoanThanh DESC"; // Sắp xếp theo ngày hoàn thành gần nhất
-	                      
-	        TypedQuery<PhanCongGiaoHang> query = em.createQuery(jpql, PhanCongGiaoHang.class);
-	        query.setParameter("shipperId", shipperMaND);
-	        return query.getResultList();
-	    } finally {
-	        em.close();
-	    }
-	}
-	public List<PhanCongGiaoHang> findPendingOrdersByShipperId(Integer shipperMaND) {
-	    EntityManager em = JPAUtil.getEntityManager();
-	    try {
-	        String jpql = "SELECT p FROM PhanCongGiaoHang p JOIN FETCH p.donHang " +
-	                      "WHERE p.nguoiGiao.maND = :shipperId " +
-	                      "AND p.trangThai NOT IN ('HOAN_THANH', 'TRA_HANG') " +
-	                      "ORDER BY p.ngayGiao DESC";
-	                      
-	        TypedQuery<PhanCongGiaoHang> query = em.createQuery(jpql, PhanCongGiaoHang.class);
-	        query.setParameter("shipperId", shipperMaND);
-	        return query.getResultList();
-	    } finally {
-	        em.close();
-	    }
-	}
-	// SỬA LẠI NHƯ SAU:
-	public List<PhanCongGiaoHang> findAssignedOrdersByShipperId(Integer shipperMaND) {
-	    EntityManager em = JPAUtil.getEntityManager();
-	    try {
-	        // Thêm JOIN FETCH p.donHang để tránh LazyInitializationException
-	        String jpql = "SELECT p FROM PhanCongGiaoHang p JOIN FETCH p.donHang " +
-	                      "WHERE p.nguoiGiao.maND = :shipperId";
-
-	        TypedQuery<PhanCongGiaoHang> query = em.createQuery(jpql, PhanCongGiaoHang.class);
-	        query.setParameter("shipperId", shipperMaND);
-	        return query.getResultList();
-	    } finally {
-	        em.close();
-	    }
-	}
     /**
      * Cập nhật trạng thái giao hàng.
-     * (Thao tác Ghi - BẮT BUỘC phải dùng Transaction)
+     * (Phương thức này đã đúng, không cần sửa)
      */
     public void updateDeliveryStatus(Integer maPC, String trangThai, LocalDateTime ngayHoanThanh) {
         EntityManager em = JPAUtil.getEntityManager();
         EntityTransaction transaction = em.getTransaction();
         
         try {
-            transaction.begin(); // Bắt đầu giao dịch
+            transaction.begin();
             
             PhanCongGiaoHang pc = em.find(PhanCongGiaoHang.class, maPC);
             if (pc != null) {
@@ -83,13 +74,11 @@ public class PhanCongGiaoHangDAO {
                 em.merge(pc);
             }
             
-            transaction.commit(); // Hoàn thành giao dịch
-            
+            transaction.commit();
         } catch (Exception e) {
             if (transaction != null && transaction.isActive()) {
-                transaction.rollback(); // Hoàn tác nếu có lỗi
+                transaction.rollback();
             }
-            // Ném lại ngoại lệ để lớp Controller có thể bắt và xử lý redirect lỗi
             throw new RuntimeException("Cập nhật trạng thái giao hàng thất bại.", e); 
         } finally {
             if (em != null) {
@@ -100,12 +89,11 @@ public class PhanCongGiaoHangDAO {
     
     /**
      * Đếm số đơn hàng được giao theo trạng thái.
-     * (Thao tác Đọc - Chỉ cần mở và đóng EM)
+     * (Phương thức này đã đúng, không cần sửa)
      */
     public Long countOrdersByShipperAndStatus(Integer maND, String trangThai) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            // Cần sửa lại query để xử lý trường hợp "Tất cả" (như trong Controller)
             String jpql;
             if ("Tất cả".equals(trangThai)) {
                 jpql = "SELECT COUNT(pc) FROM PhanCongGiaoHang pc WHERE pc.nguoiGiao.maND = :maND";
@@ -125,6 +113,24 @@ public class PhanCongGiaoHangDAO {
             if (em != null) {
                 em.close();
             }
+        }
+    }
+    
+    // BẠN CÓ THỂ XÓA PHƯƠNG THỨC NÀY NẾU KHÔNG DÙNG ĐẾN
+    // Hoặc sửa lại nó như bên dưới để an toàn
+    public List<PhanCongGiaoHang> findAssignedOrdersByShipperId(Integer shipperMaND) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            String jpql = "SELECT p FROM PhanCongGiaoHang p " +
+                          "JOIN FETCH p.donHang " +
+                          "JOIN FETCH p.nguoiGiao " + // THÊM DÒNG NÀY
+                          "WHERE p.nguoiGiao.maND = :shipperId";
+
+            TypedQuery<PhanCongGiaoHang> query = em.createQuery(jpql, PhanCongGiaoHang.class);
+            query.setParameter("shipperId", shipperMaND);
+            return query.getResultList();
+        } finally {
+            em.close();
         }
     }
 }
