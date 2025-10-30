@@ -308,6 +308,35 @@
             color: #667eea;
         }
         
+        /* Shipper-specific field styling */
+        .shipper-only-field {
+            animation: slideDown 0.3s ease-in-out;
+            border-left: 4px solid #11998e;
+            padding-left: 1rem;
+            margin-left: -1rem;
+            background: linear-gradient(to right, rgba(17, 153, 142, 0.05), transparent);
+            border-radius: 8px;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .shipper-only-field select {
+            font-weight: 500;
+        }
+        
+        .shipper-only-field label .text-danger {
+            font-weight: bold;
+        }
+        
         .role-tab:not(.active):hover {
             background: rgba(102, 126, 234, 0.2);
         }
@@ -762,6 +791,21 @@
                                     <i class="fas fa-map-marker-alt me-2"></i>Địa chỉ
                                 </label>
                             </div>
+                            
+                            <!-- Shipper-specific: Đơn vị vận chuyển -->
+                            <div class="form-floating shipper-only-field" id="donViVanChuyenField" style="display: none;">
+                                <select class="form-select" id="donViVanChuyen" name="donViVanChuyen">
+                                    <option value="">-- Chọn đơn vị vận chuyển --</option>
+                                    <c:forEach items="${danhSachDonViVanChuyen}" var="donVi">
+                                        <option value="${donVi.maVC}">
+                                            ${donVi.tenDonVi} - Phí: ${donVi.phiVanChuyen} VNĐ
+                                        </option>
+                                    </c:forEach>
+                                </select>
+                                <label for="donViVanChuyen">
+                                    <i class="fas fa-truck me-2"></i>Đơn vị vận chuyển <span class="text-danger">*</span>
+                                </label>
+                            </div>
 
                             <!-- OTP Verification Section -->
                             <div class="otp-section" id="otpSection" style="display: none;">
@@ -909,6 +953,19 @@
                     // Update hidden input value
                     const role = this.getAttribute('data-role');
                     selectedRoleInput.value = role;
+                    
+                    // Show/hide đơn vị vận chuyển field for Shipper
+                    const donViVanChuyenField = document.getElementById('donViVanChuyenField');
+                    const donViVanChuyenSelect = document.getElementById('donViVanChuyen');
+                    
+                    if (role === 'shipper') {
+                        donViVanChuyenField.style.display = 'block';
+                        donViVanChuyenSelect.setAttribute('required', 'required');
+                    } else {
+                        donViVanChuyenField.style.display = 'none';
+                        donViVanChuyenSelect.removeAttribute('required');
+                        donViVanChuyenSelect.value = '';
+                    }
                     
                     // Update button text based on role
                     const buttonTexts = {

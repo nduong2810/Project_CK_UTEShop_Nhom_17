@@ -421,10 +421,6 @@
 								</c:if>
 								<li><hr class="dropdown-divider"></li>
 								<li><a class="dropdown-item"
-									href="${pageContext.request.contextPath}/user/settings"> <i
-										class="fas fa-cog me-2"></i>Cài đặt
-								</a></li>
-								<li><a class="dropdown-item"
 									href="${pageContext.request.contextPath}/auth/logout"> <i
 										class="fas fa-sign-out-alt me-2"></i>Đăng xuất
 								</a></li>

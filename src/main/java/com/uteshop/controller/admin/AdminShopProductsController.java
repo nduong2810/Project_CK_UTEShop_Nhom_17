@@ -1,6 +1,8 @@
 package com.uteshop.controller.admin;
 
+import com.uteshop.dao.CuaHangDAO;
 import com.uteshop.dao.SanPhamDAO;
+import com.uteshop.entity.CuaHang;
 import com.uteshop.entity.SanPham;
 import com.uteshop.entity.DanhMuc;
 
@@ -14,6 +16,7 @@ import java.util.List;
 public class AdminShopProductsController extends HttpServlet {
 
 	private final SanPhamDAO spDAO = new SanPhamDAO();
+	private final CuaHangDAO chDAO = new CuaHangDAO();
 
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
@@ -24,7 +27,13 @@ public class AdminShopProductsController extends HttpServlet {
 			return;
 		}
 
-		int pageSize = parseInt(req.getParameter("pageSize"), 10); // 8/10 tuỳ ý
+		CuaHang shop = chDAO.findById(shopId);
+		if (shop == null) {
+			resp.sendRedirect(req.getContextPath() + "/admin/suppliers?msg=notfound");
+			return;
+		}
+
+		int pageSize = parseInt(req.getParameter("pageSize"), 10);
 		int page = parseInt(req.getParameter("page"), 1);
 		String q = trimToNull(req.getParameter("q"));
 		String sort = trimToNull(req.getParameter("sort"));
@@ -44,7 +53,7 @@ public class AdminShopProductsController extends HttpServlet {
 		List<SanPham> products = spDAO.findPagedByShop(shopId, page, pageSize, q, catId, active, sort);
 		List<DanhMuc> categories = spDAO.listCategories();
 
-		req.setAttribute("shopId", shopId);
+		req.setAttribute("shop", shop);
 		req.setAttribute("products", products);
 		req.setAttribute("categories", categories);
 
