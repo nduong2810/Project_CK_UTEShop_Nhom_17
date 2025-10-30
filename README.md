@@ -55,7 +55,7 @@
 - **Đồ án**: Cuối kỳ môn Lập trình Web
 - **Trường**: Đại học Sư phạm Kỹ thuật TP.HCM (UTE)
 - **Khoa**: Công nghệ Thông tin
-- **Năm học**: 2024-2025
+- **Năm học**: 2025-2026
 - **Nhóm**: 17
 - **Version**: 1.1
 
