@@ -128,7 +128,7 @@
 | Công nghệ | Version | Mục đích |
 |-----------|---------|----------|
 | **Microsoft SQL Server** | 2019+ | Relational database |
-| **JDBC Driver** | 12.8.1 | Database connectivity |
+| **JPA** | 3.0 |  |
 
 ### Frontend Stack
 
@@ -349,18 +349,8 @@ Hoặc import trong SQL Server Management Studio:
 sqlcmd -S localhost -U sa -P your_password -d UTESHOP -i dlmau.sql
 ```
 
-### 3. Cấu hình Database Connection
 
-Mở file `src/main/resources/META-INF/persistence.xml` và cập nhật:
-
-```xml
-<property name="jakarta.persistence.jdbc.url" 
-          value="jdbc:sqlserver://localhost:1433;databaseName=UTESHOP;..."/>
-<property name="jakarta.persistence.jdbc.user" value="sa"/>
-<property name="jakarta.persistence.jdbc.password" value="your_password"/>
-```
-
-### 4. Build Project
+### 3. Build Project
 
 ```bash
 mvn clean install
@@ -370,7 +360,7 @@ Hoặc trong Eclipse/IntelliJ:
 - Right-click project → Maven → Update Project
 - Project → Clean → Build Project
 
-### 5. Deploy to Tomcat
+### 4. Deploy to Tomcat
 
 #### Cách 1: Eclipse/STS
 1. Right-click project → Run As → Run on Server
@@ -388,7 +378,7 @@ cd /path/to/tomcat/bin
 startup.bat    # Windows
 ```
 
-### 6. Truy cập ứng dụng
+### 5. Truy cập ứng dụng
 
 Mở browser và truy cập:
 
@@ -396,7 +386,7 @@ Mở browser và truy cập:
 http://localhost:8080/Project_CK_UTESHOP/
 ```
 
-### 7. Tài khoản mặc định
+### 6. Tài khoản mặc định
 
 Nếu đã import data mẫu:
 
