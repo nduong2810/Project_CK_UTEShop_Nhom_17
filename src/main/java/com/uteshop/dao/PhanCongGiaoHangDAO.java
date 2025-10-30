@@ -68,12 +68,32 @@ public class PhanCongGiaoHangDAO {
             transaction.begin();
             
             PhanCongGiaoHang pc = em.find(PhanCongGiaoHang.class, maPC);
+            
             if (pc != null) {
+                // 1. Cập nhật trạng thái PhanCongGiaoHang
                 pc.setTrangThai(trangThai);
                 if (ngayHoanThanh != null) {
                     pc.setNgayHoanThanh(ngayHoanThanh);
                 }
                 em.merge(pc);
+
+                // 2. LẤY VÀ CẬP NHẬT TRẠNG THÁI DonHang LIÊN QUAN
+                DonHang donHang = pc.getDonHang();
+                if (donHang != null) {
+                    // Chuyển đổi trạng thái String sang Enum (Giả định DonHang.TrangThaiDonHang là Enum)
+                    try {
+                        // Cập nhật trạng thái của Đơn hàng
+                        DonHang.TrangThaiDonHang newTrangThaiDH = DonHang.TrangThaiDonHang.valueOf(trangThai);
+                        donHang.setTrangThai(newTrangThaiDH);
+                        
+                        // LƯU Ý: Nếu TRẢ HÀNG, có thể cần cập nhật lyDoHuy (lý do hủy) trong Controller trước khi gọi DAO.
+                        
+                        em.merge(donHang);
+                    } catch (IllegalArgumentException e) {
+                        // Xử lý nếu trạng thái không khớp với Enum của DonHang
+                        System.err.println("Trạng thái PhanCongGiaoHang không hợp lệ cho DonHang: " + trangThai);
+                    }
+                }
             }
             
             transaction.commit();
@@ -81,7 +101,7 @@ public class PhanCongGiaoHangDAO {
             if (transaction != null && transaction.isActive()) {
                 transaction.rollback();
             }
-            throw new RuntimeException("Cập nhật trạng thái giao hàng thất bại.", e); 
+            throw new RuntimeException("Cập nhật trạng thái giao hàng và đơn hàng thất bại.", e); 
         } finally {
             if (em != null) {
                 em.close();
@@ -175,6 +195,23 @@ public class PhanCongGiaoHangDAO {
             }
             e.printStackTrace();
             return false;
+        } finally {
+            em.close();
+        }
+    }
+    public List<PhanCongGiaoHang> findReturnedOrdersByShipperId(Integer shipperMaND) {
+        EntityManager em = JPAUtil.getEntityManager();
+        try {
+            String jpql = "SELECT p FROM PhanCongGiaoHang p " +
+                          "JOIN FETCH p.donHang " +
+                          "JOIN FETCH p.nguoiGiao " +
+                          "WHERE p.nguoiGiao.maND = :shipperId " +
+                          "AND p.trangThai = 'TRA_HANG' " + // Chỉ lấy trạng thái TRẢ HÀNG
+                          "ORDER BY p.ngayHoanThanh DESC"; // Sắp xếp theo ngày trả gần nhất
+                          
+            TypedQuery<PhanCongGiaoHang> query = em.createQuery(jpql, PhanCongGiaoHang.class);
+            query.setParameter("shipperId", shipperMaND);
+            return query.getResultList();
         } finally {
             em.close();
         }
