@@ -48,17 +48,21 @@ public class PhanCongGiaoHangDAO {
 	        em.close();
 	    }
 	}
+	// SỬA LẠI NHƯ SAU:
 	public List<PhanCongGiaoHang> findAssignedOrdersByShipperId(Integer shipperMaND) {
-        EntityManager em = JPAUtil.getEntityManager();
-        try {
-            String jpql = "SELECT p FROM PhanCongGiaoHang p WHERE p.nguoiGiao.maND = :shipperId";
-            TypedQuery<PhanCongGiaoHang> query = em.createQuery(jpql, PhanCongGiaoHang.class);
-            query.setParameter("shipperId", shipperMaND);
-            return query.getResultList();
-        } finally {
-            em.close();
-        }
-    }
+	    EntityManager em = JPAUtil.getEntityManager();
+	    try {
+	        // Thêm JOIN FETCH p.donHang để tránh LazyInitializationException
+	        String jpql = "SELECT p FROM PhanCongGiaoHang p JOIN FETCH p.donHang " +
+	                      "WHERE p.nguoiGiao.maND = :shipperId";
+
+	        TypedQuery<PhanCongGiaoHang> query = em.createQuery(jpql, PhanCongGiaoHang.class);
+	        query.setParameter("shipperId", shipperMaND);
+	        return query.getResultList();
+	    } finally {
+	        em.close();
+	    }
+	}
     /**
      * Cập nhật trạng thái giao hàng.
      * (Thao tác Ghi - BẮT BUỘC phải dùng Transaction)
