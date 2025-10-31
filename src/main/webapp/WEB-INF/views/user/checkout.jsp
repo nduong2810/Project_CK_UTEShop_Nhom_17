@@ -1048,15 +1048,6 @@
                                         groupingUsed="true" maxFractionDigits="0"/>₫</strong>
                             </div>
                             
-                            <!-- Dòng giảm giá (sẽ được thêm động bằng JavaScript) -->
-                            <c:if test="${discountAmount != null && discountAmount > 0}">
-                                <div class="summary-row text-danger" id="discountRow">
-                                    <span><i class="fas fa-tag me-2"></i>Giảm giá:</span>
-                                    <strong id="discountAmountText">-<fmt:formatNumber value="${discountAmount}" type="number" 
-                                            groupingUsed="true" maxFractionDigits="0"/>₫</strong>
-                                </div>
-                            </c:if>
-                            
                             <div class="summary-row">
                                 <span>Tổng thanh toán:</span>
                                 <strong id="totalAmountText"><fmt:formatNumber value="${totalAmount}" type="number" 
@@ -1366,12 +1357,6 @@
                     }
                 }
                 
-                // Cập nhật nội dung và hiển thị
-                discountRow.innerHTML = `
-                    <span><i class="fas fa-tag me-2"></i>Giảm giá:</span>
-                    <strong>-${totalDiscount.toLocaleString('vi-VN')}₫</strong>
-                `;
-                discountRow.style.display = 'flex'; // Dùng 'flex' vì .summary-row là flex
     
             } else {
                 // Nếu có, ẩn đi
